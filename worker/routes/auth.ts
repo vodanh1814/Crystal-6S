@@ -62,13 +62,24 @@ authRouter.post('/setup', async (c) => {
       .run();
   }
 
+  // Optional factory initial config (seed areas & default KPI target)
+  if (body.seed_sample_areas === false) {
+    await c.env.DB.prepare('DELETE FROM areas WHERE id NOT IN (SELECT DISTINCT area_id FROM audit_areas)').run();
+  }
+  if (body.default_target !== undefined) {
+    const targetVal = Math.min(100, Math.max(50, Number(body.default_target) || 90));
+    await c.env.DB.prepare('UPDATE areas SET target_score = ?').bind(targetVal).run();
+    await c.env.DB.prepare('UPDATE area_targets SET target_score = ?').bind(targetVal).run();
+  }
+
+  const userLang = body.lang === 'en' ? 'en' : 'vi';
   const passwordHash = await hashPassword(password);
 
   const insertRes = await c.env.DB
     .prepare(
       'INSERT INTO users (username, password_hash, full_name, role, lang, active, token_version) VALUES (?, ?, ?, ?, ?, 1, 0)'
     )
-    .bind(username, passwordHash, fullName, 'admin', 'vi')
+    .bind(username, passwordHash, fullName, 'admin', userLang)
     .run();
 
   const user = await c.env.DB
