@@ -1,0 +1,48 @@
+# Changelog
+
+Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều được ghi nhận tại tài liệu này theo chuẩn [Semantic Versioning](https://semver.org/).
+
+---
+
+## [2.1.0] - 2026-10-31
+
+### Added (Tính năng mới)
+- **Bộ cài đặt độc lập `Crystal_5S_Setup.exe` (WPF Vector UI v2.1)**:
+  - Chuyển sang nền tảng đồ họa **WPF Vector (`PresentationFramework`)** chống vỡ hình / nhòe chữ 100% trên mọi màn hình độ phân giải cao (High-DPI 125%, 150%, 2K, 4K).
+  - Bổ sung chuyển đổi **Song ngữ tức thì (`🇻🇳 Tiếng Việt ⇄ 🇬🇧 English`)** và **Chế độ Sáng / Tối (`☀ Light / 🌙 Dark Theme`)** ngay trên thanh tiêu đề của bộ cài `.exe`, trang `/setup` và `/login`.
+  - Gom **100% cấu hình vào 1 màn hình duy nhất**: Thương hiệu Công ty, Chọn ảnh Logo + Ô xem trước (Live Preview), Tạo sẵn Tài khoản Admin đầu tiên, Thư mục cài đặt, Mã định danh Cloud (`Slug`), Cổng LAN (`Port`), Chỉ tiêu KPI 5S mặc định (`%`), Tùy chọn nạp 16 khu vực mẫu và Khung nhật ký trực tiếp (Embedded Live Console Log).
+- **Biểu tượng ứng dụng đa độ phân giải (`assets/crystal_5s.ico` & `public/favicon.svg`)**:
+  - Thiết kế bộ icon lục giác **Crystal 5S** chuẩn đa kích thước (`16px`, `32px`, `48px`, `64px`, `128px`, `256px` PNG-compressed) nhúng trực tiếp vào file `.exe`, thanh tiêu đề cửa sổ và trình duyệt web.
+
+### Fixed (Sửa lỗi & Cải thiện UI)
+- Đồng bộ độ tương phản cao trên toàn bộ ứng dụng web (`Layout.tsx`, `Modal.tsx`, `Login.tsx`, `Setup.tsx`): tách biệt nền tối Andon (`bg-slate-950`) cho màn hình TV Dashboard (`/`) và nền sáng sắc nét (`bg-slate-50 text-slate-900`) cho các trang nghiệp vụ & hộp thoại Modal.
+- Thêm cơ chế tự động fallback (`onError`) cho toàn bộ hình ảnh Logo công ty, tự động hiển thị huy hiệu `5S` chuẩn nếu đường dẫn ảnh bị lỗi.
+
+---
+
+## [2.0.0] - 2026-10-31
+
+### Added (Tính năng mới)
+- **Màn hình TV Smart Factory Andon (`/`) công khai**:
+  - Truy cập thẳng màn hình Dashboard TV mà không cần đăng nhập; bố cục vừa khít 100% màn hình TV (không cuộn dọc/ngang), 3 chế độ thanh bên (`Thu gọn`, `Ẩn thanh bên`, `Hiện thanh bên`) và chế độ **Full TV**.
+- **Mô hình Kỳ Audit 5S Toàn Nhà Máy Theo Tuần**:
+  - Mỗi tuần ISO có **1 kỳ Audit chung cho toàn bộ nhà máy** bao gồm tất cả khu vực đang hoạt động (16 khu vực).
+  - Tự động tính phạt lũy tiến trong cùng tháng (`repeat_level = 1 + số tuần trước trong tháng đã vi phạm cùng tiêu chí tại khu vực đó`), tự động reset về mức 1 khi sang tháng mới.
+  - Bảng nhập nhanh số lần vi phạm cho 3 tiêu chí đánh giá ngoài (`S5.2-BOD`, `S5.2-CUS`, `S5.3`) không cần đính kèm ảnh.
+- **Tách biệt hoàn toàn 4 Vai trò (`Admin`, `Auditor`, `Area MNG`, `Viewer`)**:
+  - Đảm bảo 1 tài khoản chỉ giữ 1 vai trò độc lập (`Auditor` và `Area MNG` không kiêm nhiệm chung trên cùng 1 tài khoản).
+- **Thư viện ảnh 2K sắc nét trên Cloudflare R2 & Lightbox toàn màn hình**:
+  - Nâng độ phân giải ảnh tải lên R2 lên chuẩn **2K (`2048px`, JPEG quality `0.85`)** kèm bộ nhớ đệm `Cache-Control: public, max-age=31536000, immutable`.
+  - Bổ sung thanh lọc nhanh theo từng khu vực tại `/findings`, chế độ xem **Thư viện ảnh (Photo Gallery)** đối chiếu `TRƯỚC (BEFORE)` / `SAU (AFTER)` và trình xem ảnh phóng to **Lightbox**.
+- **Nhập dữ liệu điểm lịch sử theo tháng (`T1..T12`)**:
+  - Cho phép Admin nhập hoặc copy-paste trực tiếp bảng điểm các tháng từ Excel vào mục **Báo cáo (`/reports`) → 📥 Nhập điểm lịch sử**.
+- **Nhận diện thương hiệu đa công ty (`company_name` & `company_logo`)**:
+  - Cho phép cấu hình Tên Công ty và Logo Công ty cho từng nhà máy độc lập.
+
+---
+
+## [1.0.0] - 2026-10-30
+
+### Added
+- Khởi tạo kiến trúc nền tảng **Crystal 5S Audit** trên Cloudflare Workers (Hono REST API + React 19 SPA + Tailwind CSS v4 + Cloudflare D1 + Cloudflare R2).
+- Bộ 24 tiêu chí kiểm tra 5S song ngữ Việt – Anh (`S1.1` đến `S5.3`) và 16 khu vực sản xuất mẫu (`KNI`, `GQC`, `WH`, `BAT`, `DYE`, `L-DIP`, `UNT`, `SET`, `VAP`, `FQC`, `L-TES`, `MTN`, `UTI`, `TSC`, `ADM`, `FM/CFD`).

@@ -1,162 +1,93 @@
-# Crystal 5S Audit — Hệ thống Đánh giá & Cải tiến 5S
+# Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-Ứng dụng web toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục và báo cáo 5S (Sort – Set in order – Shine – Standardize – Sustain) tại nhà máy, hoạt động hoàn toàn trên nền tảng Cloudflare (Cloudflare Workers, D1 Database, R2 Object Storage và Cloudflare Workers Static Assets).
+**Phiên bản hiện tại: `v2.1.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
----
-
-## 1. Tính năng nổi bật
-
-- **Kiến trúc Serverless tối ưu**: Một Worker Hono duy nhất phục vụ toàn bộ REST API (`/api/*`) và lưu trữ tệp tĩnh giao diện React SPA (Vite + Tailwind CSS v4).
-- **Song ngữ hoàn toàn (Tiếng Việt & Tiếng Anh)**: Tự động phát hiện hoặc chuyển đổi linh hoạt qua nút toggle; lưu trữ tùy chọn ngôn ngữ theo từng tài khoản người dùng.
-- **Tuân thủ chính xác bộ quy tắc 5S & Công thức tính điểm**:
-  - Mỗi khu vực (Area) thực hiện đúng **1 đợt kiểm tra / tuần** (theo chuẩn ISO Week: Thứ Hai – Chủ Nhật).
-  - Điểm tuần: `Điểm = max(0, 100 - Σ penalty áp dụng)`.
-  - Phạt lũy tiến theo tuần (`escalating`): lỗi chưa khắc phục lặp lại tuần tiếp theo sẽ bị cộng thêm **+1 điểm phạt** cho mỗi tuần lặp lại (`penalty = penalty_gốc + (repeat_level - 1)`). Hệ số lặp tự động đặt lại (reset) về 1 vào đầu mỗi tháng mới.
-  - Các lỗi ngoại lệ không áp dụng lũy tiến: `S5.2-BOD`, `S5.2-CUS`, `S5.3` (Internal IE).
-  - Điểm tháng: Trung bình cộng các đợt kiểm tra đã hoàn thành trong tháng đó.
-  - Điểm chuẩn theo năm (`yearly_targets`): 2026 mặc định 95%; điểm đạt hiển thị xanh, dưới chuẩn hiển thị đỏ.
-- **Quy trình Khắc phục & Chuyển tuần (Carry-over Flow)**:
-  - Khi tạo đợt kiểm tra tuần mới, hệ thống tự động tải toàn bộ lỗi chưa đóng của tuần trước đó (Pending Previous Findings).
-  - Auditor bắt buộc phải đánh giá: **"Đã cải thiện" (Improved)** (đóng lỗi) hoặc **"Chưa cải thiện" (Not improved)** (chuyển sang tuần này với mức phạt lũy tiến tăng thêm 1 điểm) trước khi có thể Submit audit.
-  - Cho phép hoàn tác (Undo) quyết định khi audit còn ở trạng thái nháp (Draft).
-- **Cảnh báo hạn 7 ngày (7-day Alarms)**:
-  - Tự động tính hạn khắc phục (due date = ngày audit + 7 ngày).
-  - Đếm ngược số ngày còn lại; cảnh báo đỏ khi quá hạn.
-  - Chuông thông báo hiển thị tổng số cảnh báo cần xử lý theo vai trò (Area MNG: lỗi Open cần khắc phục; Auditor: lỗi Fixed cần xác nhận).
-- **Hình ảnh Before / After nén trực tiếp trên trình duyệt**:
-  - Hỗ trợ chụp trực tiếp từ camera điện thoại (`capture="environment"`) hoặc tải từ thư viện ảnh.
-  - Nén tự động bằng Canvas (cạnh tối đa 1600px, JPEG quality 0.75) trước khi tải lên R2, tiết kiệm băng thông và dung lượng lưu trữ.
-- **Báo cáo đa chiều & Xuất Excel**:
-  - Dashboard tổng quan: Điểm tuần hiện tại, bảng xếp hạng tháng, biểu đồ đường xu hướng điểm 12 tuần (Recharts), biểu đồ cột phân bổ lỗi theo nhóm S1–S5.
-  - Báo cáo tuần & tháng ma trận nhiệt (heatmap colors vs target).
-  - Xuất báo cáo ra file Excel (.xlsx) thông qua SheetJS tải động (lazy dynamic import).
+Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 2. Yêu cầu môi trường
+## 1. Điểm nổi bật của phiên bản `v2.1.0`
 
-- **Node.js**: Phiên bản 20.x trở lên (đã kiểm thử tương thích tốt với Node 24.x).
-- **npm**: Phiên bản 10.x trở lên.
-- **Tài khoản Cloudflare**: Miễn phí hoặc trả phí có quyền truy cập Workers, D1 và R2.
+### 🚀 Bộ cài đặt độc lập 1-File `Crystal_5S_Setup.exe` (All-in-One Single-Screen Installer)
+- **Đồ họa Vector WPF sắc nét**: Tự động tương thích mọi độ phân giải màn hình Windows (100%, 125%, 150%, 2K, 4K), không bị vỡ hình hay nhòe chữ, đi kèm bộ biểu tượng **Crystal 5S** đa độ phân giải (`assets/crystal_5s.ico`).
+- **Song ngữ (`🇻🇳 Tiếng Việt ⇄ 🇬🇧 English`) & Giao diện Sáng / Tối (`☀ Light / 🌙 Dark`)**: Chuyển đổi trực tiếp ngay trên thanh tiêu đề của bộ cài đặt `.exe`, màn hình khởi tạo `/setup` và màn hình đăng nhập `/login`.
+- **Gói gọn toàn bộ cấu hình trong 1 màn hình duy nhất**:
+  1. **Thương hiệu Công ty**: Nhập Tên Công ty / Nhà máy + Chọn file ảnh Logo (`.png`, `.jpg`, `.svg`, `.webp`) kèm ô xem trước (Live Preview).
+  2. **Tài khoản Quản trị viên (Admin)**: Nhập Họ tên, Tài khoản (`admin`), Mật khẩu (`>= 6 ký tự`) — tự động khởi tạo vào Database D1 ngay trong quá trình cài.
+  3. **Cấu hình Hệ thống & Đám mây**: Chọn thư mục cài đặt, Mã định danh Cloud (`Slug` tự động tạo tên riêng cho Worker / D1 / R2 khi triển khai cho công ty khác), Cổng mạng LAN (`Port`), Chỉ tiêu KPI 5S mặc định (`%`) và tùy chọn nạp sẵn **16 khu vực mẫu** hoặc **Để trống hoàn toàn**.
+  4. **Nhật ký trực tiếp (Embedded Live Console Log)**: Theo dõi toàn bộ tiến trình cài đặt ngay trong cùng một cửa sổ ứng dụng.
+
+### 📺 Màn hình TV Smart Factory Andon (`/` Mặc định Công khai)
+- Truy cập trực tiếp vào `/` là hiển thị ngay bảng **Smart Factory Andon Dashboard** dành cho màn hình TV tại xưởng mà không bắt buộc đăng nhập (bấm biểu tượng người dùng góc phải trên cùng để đăng nhập khi cần thao tác).
+- **Thiết kế vừa khít 100% khung hình TV (Zero Scroll)**: Hiển thị đồng thời 6 thẻ KPI tổng hợp, ma trận nhiệt 4×4 của 16 khu vực sản xuất, bảng cảnh báo lỗi quá hạn 7 ngày & lỗi lặp lại, biểu đồ xu hướng 12 tuần, phân bổ lỗi theo nhóm S1–S5 và bảng xếp hạng Top/Bottom khu vực.
+- **Thanh bên thông minh 3 trạng thái (`Thu gọn` → `Ẩn thanh bên` → `Hiện thanh bên`)** kèm nút **Full TV** phóng toàn màn hình.
+
+### 📋 Mô hình Kỳ Audit 5S Toàn Nhà Máy Theo Tuần (Plant-Wide Weekly Audit)
+- Mỗi tuần ISO (Thứ Hai – Chủ Nhật) nhà máy có **1 kỳ Audit chung duy nhất** bao gồm toàn bộ các khu vực đang hoạt động:
+  - Điểm khởi đầu của mỗi khu vực = `100%`.
+  - Khi phát hiện lỗi thực địa (`S1.1` → `S5.1`), chọn **Khu vực + Tiêu chí + Mô tả + Ảnh chụp thực tế (Before)**, hệ thống tự động trừ điểm khu vực đó.
+  - **Tự động phạt lũy tiến trong tháng**: Nếu cùng một `(Khu vực, Tiêu chí)` đã từng bị ghi nhận lỗi ở các kỳ Audit đã hoàn thành trước đó trong **cùng tháng** (dù lỗi tuần trước đã đóng hay chưa đóng), mức phạt tự động tăng thêm `+1 điểm` cho mỗi tuần lặp (`applied_penalty = base_penalty + (repeat_level - 1)`). Sang tháng mới, hệ số lặp tự động reset về `1`.
+  - **Bảng nhập nhanh 3 mục đánh giá ngoài (`S5.2-BOD`, `S5.2-CUS`, `S5.3`)**: Chỉ cần nhập số lần vi phạm cho từng khu vực, không cần tải ảnh và không tính lũy tiến.
+
+### 👥 Tách biệt hoàn toàn 4 Vai trò Người dùng
+- Mỗi tài khoản chỉ giữ **1 vai trò duy nhất** (không kiêm nhiệm chồng chéo):
+  - **`Admin` (Quản trị viên)**: Toàn quyền quản lý hệ thống, thương hiệu, người dùng, khu vực, bộ tiêu chí, chỉ tiêu KPI và nhập điểm lịch sử.
+  - **`Auditor` (Đánh giá viên 5S)**: Thực hiện kiểm tra 5S, ghi nhận lỗi + ảnh `Before`, nghiệm thu & đóng lỗi sau khi khu vực đã khắc phục.
+  - **`Area MNG` (Quản lý khu vực - `manager`)**: Nhận cảnh báo lỗi tại khu vực mình phụ trách, tải ảnh khắc phục (`After`) và gửi báo cáo hoàn thành.
+  - **`Viewer` (Người xem)**: Xem bảng điện tử Dashboard, danh sách lỗi, thư viện ảnh và xuất báo cáo Excel.
+
+### 🖼️ Kho ảnh 2K trên Cloudflare R2 & Thư viện Ảnh Khu vực
+- Ảnh `Before` / `After` được xử lý tối ưu ở độ phân giải **2K (`2048px`, JPEG quality `0.85`)** sắc nét và lưu trữ trên Cloudflare R2 với `Cache-Control: public, max-age=31536000, immutable`.
+- Trang **Lỗi ghi nhận (`/findings`)** và **Chi tiết kỳ Audit (`/audits/:id`)** có thanh chọn nhanh từng khu vực (`KNI`, `GQC`, `WH`, `DYE`...), chuyển đổi giữa chế độ **Danh sách kèm ảnh** và **Thư viện ảnh (Photo Gallery)** đối chiếu trực quan `TRƯỚC` – `SAU` kèm trình xem ảnh phóng to **Lightbox**.
+
+### 📥 Nhập dữ liệu Điểm lịch sử theo tháng (`T1..T12`) & Xuất Báo cáo Excel
+- Tại trang **Báo cáo (`/reports`) → Báo cáo tháng → 📥 Nhập điểm lịch sử**, Admin có thể nhập hoặc **copy-paste trực tiếp vùng dữ liệu từ file Excel** để cập nhật điểm 5S của các tháng trước trong năm (`T1` đến `T12`).
+- Tự động kết hợp điểm lịch sử (cho các tháng chưa chạy phần mềm) với điểm tính tự động từ các kỳ Audit thực tế và xuất báo cáo ma trận ra file `.xlsx`.
 
 ---
 
-## 3. Cài đặt & Phát triển Local
+## 2. Cách cài đặt & Sử dụng nhanh (Dành cho Người dùng / Triển khai Nhà máy)
 
-### Bước 1: Cài đặt dependencies
+### Cách 1: Chạy trực tiếp bằng file `Crystal_5S_Setup.exe` (Khuyên dùng)
+1. Nhấp đúp mở file **`Crystal_5S_Setup.exe`**.
+2. Chọn ngôn ngữ (`🇻🇳 Tiếng Việt` / `🇬🇧 English`) và giao diện (`🌙 Tối` / `☀ Sáng`).
+3. Điền **Tên Công ty**, chọn **Logo công ty**, kiểm tra thông tin **Tài khoản Admin** (`admin` / `admin123`) và nhấn:
+   - **▶ CÀI ĐẶT & CHẠY LOCAL (MẠNG LAN)**: Để tự động cài đặt và mở hệ thống ngay tại `http://localhost:5173`.
+   - **☁ ĐƯA LÊN CLOUDFLARE (INTERNET)**: Để tự động khởi tạo Database D1, Kho ảnh R2 và xuất bản ra địa chỉ web `https://<mã-công-ty>-5s-audit.<subdomain>.workers.dev`.
+
+### Cách 2: Chạy bằng dòng lệnh (Dành cho Lập trình viên)
 ```powershell
+# 1. Cài đặt thư viện
 npm install
-```
 
-### Bước 2: Cấu hình biến môi trường cục bộ
-Tạo file `.dev.vars` từ file mẫu `.dev.vars.example`:
-```powershell
-Copy-Item .dev.vars.example .dev.vars
-```
-Chỉnh sửa chuỗi bí mật `JWT_SECRET` trong `.dev.vars` nếu cần (dùng để ký phiên đăng nhập JWT).
-
-### Bước 3: Áp dụng Database Migrations cho môi trường Local
-Hệ thống sử dụng Cloudflare D1 cục bộ (lưu trữ trong `.wrangler/state/v3/d1`):
-```powershell
+# 2. Khởi tạo Database D1 cục bộ & nạp 16 khu vực mẫu
 npm run db:migrate:local
-```
-
-### Bước 4: (Tùy chọn) Khởi tạo 16 khu vực mẫu & ma trận tiêu chí không áp dụng (NA)
-Nếu muốn sử dụng danh sách 16 khu vực tiêu chuẩn từ nhà máy (KNI, GQC, WH, BAT, DYE, L-DIP, UNT, SET, VAP, FQC, L-TES, MTN, UTI, TSC, ADM, FM/CFD):
-```powershell
 npm run db:sample:local
-```
 
-### Bước 5: Khởi động máy chủ phát triển
-```powershell
+# 3. Chạy máy chủ phát triển (http://localhost:5173)
 npm run dev
 ```
-Trình duyệt sẽ mở ứng dụng tại: `http://localhost:5173`
-
-### Bước 6: Khởi tạo tài khoản Quản trị viên đầu tiên
-Khi truy cập lần đầu tiên, hệ thống sẽ tự động chuyển hướng đến màn hình khởi tạo:
-`http://localhost:5173/setup`
-Nhập Họ tên, Tên đăng nhập và Mật khẩu (tối thiểu 6 ký tự) để tạo tài khoản Admin tối cao.
 
 ---
 
-## 4. Triển khai lên Cloudflare (Production)
+## 3. Các lệnh Quản trị & Đóng gói (Scripts)
 
-### Bước 1: Đăng nhập Cloudflare qua Wrangler
-```powershell
-npx wrangler login
-```
-
-### Bước 2: Tạo D1 Database trên Cloudflare
-```powershell
-npx wrangler d1 create crystal5s-db
-```
-Lệnh sẽ trả về thông tin cấu hình, ví dụ:
-```json
-{
-  "binding": "DB",
-  "database_name": "crystal5s-db",
-  "database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-}
-```
-Mở file `wrangler.jsonc` và thay thế giá trị `database_id: "placeholder-d1-id"` bằng `database_id` vừa nhận được.
-
-### Bước 3: Tạo R2 Storage Bucket trên Cloudflare
-```powershell
-npx wrangler r2 bucket create crystal5s-photos
-```
-
-### Bước 4: Thiết lập chuỗi bí mật JWT trên Cloudflare
-```powershell
-npx wrangler secret put JWT_SECRET
-```
-Nhập một chuỗi bí mật ngẫu nhiên và an toàn khi được hỏi trong terminal.
-
-### Bước 5: Chạy Database Migrations trên Cloudflare D1
-```powershell
-npm run db:migrate:remote
-```
-
-*(Tùy chọn)* Chèn 16 khu vực mẫu lên Cloudflare D1:
-```powershell
-npm run db:sample:remote
-```
-
-### Bước 6: Build & Deploy toàn bộ ứng dụng
-```powershell
-npm run deploy
-```
-Wrangler sẽ biên dịch toàn bộ Worker backend và đóng gói giao diện React SPA tải lên Workers Static Assets.
-
-### Bước 7: Thiết lập Admin đầu tiên trên Production
-Mở đường dẫn URL do Cloudflare cung cấp (ví dụ: `https://crystal-5s-audit.your-subdomain.workers.dev/setup`) và điền thông tin để tạo tài khoản Quản trị viên đầu tiên.
+| Lệnh | Mô tả |
+| :--- | :--- |
+| `npm run dev` | Khởi chạy máy chủ phát triển tại `http://localhost:5173` |
+| `npm run build` | Kiểm tra TypeScript và biên dịch bản Production (`dist/`) |
+| `npm run build:exe` | Đóng gói lại toàn bộ mã nguồn + Icon vào file độc lập `Crystal_5S_Setup.exe` |
+| `npm run setup:local` | Chạy trình cài đặt tự động chế độ Mạng LAN qua CLI |
+| `npm run setup:cloud` | Chạy trình cài đặt & triển khai tự động lên Cloudflare qua CLI |
+| `npm test` | Chạy bộ 18 Unit Tests kiểm증 công thức chấm điểm, lũy tiến, phân quyền & tuần ISO |
+| `npm run typecheck` | Kiểm tra kiểu dữ liệu TypeScript trên toàn bộ Frontend (`src/`) và Backend (`worker/`) |
 
 ---
 
-## 5. Kiểm thử & Đảm bảo chất lượng
+## 4. Quy tắc Quản lý Phiên bản (Versioning & Changelog)
 
-Dự án đi kèm bộ kiểm thử tự động toàn diện:
-
-1. **Kiểm tra TypeScript Typecheck**:
-   ```powershell
-   npm run typecheck
-   ```
-   Kiểm tra đồng thời toàn bộ `src/` (React SPA) và `worker/` (Cloudflare Workers API).
-
-2. **Chạy Unit Tests cho Logic cốt lõi**:
-   ```powershell
-   npm test
-   ```
-   Kiểm thử 100% các hàm thuần tính toán (`worker/lib/week.ts` và `worker/lib/scoring.ts`) bằng `node:test`.
-
-3. **Kiểm tra Build Bundle**:
-   ```powershell
-   npm run build
-   ```
-   Biên dịch thành công Worker bundle và tách riêng lazy chunk cho thư viện Excel `xlsx`.
-
-4. **Chạy kịch bản Kiểm thử Tích hợp (Smoke Test)**:
-   ```powershell
-   powershell.exe -ExecutionPolicy Bypass -File scripts/smoke_test_curl.ps1
-   ```
-   Tự động khởi động dev server, chạy chuỗi kiểm thử curl khép kín (Khởi tạo admin → Đăng nhập → Tạo Area → Gán Auditor → Tạo Audit 1 → Thêm lỗi S1.1 → Submit đạt 98 điểm → Tạo Audit 2 tuần sau → Chuyển lỗi với trạng thái Chưa cải thiện → Xác minh điểm phạt lũy tiến tăng từ 2 lên 3 điểm) và tự động tắt server sau khi hoàn tất.
+Mỗi khi cập nhật tính năng hoặc sửa lỗi mới:
+1. Nâng số phiên bản trong [`package.json`](./package.json) và [`scripts/build_exe.mjs`](./scripts/build_exe.mjs) theo chuẩn **Semantic Versioning (`MAJOR.MINOR.PATCH`)**.
+2. Ghi nhận chi tiết các thay đổi vào [`CHANGELOG.md`](./CHANGELOG.md).
+3. Chạy `npm run build:exe` để cập nhật lại file bộ cài đặt [`Crystal_5S_Setup.exe`](./Crystal_5S_Setup.exe).
+4. Commit, gắn thẻ phiên bản (`git tag vX.Y.Z`) và đẩy lên GitHub (`git push origin main --tags`).
