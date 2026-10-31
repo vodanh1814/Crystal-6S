@@ -1,0 +1,8 @@
+node_modules
+dist
+.wrangler
+.dev.vars
+*.tsbuildinfo
+cookies*.txt
+.exe_build
+.tmp*
