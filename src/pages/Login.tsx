@@ -4,6 +4,7 @@ import { LogIn, Loader2, Globe, ArrowLeft, Sun, Moon } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
+import { APP_VERSION } from '../version';
 
 export const Login: React.FC = () => {
   const { login, user, companyName, companyLogo } = useAuth();
@@ -123,7 +124,7 @@ export const Login: React.FC = () => {
             {companyName}
           </h2>
           <p className={`text-xs font-medium ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
-            {t('appTitle')} — {t('login_welcome')}
+            {t('appTitle')} — {t('login_welcome')} · <span className="font-mono font-bold text-emerald-500">v{APP_VERSION}</span>
           </p>
         </div>
 

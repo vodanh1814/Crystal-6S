@@ -20,10 +20,12 @@ import {
   Maximize2,
   Minimize2,
   Tv,
+  ArrowUpCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { api } from '../api/client';
+import { APP_VERSION } from '../version';
 
 type SidebarState = 'expanded' | 'collapsed' | 'hidden';
 
@@ -45,10 +47,38 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [clockTime, setClockTime] = useState('');
   const [logoBroken, setLogoBroken] = useState(false);
+  const [availableUpdateVer, setAvailableUpdateVer] = useState<string | null>(null);
 
   useEffect(() => {
     setLogoBroken(false);
   }, [companyLogo]);
+
+  // Admin-only background check for new version on Git
+  useEffect(() => {
+    if (!isAdmin) {
+      setAvailableUpdateVer(null);
+      return;
+    }
+    let cancelled = false;
+    const checkGitUpdate = async () => {
+      try {
+        const res = await api
+          .get<any>('/settings/local-update-check')
+          .catch(() => api.get<any>('/settings/update-check'));
+        if (!cancelled && res && res.has_update && res.latest_version) {
+          setAvailableUpdateVer(res.latest_version);
+        } else if (!cancelled) {
+          setAvailableUpdateVer(null);
+        }
+      } catch {}
+    };
+    checkGitUpdate();
+    const timer = setInterval(checkGitUpdate, 5 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [isAdmin]);
 
   // Live Clock in Vietnam time (UTC+7)
   useEffect(() => {
@@ -168,11 +198,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 )}
                 {sidebarState === 'expanded' && (
                   <div className="truncate">
-                    <div className="font-bold text-xs tracking-wider leading-none text-white truncate">
-                      {companyName} 5S
+                    <div className="font-bold text-xs tracking-wider leading-none text-white truncate flex items-center gap-1.5">
+                      <span className="truncate">{companyName} 5S</span>
+                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono text-[9px] font-bold shrink-0">
+                        v{APP_VERSION}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 leading-tight truncate">
-                      Andon System
+                    <div className="text-[10px] text-slate-400 leading-tight truncate mt-0.5">
+                      Andon System · v{APP_VERSION}
                     </div>
                   </div>
                 )}
@@ -343,10 +376,24 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <span className="font-black text-xs sm:text-sm tracking-tight text-white truncate">
                 {companyName} <span className="text-slate-500 font-normal">·</span> {t('factory_andon_board')}
               </span>
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono font-bold text-emerald-400 shrink-0">
+                v{APP_VERSION}
+              </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* Admin-only Auto-Update Available Notification Pill */}
+            {isAdmin && availableUpdateVer && (
+              <Link
+                to="/admin/targets"
+                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 shadow-sm shadow-amber-500/30 animate-pulse transition"
+                title={t('new_version_found_msg', { v: availableUpdateVer })}
+              >
+                <ArrowUpCircle className="w-3.5 h-3.5" />
+                <span>{t('update_available_badge', { v: availableUpdateVer })}</span>
+              </Link>
+            )}
             {/* Live Clock Indicator */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>

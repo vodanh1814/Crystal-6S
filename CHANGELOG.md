@@ -4,6 +4,18 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.2.0] - 2026-10-31
+
+### Added (Tính năng mới)
+- **Hiển thị Phiên bản Hệ thống (`v2.2.0`) trên toàn bộ giao diện**:
+  - Gắn nhãn phiên bản `v2.2.0` trực quan tại Thanh bên (Sidebar), Thanh tiêu đề trên cùng (Top Header Bar), trang Đăng nhập (`/login`), trang Khởi tạo (`/setup`), trang Quản trị (`/admin/targets`) và bộ cài `Crystal_5S_Setup.exe` để dễ dàng nhận diện phiên bản đang chạy tại từng khu vực / nhà máy.
+- **Tự động Kiểm tra & Cập nhật Phiên bản mới từ Git (Git Auto-Update — Chỉ dành cho Admin)**:
+  - Chỉ tài khoản Quản trị viên (`Admin`) mới có quyền kiểm tra và thực thi cập nhật tự động (các vai trò `Auditor`, `Area MNG`, `Viewer` bị chặn hoàn toàn ở cả giao diện lẫn tầng API `403 Forbidden`).
+  - Tự động kiểm tra ngầm phiên bản mới trên GitHub (`vodanh1814/Crystal-6S`) và hiển thị nút cảnh báo nổi bật **`⬆ Có bản mới vX.Y.Z`** trên thanh Header cho Admin.
+  - Trang **Quản trị → Chỉ tiêu & Thương hiệu (`/admin/targets`)** bổ sung bảng **Phiên bản & Cập nhật Hệ thống (Git Auto-Update)** cho phép Admin bấm 1 nút để tự động kéo mã nguồn mới từ Git (`git fetch` & `reset`), cập nhật thư viện (`npm install`), nâng cấp Database D1 an toàn (giữ nguyên 100% dữ liệu) và tự động tải lại ứng dụng.
+
+---
+
 ## [2.1.0] - 2026-10-31
 
 ### Added (Tính năng mới)

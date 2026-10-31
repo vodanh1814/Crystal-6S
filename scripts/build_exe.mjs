@@ -199,7 +199,7 @@ using WinForms = System.Windows.Forms;
 
 [assembly: AssemblyTitle("Crystal 5S Audit — All-in-One Installer & Configurator")]
 [assembly: AssemblyProduct("Crystal 5S Audit System")]
-[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyVersion("2.2.0.0")]
 
 namespace Crystal5SInstaller
 {
@@ -760,8 +760,8 @@ namespace Crystal5SInstaller
         {
             if (lang == "vi")
             {
-                this.Title = "Crystal 5S Audit — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One Setup)";
-                lblTitle.Text = "CRYSTAL 5S AUDIT — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
+                this.Title = "Crystal 5S Audit v2.2.0 — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One Setup)";
+                lblTitle.Text = "CRYSTAL 5S AUDIT v2.2.0 — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
                 lblSubtitle.Text = "Tự động giải nén, gắn Thương hiệu & Logo, khởi tạo Admin, Database D1/R2 và chạy ngay";
                 btnLang.Content = "🇻🇳 Tiếng Việt  ⇄  EN";
                 btnTheme.Content = isDark ? "🌙 Giao diện Tối" : "☀ Giao diện Sáng";
@@ -798,8 +798,8 @@ namespace Crystal5SInstaller
             }
             else
             {
-                this.Title = "Crystal 5S Audit — All-in-One Single-Screen Installer & Configurator";
-                lblTitle.Text = "CRYSTAL 5S AUDIT — ALL-IN-ONE SYSTEM INSTALLER";
+                this.Title = "Crystal 5S Audit v2.2.0 — All-in-One Single-Screen Installer & Configurator";
+                lblTitle.Text = "CRYSTAL 5S AUDIT v2.2.0 — ALL-IN-ONE SYSTEM INSTALLER";
                 lblSubtitle.Text = "Automatically extract payload, apply Company Branding, create Admin user, provision D1/R2 & launch";
                 btnLang.Content = "🇬🇧 English  ⇄  VI";
                 btnTheme.Content = isDark ? "🌙 Dark Theme" : "☀ Light Theme";

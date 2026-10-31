@@ -296,4 +296,20 @@ export const vi = {
   logo_help: 'Hỗ trợ PNG, JPG, SVG, WebP. Tự động thu nhỏ tối đa 256px và giữ nền trong suốt.',
   save_branding: 'Lưu thương hiệu',
   branding_updated: 'Đã cập nhật nhận diện thương hiệu thành công',
+
+  // Version & Auto-Update (Admin Only)
+  system_version_title: 'Phiên bản & Cập nhật Hệ thống (Git Auto-Update)',
+  system_version_desc: 'Kiểm tra phiên bản đang vận hành tại khu vực/nhà máy và tự động cập nhật bản mới từ Git (Chỉ dành cho Admin)',
+  current_version_label: 'Phiên bản đang chạy',
+  latest_git_version: 'Phiên bản mới nhất trên Git',
+  check_for_updates: 'Kiểm tra bản mới trên Git',
+  checking_updates: 'Đang kiểm tra Git...',
+  update_available_badge: 'Có bản mới v{v}',
+  up_to_date_msg: 'Hệ thống đang chạy phiên bản mới nhất!',
+  new_version_found_msg: 'Phát hiện phiên bản mới v{v} trên GitHub! Bạn có thể cập nhật tự động ngay.',
+  auto_update_now_btn: 'Cập nhật tự động ngay (v{v})',
+  updating_system: 'Đang tải & cập nhật hệ thống...',
+  update_success_msg: 'Đã cập nhật thành công lên phiên bản v{v}! Hệ thống sẽ tự động tải lại...',
+  admin_only_update_note: 'Lưu ý bảo mật: Chỉ tài khoản Quản trị viên (Admin) mới có quyền kiểm tra và thực thi cập nhật tự động.',
+  view_changelog: 'Xem lịch sử thay đổi (Changelog)',
 };

@@ -16,6 +16,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { fileToLogoDataUrl } from '../lib/imageCompression';
+import { APP_VERSION } from '../version';
 
 export const Setup: React.FC = () => {
   const { login, updateBranding } = useAuth();
@@ -136,7 +137,12 @@ export const Setup: React.FC = () => {
               <ShieldCheck className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">{t('first_run_setup')}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight">{t('first_run_setup')}</h1>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold">
+                  v{APP_VERSION}
+                </span>
+              </div>
               <p className={`text-xs ${subText}`}>{t('setup_description')}</p>
             </div>
           </div>

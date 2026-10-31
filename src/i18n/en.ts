@@ -298,4 +298,20 @@ export const en: typeof vi = {
   logo_help: 'Supports PNG, JPG, SVG, WebP. Scaled to max 256px preserving transparency.',
   save_branding: 'Save Branding',
   branding_updated: 'Company branding updated successfully',
+
+  // Version & Auto-Update (Admin Only)
+  system_version_title: 'System Version & Git Auto-Update',
+  system_version_desc: 'Identify the active software version at this plant/area and auto-update from Git (Admin Only)',
+  current_version_label: 'Installed Version',
+  latest_git_version: 'Latest Version on Git',
+  check_for_updates: 'Check Git for Updates',
+  checking_updates: 'Checking Git...',
+  update_available_badge: 'Update v{v}',
+  up_to_date_msg: 'System is running the latest version!',
+  new_version_found_msg: 'New version v{v} is available on GitHub! You can auto-update now.',
+  auto_update_now_btn: 'Auto-Update Now (v{v})',
+  updating_system: 'Downloading & applying update...',
+  update_success_msg: 'Successfully updated to v{v}! Reloading application...',
+  admin_only_update_note: 'Security notice: Only Administrator (Admin) accounts have permission to check and run auto-updates.',
+  view_changelog: 'View Release Changelog',
 };
