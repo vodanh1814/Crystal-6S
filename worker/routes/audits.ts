@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, Audit, Finding, Photo, ChecklistItem, Area } from '../types';
 import { authMiddleware } from '../lib/auth';
-import { isAdmin, canAuditArea } from '../lib/permissions';
+import { isAdmin, isAuditor, canAuditArea } from '../lib/permissions';
 import {
   getISOWeek,
   getVietnamToday,
@@ -57,8 +57,8 @@ auditsRouter.post('/', async (c) => {
     return c.json({ error: 'Audit date is required' }, 400);
   }
 
-  // Permission check: Admin or user with at least one auditor role
-  const isAuditorOrAdmin = isAdmin(user) || userAreas.some((ua) => ua.role === 'auditor');
+  // Permission check: Admin or plant-wide Auditor role
+  const isAuditorOrAdmin = isAdmin(user) || isAuditor(user);
   if (!isAuditorOrAdmin) {
     return c.json({ error: 'Forbidden: Auditor or Admin role required to create an audit' }, 403);
   }
@@ -270,15 +270,13 @@ auditsRouter.get('/:id', async (c) => {
   const isLatestAudit = !newerAudit;
 
   const isUserAdmin = isAdmin(user);
-  const hasAnyAuditor = userAreas.some((ua) => ua.role === 'auditor');
-  const canEdit = audit.status === 'draft' && (isUserAdmin || hasAnyAuditor);
+  const isUserAuditor = isAuditor(user);
+  const canEdit = audit.status === 'draft' && (isUserAdmin || isUserAuditor);
   const canSubmit = canEdit;
   const canReopen = audit.status === 'submitted' && isUserAdmin && isLatestAudit;
   const canDelete = audit.status === 'draft' && (isUserAdmin || audit.auditor_id === user.id);
 
-  const auditedAreaIds = isUserAdmin
-    ? null
-    : userAreas.filter((ua) => ua.role === 'auditor').map((ua) => ua.area_id);
+  const auditedAreaIds = isUserAdmin || isUserAuditor ? null : [];
 
   return c.json({
     audit,
@@ -323,7 +321,7 @@ auditsRouter.put('/:id', async (c) => {
     return c.json({ error: 'Cannot modify a submitted audit' }, 400);
   }
 
-  const isAuditorOrAdmin = isAdmin(user) || userAreas.some((ua) => ua.role === 'auditor');
+  const isAuditorOrAdmin = isAdmin(user) || isAuditor(user);
   if (!isAuditorOrAdmin) {
     return c.json({ error: 'Forbidden: You are not authorized to edit this audit' }, 403);
   }
@@ -430,7 +428,7 @@ auditsRouter.post('/:id/submit', async (c) => {
     return c.json({ error: 'Audit is already submitted' }, 400);
   }
 
-  const isAuditorOrAdmin = isAdmin(user) || userAreas.some((ua) => ua.role === 'auditor');
+  const isAuditorOrAdmin = isAdmin(user) || isAuditor(user);
   if (!isAuditorOrAdmin) {
     return c.json({ error: 'Forbidden: You are not authorized to submit this audit' }, 403);
   }

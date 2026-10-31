@@ -105,13 +105,13 @@ usersRouter.post('/', async (c) => {
 
   const newUserId = insertRes.meta.last_row_id as number;
 
-  // Area assignments enforcing role exclusivity
+  // Area assignments (only Area MNG belongs to specific areas; Auditor is plant-wide)
   const areaIds = extractAreaIds(body);
-  if (role === 'auditor' || role === 'manager') {
+  if (role === 'manager') {
     for (const aid of areaIds) {
       await c.env.DB
         .prepare('INSERT OR IGNORE INTO user_areas (user_id, area_id, role) VALUES (?, ?, ?)')
-        .bind(newUserId, aid, role)
+        .bind(newUserId, aid, 'manager')
         .run();
     }
   }
@@ -187,28 +187,18 @@ usersRouter.put('/:id', async (c) => {
     .bind(fullName, role, active, lang, passwordHash, tokenVersion, targetId)
     .run();
 
-  // Handle area assignments
+  // Handle area assignments (only Area MNG 'manager' belongs to specific areas)
   const hasAreaIdsParam = body.area_ids !== undefined || body.assignments !== undefined;
-  if (hasAreaIdsParam) {
+  if (role !== 'manager') {
+    await c.env.DB.prepare('DELETE FROM user_areas WHERE user_id = ?').bind(targetId).run();
+  } else if (hasAreaIdsParam) {
     const areaIds = extractAreaIds(body);
     await c.env.DB.prepare('DELETE FROM user_areas WHERE user_id = ?').bind(targetId).run();
 
-    if (role === 'auditor' || role === 'manager') {
-      for (const aid of areaIds) {
-        await c.env.DB
-          .prepare('INSERT OR IGNORE INTO user_areas (user_id, area_id, role) VALUES (?, ?, ?)')
-          .bind(targetId, aid, role)
-          .run();
-      }
-    }
-  } else if (role !== existing.role) {
-    // Role changed without explicit area_ids
-    if (role === 'admin' || role === 'viewer') {
-      await c.env.DB.prepare('DELETE FROM user_areas WHERE user_id = ?').bind(targetId).run();
-    } else if (role === 'auditor' || role === 'manager') {
+    for (const aid of areaIds) {
       await c.env.DB
-        .prepare('UPDATE user_areas SET role = ? WHERE user_id = ?')
-        .bind(role, targetId)
+        .prepare('INSERT OR IGNORE INTO user_areas (user_id, area_id, role) VALUES (?, ?, ?)')
+        .bind(targetId, aid, 'manager')
         .run();
     }
   }
@@ -253,11 +243,11 @@ usersRouter.put('/:id/areas', async (c) => {
   const areaIds = extractAreaIds(body);
 
   let insertedCount = 0;
-  if (existing.role === 'auditor' || existing.role === 'manager') {
+  if (existing.role === 'manager') {
     for (const aid of areaIds) {
       await c.env.DB
         .prepare('INSERT OR IGNORE INTO user_areas (user_id, area_id, role) VALUES (?, ?, ?)')
-        .bind(targetId, aid, existing.role)
+        .bind(targetId, aid, 'manager')
         .run();
       insertedCount++;
     }

@@ -82,7 +82,7 @@ export const AdminUsers: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const area_ids = (role === 'auditor' || role === 'manager') ? selectedAreaIds : [];
+      const area_ids = role === 'manager' ? selectedAreaIds : [];
 
       if (editingUser) {
         const payload: any = {
@@ -209,7 +209,7 @@ export const AdminUsers: React.FC = () => {
                     roleLabel = 'Viewer';
                   }
 
-                  const canAssignAreas = u.role === 'auditor' || u.role === 'manager';
+                  const canAssignAreas = u.role === 'manager';
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
@@ -234,6 +234,10 @@ export const AdminUsers: React.FC = () => {
                       <td className="py-3.5 px-4 text-xs">
                         {u.role === 'admin' ? (
                           <span className="text-purple-700 font-bold italic">Tất cả khu vực (Toàn quyền)</span>
+                        ) : u.role === 'auditor' ? (
+                          <span className="text-blue-700 font-bold italic">
+                            Toàn nhà máy (Đi chấm 5S & Verify đóng lỗi)
+                          </span>
                         ) : u.role === 'viewer' ? (
                           <span className="text-slate-400 italic">Tất cả khu vực (Chỉ xem)</span>
                         ) : u.areas.length === 0 ? (
@@ -243,11 +247,7 @@ export const AdminUsers: React.FC = () => {
                             {u.areas.map((a, i) => (
                               <span
                                 key={i}
-                                className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
-                                  u.role === 'auditor'
-                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                    : 'bg-amber-50 text-amber-800 border-amber-200'
-                                }`}
+                                className="px-2 py-0.5 rounded text-[11px] font-bold border bg-amber-50 text-amber-800 border-amber-200"
                               >
                                 {a.area_code}
                               </span>
@@ -389,16 +389,22 @@ export const AdminUsers: React.FC = () => {
             </div>
           )}
 
-          {/* Area Selection Grid (Displayed if role is auditor or manager) */}
-          {(role === 'auditor' || role === 'manager') && (
+          {/* Area Selection Grid (Only displayed for Area MNG 'manager') */}
+          {role === 'auditor' && (
+            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold">
+              💡 <strong>Auditor (Đánh giá viên 5S):</strong> Không thuộc riêng khu vực nào — có quyền đi chấm điểm 5S và kiểm tra / xác nhận đóng lỗi (Verify) cho toàn bộ các khu vực trong nhà máy.
+            </div>
+          )}
+
+          {role === 'manager' && (
             <div className="pt-2 border-t border-slate-100 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                    Phân quyền khu vực phụ trách ({role === 'auditor' ? 'Đi chấm 5S' : 'Quản lý cải thiện'})
+                    Phân quyền khu vực phụ trách (Area MNG — Quản lý khắc phục lỗi)
                   </span>
                   <p className="text-[11px] text-slate-500">
-                    Chọn các khu vực được phân công cho người dùng này ({selectedAreaIds.length}/{areas.length} khu vực)
+                    Chọn khu vực giao cho Area MNG này cập nhật ảnh After ({selectedAreaIds.length}/{areas.length} khu vực)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -428,9 +434,7 @@ export const AdminUsers: React.FC = () => {
                       key={a.id}
                       className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-semibold cursor-pointer transition select-none ${
                         isChecked
-                          ? role === 'auditor'
-                            ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
-                            : 'bg-amber-50 border-amber-300 text-amber-900 font-bold'
+                          ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >

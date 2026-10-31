@@ -125,10 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuditor = user?.role === 'auditor';
   const isManager = user?.role === 'manager';
 
-  const canAudit = (areaId: number): boolean => {
-    if (isAdmin) return true;
-    if (user?.role !== 'auditor') return false;
-    return areas.some((a) => a.area_id === areaId && a.role === 'auditor');
+  const canAudit = (_areaId: number): boolean => {
+    return isAdmin || isAuditor;
   };
 
   const canManage = (areaId: number): boolean => {

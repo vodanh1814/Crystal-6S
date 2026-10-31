@@ -4,6 +4,15 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.2.1] - 2026-10-31
+
+### Changed (Thay đổi nghiệp vụ phân quyền)
+- **Tách biệt phạm vi hoạt động của `Auditor` (Toàn nhà máy) và `Area MNG` (Theo từng khu vực)**:
+  - **`Auditor` (Đánh giá viên 5S)**: Không thuộc riêng bất kỳ khu vực nào; có quyền đi chấm điểm 5S tuần và kiểm tra / xác nhận đóng lỗi (`Verify & Close / Reject`) cho **toàn bộ tất cả các khu vực trong nhà máy** mà không cần gán từng khu vực.
+  - **`Area MNG` (`manager` — Quản lý khu vực)**: Chỉ được gán phụ trách khu vực cụ thể của mình và **chỉ có quyền tải ảnh `After` / gửi báo cáo khắc phục cho đúng khu vực đó**.
+
+---
+
 ## [2.2.0] - 2026-10-31
 
 ### Added (Tính năng mới)

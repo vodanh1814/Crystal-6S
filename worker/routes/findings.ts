@@ -177,10 +177,10 @@ findingsRouter.get('/alarms', async (c) => {
     });
   }
 
-  // 2. Auditor Alarms: Fixed findings in audited areas (waiting for verification)
+  // 2. Auditor Alarms: Fixed findings across all areas (waiting for verification by plant-wide Auditor or Admin)
   let auditorFindings: any[] = [];
-  if (isUserAdmin || (auditedAreaIds && auditedAreaIds.length > 0)) {
-    let auQuery = `
+  if (isUserAdmin || user.role === 'auditor') {
+    const auQuery = `
       SELECT f.*, a.audit_date, a.month, a.iso_year, a.iso_week,
              ar.code as area_code, ar.name as area_name,
              ci.code as item_code, ci.s_group, ci.location_vi, ci.location_en,
@@ -192,15 +192,10 @@ findingsRouter.get('/alarms', async (c) => {
       JOIN checklist_items ci ON ci.id = f.item_id
       LEFT JOIN users u_fixer ON u_fixer.id = f.fixed_by
       WHERE f.status = 'fixed' AND a.status = 'submitted'
+      ORDER BY f.fixed_at ASC, f.id ASC
     `;
-    const params: any[] = [];
-    if (!isUserAdmin && auditedAreaIds) {
-      auQuery += ` AND f.area_id IN (${auditedAreaIds.map(() => '?').join(',')})`;
-      params.push(...auditedAreaIds);
-    }
-    auQuery += ' ORDER BY f.fixed_at ASC, f.id ASC';
 
-    const res = await c.env.DB.prepare(auQuery).bind(...params).all<any>();
+    const res = await c.env.DB.prepare(auQuery).all<any>();
     auditorFindings = (res.results || []).map((f) => ({
       ...f,
       alarm_type: 'auditor_verify_needed',

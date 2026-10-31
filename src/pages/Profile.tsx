@@ -78,20 +78,20 @@ export const Profile: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               {t('assigned_areas_label')}
             </span>
-            {areas.length === 0 ? (
+            {user?.role === 'auditor' ? (
+              <p className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg inline-block">
+                Toàn nhà máy (Auditor — Đi chấm 5S & Verify giải quyết lỗi tất cả khu vực)
+              </p>
+            ) : areas.length === 0 ? (
               <p className="text-xs text-slate-400 italic">{t('no_assigned_areas')}</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {areas.map((a, i) => (
                   <span
                     key={i}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      a.role === 'auditor'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200"
                   >
-                    {a.area_code} ({a.role})
+                    {a.area_code} (Area MNG)
                   </span>
                 ))}
               </div>
