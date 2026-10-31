@@ -122,7 +122,7 @@ export const Setup: React.FC = () => {
 
   return (
     <div
-      className={`h-screen w-screen overflow-hidden flex items-center justify-center p-4 transition-colors ${
+      className={`min-h-screen w-full overflow-y-auto flex items-center justify-center p-4 transition-colors ${
         dark ? 'bg-slate-950' : 'bg-slate-100'
       }`}
     >

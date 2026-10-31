@@ -1,8 +1,10 @@
-// Crystal 5S Audit — Self-Contained Windows .EXE Builder (C# WinForms + Embedded Payload)
+// Crystal 5S Audit — Self-Contained Windows .EXE Builder (WPF Vector UI + Multi-Res .ICO + Embedded Payload)
 // Features:
+//  - Multi-resolution Windows Application Icon (assets/crystal_5s.ico: 16, 32, 48, 64, 128, 256px PNG frames)
+//  - Hardware-accelerated WPF Vector UI (100% DPI-aware, zero pixelation/blurriness, zero text overlap)
 //  - Bilingual UI (Tiếng Việt / English toggle)
 //  - Light / Dark Mode Theme toggle
-//  - All-in-One Single-Screen Configuration (Branding + Logo Preview + Admin Account + KPI Target + Sample Areas + LAN Port + Cloud Slug + Live Embedded Console Log)
+//  - All-in-One Single-Screen Configuration + Live Embedded Console Log
 
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -10,16 +12,167 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 const CSC = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe';
+const WPF_DIR = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\WPF';
 const BUILD_DIR = path.join(ROOT, '.exe_build');
+const ASSETS_DIR = path.join(ROOT, 'assets');
+const ICO_PATH = path.join(ASSETS_DIR, 'crystal_5s.ico');
 const PAYLOAD_ZIP = path.join(BUILD_DIR, 'payload.zip');
+const ICON_GEN_CS = path.join(BUILD_DIR, 'IconGen.cs');
+const ICON_GEN_EXE = path.join(BUILD_DIR, 'IconGen.exe');
 const CS_FILE = path.join(BUILD_DIR, 'InstallerProgram.cs');
 const OUT_EXE = path.join(ROOT, 'Crystal_5S_Setup.exe');
 
-if (!fs.existsSync(BUILD_DIR)) {
-  fs.mkdirSync(BUILD_DIR, { recursive: true });
-}
+if (!fs.existsSync(BUILD_DIR)) fs.mkdirSync(BUILD_DIR, { recursive: true });
+if (!fs.existsSync(ASSETS_DIR)) fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-console.log('1/3. Đang nén mã nguồn sạch thành gói nhúng (payload.zip)...');
+// ── STEP 1: Generate Multi-Resolution Crystal 5S Icon (assets/crystal_5s.ico) ──
+console.log('1/4. Đang tạo biểu tượng ứng dụng độ phân giải cao (assets/crystal_5s.ico)...');
+const iconGenCode = `\uFEFF
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.IO;
+
+class IconGen
+{
+    static byte[] RenderPngFrame(int size)
+    {
+        using (Bitmap bmp = new Bitmap(size, size, PixelFormat.Format32bppArgb))
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+            g.Clear(Color.Transparent);
+
+            float pad = size * 0.05f;
+            float box = size - pad * 2f;
+            float radius = size * 0.24f;
+
+            // Outer dark slate squircle shadow/border
+            using (GraphicsPath outerPath = RoundedRect(new RectangleF(pad, pad, box, box), radius))
+            using (SolidBrush darkBrush = new SolidBrush(Color.FromArgb(255, 15, 23, 42)))
+            {
+                g.FillPath(darkBrush, outerPath);
+            }
+
+            // Inner emerald-to-cyan gradient squircle
+            float inPad = size * 0.09f;
+            float inBox = size - inPad * 2f;
+            float inRad = size * 0.20f;
+            using (GraphicsPath innerPath = RoundedRect(new RectangleF(inPad, inPad, inBox, inBox), inRad))
+            using (LinearGradientBrush grad = new LinearGradientBrush(
+                new PointF(0, 0),
+                new PointF(size, size),
+                Color.FromArgb(255, 16, 185, 129),
+                Color.FromArgb(255, 2, 132, 199)))
+            {
+                g.FillPath(grad, innerPath);
+            }
+
+            // Crystal hexagon facet overlay
+            PointF[] hex = new PointF[]
+            {
+                new PointF(size * 0.50f, size * 0.14f),
+                new PointF(size * 0.82f, size * 0.30f),
+                new PointF(size * 0.82f, size * 0.70f),
+                new PointF(size * 0.50f, size * 0.86f),
+                new PointF(size * 0.18f, size * 0.70f),
+                new PointF(size * 0.18f, size * 0.30f)
+            };
+            using (LinearGradientBrush facetBrush = new LinearGradientBrush(
+                new PointF(0, 0),
+                new PointF(size, size),
+                Color.FromArgb(75, 255, 255, 255),
+                Color.FromArgb(10, 255, 255, 255)))
+            using (Pen facetPen = new Pen(Color.FromArgb(115, 167, 243, 208), Math.Max(1f, size * 0.02f)))
+            {
+                g.FillPolygon(facetBrush, hex);
+                g.DrawPolygon(facetPen, hex);
+            }
+
+            // Bold "5S" typography centered
+            using (Font font = new Font("Segoe UI", size * 0.34f, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (StringFormat sf = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            {
+                // Subtle drop shadow
+                using (SolidBrush shadow = new SolidBrush(Color.FromArgb(90, 0, 0, 0)))
+                {
+                    g.DrawString("5S", font, shadow, new RectangleF(0, size * 0.03f, size, size), sf);
+                }
+                using (SolidBrush white = new SolidBrush(Color.White))
+                {
+                    g.DrawString("5S", font, white, new RectangleF(0, size * 0.01f, size, size), sf);
+                }
+            }
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                bmp.Save(ms, ImageFormat.Png);
+                return ms.ToArray();
+            }
+        }
+    }
+
+    static GraphicsPath RoundedRect(RectangleF bounds, float radius)
+    {
+        float d = radius * 2f;
+        GraphicsPath path = new GraphicsPath();
+        path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
+        path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
+        path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
+
+    static void Main(string[] args)
+    {
+        int[] sizes = new int[] { 16, 32, 48, 64, 128, 256 };
+        List<byte[]> frames = new List<byte[]>();
+        foreach (int s in sizes) frames.Add(RenderPngFrame(s));
+
+        using (FileStream fs = new FileStream(args[0], FileMode.Create, FileAccess.Write))
+        using (BinaryWriter bw = new BinaryWriter(fs))
+        {
+            // ICONDIR header
+            bw.Write((ushort)0);
+            bw.Write((ushort)1);
+            bw.Write((ushort)sizes.Length);
+
+            int offset = 6 + (16 * sizes.Length);
+            for (int i = 0; i < sizes.Length; i++)
+            {
+                int s = sizes[i];
+                byte[] data = frames[i];
+                bw.Write((byte)(s >= 256 ? 0 : s));
+                bw.Write((byte)(s >= 256 ? 0 : s));
+                bw.Write((byte)0);
+                bw.Write((byte)0);
+                bw.Write((ushort)1);
+                bw.Write((ushort)32);
+                bw.Write((uint)data.Length);
+                bw.Write((uint)offset);
+                offset += data.Length;
+            }
+            for (int i = 0; i < frames.Count; i++)
+            {
+                bw.Write(frames[i]);
+            }
+        }
+    }
+}
+`;
+fs.writeFileSync(ICON_GEN_CS, iconGenCode, 'utf-8');
+execSync(`"${CSC}" /nologo /out:"${ICON_GEN_EXE}" /r:System.dll /r:System.Drawing.dll "${ICON_GEN_CS}"`, { stdio: 'inherit' });
+execSync(`"${ICON_GEN_EXE}" "${ICO_PATH}"`, { stdio: 'inherit' });
+
+// ── STEP 2: Create Clean Source Archive (payload.zip) ──
+console.log('2/4. Đang nén mã nguồn sạch thành gói nhúng (payload.zip)...');
 const psZipCmd = `
   $exclude = @('node_modules', '.wrangler', 'dist', '.dev.vars', '.git', '.exe_build', 'Crystal_5S_Installer.zip', 'Crystal_5S_Setup.exe', '*.tsbuildinfo', 'cookies*.txt', '.tmp*');
   $files = Get-ChildItem -Path '${ROOT}' -Exclude $exclude;
@@ -28,485 +181,756 @@ const psZipCmd = `
 `;
 execSync(`powershell -NoProfile -Command "${psZipCmd.replace(/\r?\n/g, ' ')}"`, { stdio: 'inherit' });
 
-const csCode = `
+// ── STEP 3: Write WPF Vector-Crisp Installer Program (UTF-8 with BOM!) ──
+const csCode = `\uFEFF
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using WinForms = System.Windows.Forms;
 
-[assembly: AssemblyTitle("Crystal 5S Audit - All-in-One Installer & Launcher")]
+[assembly: AssemblyTitle("Crystal 5S Audit — All-in-One Installer & Configurator")]
 [assembly: AssemblyProduct("Crystal 5S Audit System")]
-[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyVersion("2.1.0.0")]
 
 namespace Crystal5SInstaller
 {
-    public class MainForm : Form
+    public class InstallerWindow : Window
     {
         private bool isDark = true;
-        private string lang = "vi"; // "vi" or "en"
+        private string lang = "vi";
         private Process activeProcess = null;
 
-        // Header controls
-        private Panel pnlHeader;
-        private Label lblHeader;
-        private Label lblSub;
+        // UI Elements for Dynamic Theme & Language Switching
+        private Grid rootGrid;
+        private Border headerBorder;
+        private TextBlock lblTitle;
+        private TextBlock lblSubtitle;
         private Button btnLang;
         private Button btnTheme;
 
-        // Left Card (Branding + Admin)
-        private Panel cardLeft;
-        private Label lblSecBrand;
-        private Label lblCompany;
+        private Border cardLeft;
+        private TextBlock lblSecBrand;
+        private TextBlock lblCompany;
         private TextBox txtCompany;
-        private Label lblLogo;
+        private TextBlock lblLogo;
         private TextBox txtLogo;
         private Button btnBrowseLogo;
-        private PictureBox picLogo;
+        private Border logoPreviewBorder;
+        private Image imgLogoPreview;
+        private TextBlock lblLogoPlaceholder;
 
-        private Label lblSecAdmin;
-        private Label lblAdminName;
+        private TextBlock lblSecAdmin;
+        private TextBlock lblAdminName;
         private TextBox txtAdminName;
-        private Label lblAdminUser;
+        private TextBlock lblAdminUser;
         private TextBox txtAdminUser;
-        private Label lblAdminPass;
+        private TextBlock lblAdminPass;
         private TextBox txtAdminPass;
-        private CheckBox chkShowPass;
 
-        // Right Card (System & Deployment Config)
-        private Panel cardRight;
-        private Label lblSecSys;
-        private Label lblDir;
+        private Border cardRight;
+        private TextBlock lblSecSys;
+        private TextBlock lblDir;
         private TextBox txtDir;
         private Button btnBrowseDir;
-        private Label lblSlug;
+        private TextBlock lblSlug;
         private TextBox txtSlug;
-        private Label lblPort;
+        private TextBlock lblPort;
         private TextBox txtPort;
-        private Label lblTarget;
-        private NumericUpDown numTarget;
-        private Label lblSeed;
+        private TextBlock lblTarget;
+        private TextBox txtTarget;
+        private TextBlock lblSeed;
         private RadioButton rbSeedYes;
         private RadioButton rbSeedNo;
 
-        // Bottom Action & Embedded Console
         private Button btnLocal;
         private Button btnCloud;
         private Button btnOpenWeb;
+
+        private Border logBorder;
         private TextBox txtLog;
-        private Label lblStatus;
+        private TextBlock lblStatus;
 
-        public MainForm()
+        public InstallerWindow()
         {
-            this.Size = new Size(900, 610);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+            this.Width = 940;
+            this.Height = 640;
+            this.MinWidth = 880;
+            this.MinHeight = 600;
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            this.FontFamily = new FontFamily("Segoe UI");
+            this.UseLayoutRounding = true;
+            this.SnapsToDevicePixels = true;
+            RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
+            TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
+            TextOptions.SetTextRenderingMode(this, TextRenderingMode.ClearType);
 
-            BuildUI();
+            // Load embedded icon for window title bar & default logo preview
+            try
+            {
+                using (Stream iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("app.ico"))
+                {
+                    if (iconStream != null)
+                    {
+                        MemoryStream ms = new MemoryStream();
+                        iconStream.CopyTo(ms);
+                        ms.Position = 0;
+                        this.Icon = BitmapFrame.Create(ms);
+                    }
+                }
+            }
+            catch { }
+
+            BuildLayout();
+            LoadDefaultLogoPreview();
             ApplyLanguage();
             ApplyTheme();
         }
 
-        private void BuildUI()
+        private void BuildLayout()
         {
-            // ── HEADER BAR ──
-            pnlHeader = new Panel() { Location = new Point(0, 0), Size = new Size(900, 64) };
-            this.Controls.Add(pnlHeader);
+            rootGrid = new Grid();
+            rootGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto }); // 0: Header
+            rootGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto }); // 1: 2-Column Config Cards
+            rootGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto }); // 2: Action Buttons
+            rootGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) }); // 3: Live Console Log
+            rootGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto }); // 4: Footer Status
+            this.Content = rootGrid;
 
-            lblHeader = new Label()
+            // ── ROW 0: HEADER BAR ──
+            headerBorder = new Border()
             {
-                Font = new Font("Segoe UI", 13.5F, FontStyle.Bold),
-                Location = new Point(22, 10),
-                AutoSize = true
+                Padding = new Thickness(22, 14, 22, 14),
+                BorderThickness = new Thickness(0, 0, 0, 1)
             };
-            pnlHeader.Controls.Add(lblHeader);
+            Grid headerGrid = new Grid();
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            headerBorder.Child = headerGrid;
 
-            lblSub = new Label()
+            // Brand Badge Icon in Header
+            Border badgeBorder = new Border()
             {
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
-                Location = new Point(24, 36),
-                AutoSize = true
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(10),
+                Margin = new Thickness(0, 0, 14, 0),
+                Background = new LinearGradientBrush(
+                    Color.FromRgb(16, 185, 129),
+                    Color.FromRgb(2, 132, 199),
+                    new Point(0, 0),
+                    new Point(1, 1))
             };
-            pnlHeader.Controls.Add(lblSub);
-
-            btnLang = new Button()
+            TextBlock badgeText = new TextBlock()
             {
-                Location = new Point(645, 16),
-                Size = new Size(110, 32),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "5S",
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.Black,
+                FontSize = 18,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
             };
-            btnLang.Click += (s, e) => {
-                lang = (lang == "vi") ? "en" : "vi";
-                ApplyLanguage();
-            };
-            pnlHeader.Controls.Add(btnLang);
+            badgeBorder.Child = badgeText;
+            Grid.SetColumn(badgeBorder, 0);
+            headerGrid.Children.Add(badgeBorder);
 
-            btnTheme = new Button()
+            StackPanel titleStack = new StackPanel() { VerticalAlignment = VerticalAlignment.Center };
+            lblTitle = new TextBlock() { FontSize = 16, FontWeight = FontWeights.Bold };
+            lblSubtitle = new TextBlock() { FontSize = 11.5, Margin = new Thickness(0, 2, 0, 0) };
+            titleStack.Children.Add(lblTitle);
+            titleStack.Children.Add(lblSubtitle);
+            Grid.SetColumn(titleStack, 1);
+            headerGrid.Children.Add(titleStack);
+
+            StackPanel topBtns = new StackPanel()
             {
-                Location = new Point(765, 16),
-                Size = new Size(105, 32),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
             };
-            btnTheme.Click += (s, e) => {
-                isDark = !isDark;
-                ApplyTheme();
-                ApplyLanguage();
+            btnLang = CreatePillButton();
+            btnLang.Margin = new Thickness(0, 0, 8, 0);
+            btnLang.Click += (s, e) => { lang = (lang == "vi") ? "en" : "vi"; ApplyLanguage(); };
+
+            btnTheme = CreatePillButton();
+            btnTheme.Click += (s, e) => { isDark = !isDark; ApplyTheme(); ApplyLanguage(); };
+
+            topBtns.Children.Add(btnLang);
+            topBtns.Children.Add(btnTheme);
+            Grid.SetColumn(topBtns, 2);
+            headerGrid.Children.Add(topBtns);
+
+            Grid.SetRow(headerBorder, 0);
+            rootGrid.Children.Add(headerBorder);
+
+            // ── ROW 1: TWO-COLUMN CONFIGURATION CARDS ──
+            Grid cardsGrid = new Grid() { Margin = new Thickness(20, 14, 20, 10) };
+            cardsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            cardsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(16) });
+            cardsGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            // LEFT CARD: Company Branding & Initial Admin Account
+            cardLeft = new Border()
+            {
+                CornerRadius = new CornerRadius(12),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(16, 14, 16, 14)
             };
-            pnlHeader.Controls.Add(btnTheme);
+            StackPanel leftStack = new StackPanel();
+            cardLeft.Child = leftStack;
 
-            // ── LEFT CARD: BRANDING & ADMIN ACCOUNT ──
-            cardLeft = new Panel() { Location = new Point(20, 74), Size = new Size(418, 296), BorderStyle = BorderStyle.FixedSingle };
-            this.Controls.Add(cardLeft);
+            lblSecBrand = new TextBlock() { FontSize = 12, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 8) };
+            leftStack.Children.Add(lblSecBrand);
 
-            lblSecBrand = new Label() { Location = new Point(14, 10), AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblSecBrand);
+            // Brand Grid: Left = Company Name + Logo File, Right = Live Logo Preview Box
+            Grid brandGrid = new Grid();
+            brandGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            brandGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(12) });
+            brandGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(76) });
 
-            lblCompany = new Label() { Location = new Point(14, 36), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblCompany);
-
-            txtCompany = new TextBox() { Text = "CRYSTAL", Location = new Point(14, 55), Width = 316, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
+            StackPanel brandFields = new StackPanel();
+            lblCompany = CreateFieldLabel();
+            txtCompany = CreateInputBox("CRYSTAL");
+            txtCompany.FontWeight = FontWeights.Bold;
             txtCompany.TextChanged += (s, e) => {
-                string slug = Regex.Replace(txtCompany.Text.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+                string slug = Regex.Replace((txtCompany.Text ?? "").ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
                 if (string.IsNullOrEmpty(slug)) slug = "crystal";
                 if (txtSlug != null) txtSlug.Text = slug;
             };
-            cardLeft.Controls.Add(txtCompany);
+            brandFields.Children.Add(lblCompany);
+            brandFields.Children.Add(txtCompany);
 
-            lblLogo = new Label() { Location = new Point(14, 86), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblLogo);
+            lblLogo = CreateFieldLabel();
+            lblLogo.Margin = new Thickness(0, 8, 0, 4);
+            brandFields.Children.Add(lblLogo);
 
-            txtLogo = new TextBox() { Text = "", Location = new Point(14, 105), Width = 232, BorderStyle = BorderStyle.FixedSingle };
-            cardLeft.Controls.Add(txtLogo);
+            Grid logoRow = new Grid();
+            logoRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            logoRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(6) });
+            logoRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
 
-            btnBrowseLogo = new Button() { Location = new Point(252, 103), Size = new Size(78, 25), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = new Font("Segoe UI", 8F, FontStyle.Bold) };
-            btnBrowseLogo.Click += (s, e) => {
-                OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Filter = "Image Files|*.png;*.jpg;*.jpeg;*.svg;*.webp";
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    txtLogo.Text = ofd.FileName;
-                    try { picLogo.Image = Image.FromFile(ofd.FileName); } catch { picLogo.Image = null; }
-                }
-            };
-            cardLeft.Controls.Add(btnBrowseLogo);
+            txtLogo = CreateInputBox("");
+            Grid.SetColumn(txtLogo, 0);
+            logoRow.Children.Add(txtLogo);
 
-            picLogo = new PictureBox()
+            btnBrowseLogo = CreateSmallButton();
+            btnBrowseLogo.Click += (s, e) => BrowseLogoFile();
+            Grid.SetColumn(btnBrowseLogo, 2);
+            logoRow.Children.Add(btnBrowseLogo);
+            brandFields.Children.Add(logoRow);
+
+            Grid.SetColumn(brandFields, 0);
+            brandGrid.Children.Add(brandFields);
+
+            // Logo Preview Box
+            logoPreviewBorder = new Border()
             {
-                Location = new Point(340, 52),
-                Size = new Size(62, 76),
-                BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom
+                Width = 76,
+                Height = 76,
+                CornerRadius = new CornerRadius(10),
+                BorderThickness = new Thickness(1),
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Padding = new Thickness(4)
             };
-            cardLeft.Controls.Add(picLogo);
+            Grid previewInner = new Grid();
+            lblLogoPlaceholder = new TextBlock()
+            {
+                Text = "LOGO",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            imgLogoPreview = new Image() { Stretch = Stretch.Uniform };
+            previewInner.Children.Add(lblLogoPlaceholder);
+            previewInner.Children.Add(imgLogoPreview);
+            logoPreviewBorder.Child = previewInner;
+            Grid.SetColumn(logoPreviewBorder, 2);
+            brandGrid.Children.Add(logoPreviewBorder);
 
-            // Admin Section inside Left Card
-            lblSecAdmin = new Label() { Location = new Point(14, 144), AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblSecAdmin);
+            leftStack.Children.Add(brandGrid);
 
-            lblAdminName = new Label() { Location = new Point(14, 170), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblAdminName);
+            // Divider + Section 2: Initial Admin Account
+            lblSecAdmin = new TextBlock() { FontSize = 12, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 14, 0, 8) };
+            leftStack.Children.Add(lblSecAdmin);
 
-            txtAdminName = new TextBox() { Text = "System Administrator", Location = new Point(14, 189), Width = 388, BorderStyle = BorderStyle.FixedSingle };
-            cardLeft.Controls.Add(txtAdminName);
+            lblAdminName = CreateFieldLabel();
+            txtAdminName = CreateInputBox("System Administrator");
+            leftStack.Children.Add(lblAdminName);
+            leftStack.Children.Add(txtAdminName);
 
-            lblAdminUser = new Label() { Location = new Point(14, 222), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblAdminUser);
+            Grid adminCredGrid = new Grid() { Margin = new Thickness(0, 8, 0, 0) };
+            adminCredGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            adminCredGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10) });
+            adminCredGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-            txtAdminUser = new TextBox() { Text = "admin", Location = new Point(14, 241), Width = 150, BorderStyle = BorderStyle.FixedSingle };
-            cardLeft.Controls.Add(txtAdminUser);
+            StackPanel userCol = new StackPanel();
+            lblAdminUser = CreateFieldLabel();
+            txtAdminUser = CreateInputBox("admin");
+            userCol.Children.Add(lblAdminUser);
+            userCol.Children.Add(txtAdminUser);
+            Grid.SetColumn(userCol, 0);
+            adminCredGrid.Children.Add(userCol);
 
-            lblAdminPass = new Label() { Location = new Point(176, 222), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardLeft.Controls.Add(lblAdminPass);
+            StackPanel passCol = new StackPanel();
+            lblAdminPass = CreateFieldLabel();
+            txtAdminPass = CreateInputBox("admin123");
+            passCol.Children.Add(lblAdminPass);
+            passCol.Children.Add(txtAdminPass);
+            Grid.SetColumn(passCol, 2);
+            adminCredGrid.Children.Add(passCol);
 
-            txtAdminPass = new TextBox() { Text = "admin123", Location = new Point(176, 241), Width = 158, BorderStyle = BorderStyle.FixedSingle, UseSystemPasswordChar = true };
-            cardLeft.Controls.Add(txtAdminPass);
+            leftStack.Children.Add(adminCredGrid);
 
-            chkShowPass = new CheckBox() { Location = new Point(340, 242), AutoSize = true, Font = new Font("Segoe UI", 8F) };
-            chkShowPass.CheckedChanged += (s, e) => { txtAdminPass.UseSystemPasswordChar = !chkShowPass.Checked; };
-            cardLeft.Controls.Add(chkShowPass);
+            Grid.SetColumn(cardLeft, 0);
+            cardsGrid.Children.Add(cardLeft);
 
-            // ── RIGHT CARD: SYSTEM & DEPLOYMENT CONFIG ──
-            cardRight = new Panel() { Location = new Point(450, 74), Size = new Size(420, 296), BorderStyle = BorderStyle.FixedSingle };
-            this.Controls.Add(cardRight);
+            // RIGHT CARD: System & Deployment Configuration
+            cardRight = new Border()
+            {
+                CornerRadius = new CornerRadius(12),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(16, 14, 16, 14)
+            };
+            StackPanel rightStack = new StackPanel();
+            cardRight.Child = rightStack;
 
-            lblSecSys = new Label() { Location = new Point(14, 10), AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblSecSys);
+            lblSecSys = new TextBlock() { FontSize = 12, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 8) };
+            rightStack.Children.Add(lblSecSys);
 
-            lblDir = new Label() { Location = new Point(14, 36), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblDir);
+            lblDir = CreateFieldLabel();
+            rightStack.Children.Add(lblDir);
 
-            string defaultDir = File.Exists(Path.Combine(Application.StartupPath, "package.json"))
-                ? Application.StartupPath
+            string defaultDir = File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "package.json"))
+                ? AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\\\')
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Crystal-5S-Audit");
 
-            txtDir = new TextBox() { Text = defaultDir, Location = new Point(14, 55), Width = 304, BorderStyle = BorderStyle.FixedSingle };
-            cardRight.Controls.Add(txtDir);
+            Grid dirRow = new Grid();
+            dirRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            dirRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(6) });
+            dirRow.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
 
-            btnBrowseDir = new Button() { Location = new Point(324, 53), Size = new Size(80, 25), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = new Font("Segoe UI", 8F, FontStyle.Bold) };
+            txtDir = CreateInputBox(defaultDir);
+            Grid.SetColumn(txtDir, 0);
+            dirRow.Children.Add(txtDir);
+
+            btnBrowseDir = CreateSmallButton();
             btnBrowseDir.Click += (s, e) => {
-                FolderBrowserDialog fbd = new FolderBrowserDialog();
+                WinForms.FolderBrowserDialog fbd = new WinForms.FolderBrowserDialog();
                 fbd.SelectedPath = txtDir.Text;
-                if (fbd.ShowDialog() == DialogResult.OK) txtDir.Text = fbd.SelectedPath;
+                if (fbd.ShowDialog() == WinForms.DialogResult.OK) txtDir.Text = fbd.SelectedPath;
             };
-            cardRight.Controls.Add(btnBrowseDir);
+            Grid.SetColumn(btnBrowseDir, 2);
+            dirRow.Children.Add(btnBrowseDir);
+            rightStack.Children.Add(dirRow);
 
-            lblSlug = new Label() { Location = new Point(14, 88), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblSlug);
+            lblSlug = CreateFieldLabel();
+            lblSlug.Margin = new Thickness(0, 8, 0, 4);
+            txtSlug = CreateInputBox("crystal");
+            rightStack.Children.Add(lblSlug);
+            rightStack.Children.Add(txtSlug);
 
-            txtSlug = new TextBox() { Text = "crystal", Location = new Point(14, 107), Width = 390, BorderStyle = BorderStyle.FixedSingle };
-            cardRight.Controls.Add(txtSlug);
+            Grid portTargetGrid = new Grid() { Margin = new Thickness(0, 8, 0, 0) };
+            portTargetGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            portTargetGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10) });
+            portTargetGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
-            lblPort = new Label() { Location = new Point(14, 142), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblPort);
+            StackPanel portCol = new StackPanel();
+            lblPort = CreateFieldLabel();
+            txtPort = CreateInputBox("5173");
+            portCol.Children.Add(lblPort);
+            portCol.Children.Add(txtPort);
+            Grid.SetColumn(portCol, 0);
+            portTargetGrid.Children.Add(portCol);
 
-            txtPort = new TextBox() { Text = "5173", Location = new Point(14, 161), Width = 180, BorderStyle = BorderStyle.FixedSingle };
-            cardRight.Controls.Add(txtPort);
+            StackPanel targetCol = new StackPanel();
+            lblTarget = CreateFieldLabel();
+            txtTarget = CreateInputBox("90");
+            targetCol.Children.Add(lblTarget);
+            targetCol.Children.Add(txtTarget);
+            Grid.SetColumn(targetCol, 2);
+            portTargetGrid.Children.Add(targetCol);
 
-            lblTarget = new Label() { Location = new Point(214, 142), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblTarget);
+            rightStack.Children.Add(portTargetGrid);
 
-            numTarget = new NumericUpDown() { Minimum = 50, Maximum = 100, Value = 90, Location = new Point(214, 161), Width = 190, BorderStyle = BorderStyle.FixedSingle };
-            cardRight.Controls.Add(numTarget);
+            lblSeed = CreateFieldLabel();
+            lblSeed.Margin = new Thickness(0, 12, 0, 6);
+            rightStack.Children.Add(lblSeed);
 
-            lblSeed = new Label() { Location = new Point(14, 198), AutoSize = true, Font = new Font("Segoe UI", 8.5F, FontStyle.Bold) };
-            cardRight.Controls.Add(lblSeed);
+            rbSeedYes = new RadioButton() { IsChecked = true, FontSize = 12, Margin = new Thickness(0, 2, 0, 5), Cursor = Cursors.Hand };
+            rbSeedNo = new RadioButton() { IsChecked = false, FontSize = 12, Margin = new Thickness(0, 2, 0, 2), Cursor = Cursors.Hand };
+            rightStack.Children.Add(rbSeedYes);
+            rightStack.Children.Add(rbSeedNo);
 
-            rbSeedYes = new RadioButton() { Location = new Point(16, 220), AutoSize = true, Checked = true };
-            rbSeedNo = new RadioButton() { Location = new Point(16, 246), AutoSize = true };
-            cardRight.Controls.Add(rbSeedYes);
-            cardRight.Controls.Add(rbSeedNo);
+            Grid.SetColumn(cardRight, 2);
+            cardsGrid.Children.Add(cardRight);
 
-            // ── ACTION BUTTONS & SINGLE-SCREEN CONSOLE LOG ──
-            btnLocal = new Button()
-            {
-                Location = new Point(20, 382),
-                Size = new Size(340, 42),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
+            Grid.SetRow(cardsGrid, 1);
+            rootGrid.Children.Add(cardsGrid);
+
+            // ── ROW 2: ACTION BUTTONS BAR ──
+            Grid actionGrid = new Grid() { Margin = new Thickness(20, 2, 20, 10) };
+            actionGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            actionGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(12) });
+            actionGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            actionGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(12) });
+            actionGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            btnLocal = CreatePrimaryActionButton(Color.FromRgb(16, 185, 129), Color.FromRgb(2, 6, 23));
             btnLocal.Click += (s, e) => RunSetup("local");
-            this.Controls.Add(btnLocal);
+            Grid.SetColumn(btnLocal, 0);
+            actionGrid.Children.Add(btnLocal);
 
-            btnCloud = new Button()
-            {
-                Location = new Point(372, 382),
-                Size = new Size(340, 42),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
+            btnCloud = CreatePrimaryActionButton(Color.FromRgb(37, 99, 235), Colors.White);
             btnCloud.Click += (s, e) => RunSetup("cloud");
-            this.Controls.Add(btnCloud);
+            Grid.SetColumn(btnCloud, 2);
+            actionGrid.Children.Add(btnCloud);
 
-            btnOpenWeb = new Button()
-            {
-                Location = new Point(724, 382),
-                Size = new Size(146, 42),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
+            btnOpenWeb = CreatePrimaryActionButton(Color.FromRgb(51, 65, 85), Colors.White);
             btnOpenWeb.Click += (s, e) => {
-                string port = txtPort.Text.Trim();
-                if (string.IsNullOrEmpty(port)) port = "5173";
-                try { Process.Start("http://localhost:" + port); } catch { }
+                string p = (txtPort.Text ?? "5173").Trim();
+                if (string.IsNullOrEmpty(p)) p = "5173";
+                try { Process.Start("http://localhost:" + p); } catch { }
             };
-            this.Controls.Add(btnOpenWeb);
+            Grid.SetColumn(btnOpenWeb, 4);
+            actionGrid.Children.Add(btnOpenWeb);
 
+            Grid.SetRow(actionGrid, 2);
+            rootGrid.Children.Add(actionGrid);
+
+            // ── ROW 3: EMBEDDED LIVE CONSOLE LOG ──
+            logBorder = new Border()
+            {
+                Margin = new Thickness(20, 0, 20, 8),
+                CornerRadius = new CornerRadius(10),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8)
+            };
             txtLog = new TextBox()
             {
-                Location = new Point(20, 434),
-                Size = new Size(850, 110),
-                Multiline = true,
-                ReadOnly = true,
-                ScrollBars = ScrollBars.Vertical,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.5F, FontStyle.Regular)
+                IsReadOnly = true,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                BorderThickness = new Thickness(0),
+                Background = Brushes.Transparent,
+                FontFamily = new FontFamily("Segoe UI"),
+                FontSize = 12
             };
-            this.Controls.Add(txtLog);
+            logBorder.Child = txtLog;
+            Grid.SetRow(logBorder, 3);
+            rootGrid.Children.Add(logBorder);
 
-            lblStatus = new Label()
+            // ── ROW 4: STATUS FOOTER ──
+            lblStatus = new TextBlock()
             {
-                Location = new Point(20, 550),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular)
+                Margin = new Thickness(22, 0, 22, 10),
+                FontSize = 11.5
             };
-            this.Controls.Add(lblStatus);
+            Grid.SetRow(lblStatus, 4);
+            rootGrid.Children.Add(lblStatus);
+        }
+
+        private TextBlock CreateFieldLabel()
+        {
+            return new TextBlock()
+            {
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+        }
+
+        private TextBox CreateInputBox(string initialText)
+        {
+            return new TextBox()
+            {
+                Text = initialText,
+                FontSize = 12.5,
+                Padding = new Thickness(8, 5, 8, 5),
+                BorderThickness = new Thickness(1),
+                VerticalContentAlignment = VerticalAlignment.Center
+            };
+        }
+
+        private Button CreateSmallButton()
+        {
+            return new Button()
+            {
+                Padding = new Thickness(10, 5, 10, 5),
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+        }
+
+        private Button CreatePillButton()
+        {
+            return new Button()
+            {
+                Padding = new Thickness(12, 6, 12, 6),
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+        }
+
+        private Button CreatePrimaryActionButton(Color bg, Color fg)
+        {
+            return new Button()
+            {
+                Height = 42,
+                FontSize = 12.5,
+                FontWeight = FontWeights.Bold,
+                Background = new SolidColorBrush(bg),
+                Foreground = new SolidColorBrush(fg),
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand
+            };
+        }
+
+        private void LoadDefaultLogoPreview()
+        {
+            try
+            {
+                using (Stream iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("app.ico"))
+                {
+                    if (iconStream != null)
+                    {
+                        MemoryStream ms = new MemoryStream();
+                        iconStream.CopyTo(ms);
+                        ms.Position = 0;
+                        BitmapDecoder dec = BitmapDecoder.Create(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                        BitmapFrame best = dec.Frames[0];
+                        foreach (BitmapFrame f in dec.Frames)
+                        {
+                            if (f.PixelWidth > best.PixelWidth) best = f;
+                        }
+                        imgLogoPreview.Source = best;
+                        lblLogoPlaceholder.Visibility = Visibility.Collapsed;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void BrowseLogoFile()
+        {
+            WinForms.OpenFileDialog ofd = new WinForms.OpenFileDialog();
+            ofd.Filter = "Image Files (*.png;*.jpg;*.jpeg;*.svg;*.webp)|*.png;*.jpg;*.jpeg;*.svg;*.webp";
+            if (ofd.ShowDialog() == WinForms.DialogResult.OK)
+            {
+                txtLogo.Text = ofd.FileName;
+                try
+                {
+                    BitmapImage bmi = new BitmapImage();
+                    bmi.BeginInit();
+                    bmi.CacheOption = BitmapCacheOption.OnLoad;
+                    bmi.UriSource = new Uri(ofd.FileName);
+                    bmi.EndInit();
+                    imgLogoPreview.Source = bmi;
+                    lblLogoPlaceholder.Visibility = Visibility.Collapsed;
+                }
+                catch
+                {
+                    imgLogoPreview.Source = null;
+                    lblLogoPlaceholder.Visibility = Visibility.Visible;
+                }
+            }
+        }
+
+        public void SetModeForTest(string newLang, bool darkTheme)
+        {
+            this.lang = newLang;
+            this.isDark = darkTheme;
+            ApplyTheme();
+            ApplyLanguage();
         }
 
         private void ApplyLanguage()
         {
             if (lang == "vi")
             {
-                this.Text = "Hệ Thống Audit 5S — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One .EXE)";
-                lblHeader.Text = "CRYSTAL 5S AUDIT — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
-                lblSub.Text = "Tự động giải nén, cấu hình Thương hiệu, tạo Admin, khởi tạo Database D1/R2 & chạy ngay";
-                btnLang.Text = "🌐 VI / EN (VI)";
-                btnTheme.Text = isDark ? "🌙 Tối (Dark)" : "☀ Sáng (Light)";
+                this.Title = "Crystal 5S Audit — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One Setup)";
+                lblTitle.Text = "CRYSTAL 5S AUDIT — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
+                lblSubtitle.Text = "Tự động giải nén, gắn Thương hiệu & Logo, khởi tạo Admin, Database D1/R2 và chạy ngay";
+                btnLang.Content = "🇻🇳 Tiếng Việt  ⇄  EN";
+                btnTheme.Content = isDark ? "🌙 Giao diện Tối" : "☀ Giao diện Sáng";
 
-                lblSecBrand.Text = "1. THƯƠNG HIỆU CÔNG TY (BRANDING)";
+                lblSecBrand.Text = "1. THƯƠNG HIỆU CÔNG TY & LOGO (COMPANY BRANDING)";
                 lblCompany.Text = "Tên Công ty / Nhà máy hiển thị:";
-                lblLogo.Text = "File ảnh Logo (.png, .jpg, .svg):";
-                btnBrowseLogo.Text = "Chọn ảnh...";
+                lblLogo.Text = "File ảnh Logo (.png, .jpg, .svg - tùy chọn):";
+                btnBrowseLogo.Content = "Chọn ảnh...";
 
                 lblSecAdmin.Text = "2. TÀI KHOẢN QUẢN TRỊ VIÊN (INITIAL ADMIN)";
                 lblAdminName.Text = "Họ và tên Quản trị viên:";
-                lblAdminUser.Text = "Tên đăng nhập Admin:";
+                lblAdminUser.Text = "Tài khoản đăng nhập:";
                 lblAdminPass.Text = "Mật khẩu (>= 6 ký tự):";
-                chkShowPass.Text = "Hiện";
 
-                lblSecSys.Text = "3. CẤU HÌNH HỆ THỐNG & TRIỂN KHAI (SYSTEM)";
+                lblSecSys.Text = "3. CẤU HÌNH HỆ THỐNG & TRIỂN KHAI (SYSTEM & CLOUD)";
                 lblDir.Text = "Thư mục giải nén & cài đặt trên máy:";
-                btnBrowseDir.Text = "Chọn nơi lưu";
-                lblSlug.Text = "Mã định danh Cloud (Dùng tạo tên Web / D1 / R2 riêng):";
+                btnBrowseDir.Content = "Chọn thư mục...";
+                lblSlug.Text = "Mã định danh Cloud (Tự động đặt tên Worker / D1 / R2 riêng):";
                 lblPort.Text = "Cổng chạy mạng LAN (Port):";
                 lblTarget.Text = "Chỉ tiêu KPI 5S mặc định (%):";
                 lblSeed.Text = "Khởi tạo dữ liệu Khu vực sản xuất ban đầu:";
-                rbSeedYes.Text = "✔ Nạp sẵn 16 khu vực mẫu (KNI, GQC, WH, DYE...)";
-                rbSeedNo.Text = "✕ Để trống hoàn toàn (Admin tự tạo khu vực mới)";
+                rbSeedYes.Content = "✔ Nạp sẵn 16 khu vực mẫu (KNI, GQC, WH, DYE...)";
+                rbSeedNo.Content = "✕ Để trống hoàn toàn (Admin tự khai báo khu vực mới)";
 
-                btnLocal.Text = "▶ CÀI ĐẶT & CHẠY LOCAL (MẠNG LAN)";
-                btnCloud.Text = "☁ ĐƯA LÊN CLOUDFLARE (INTERNET)";
-                btnOpenWeb.Text = "🌐 Mở Web LAN";
-                lblStatus.Text = "Sẵn sàng. Toàn bộ cấu hình đã gom gọn trong 1 màn hình duy nhất.";
-                if (string.IsNullOrEmpty(txtLog.Text))
+                btnLocal.Content = "▶ CÀI ĐẶT & CHẠY LOCAL (MẠNG LAN)";
+                btnCloud.Content = "☁ ĐƯA LÊN CLOUDFLARE (INTERNET)";
+                btnOpenWeb.Content = "🌐 Mở Web LAN";
+                lblStatus.Text = "✔ Sẵn sàng. Toàn bộ cấu hình Công ty, Admin & Hệ thống nằm gọn trong 1 màn hình.";
+
+                if (string.IsNullOrEmpty(txtLog.Text) || txtLog.Text.StartsWith("[System Ready]"))
                 {
-                    txtLog.Text = "[Hệ thống sẵn sàng] Điền thông tin Công ty, Tài khoản Admin và bấm 1 trong 2 nút phía trên để bắt đầu..." + Environment.NewLine;
+                    txtLog.Text = "[Hệ thống sẵn sàng] Nhập Tên Công ty, Logo, Tài khoản Admin và nhấn 1 trong 2 nút phía trên để bắt đầu..." + Environment.NewLine;
                 }
             }
             else
             {
-                this.Text = "5S Audit System — All-in-One Single-Screen Installer & Configurator (.EXE)";
-                lblHeader.Text = "CRYSTAL 5S AUDIT — ALL-IN-ONE SYSTEM INSTALLER";
-                lblSub.Text = "Extract payload, configure Company Branding, create Admin user, provision D1/R2 & launch";
-                btnLang.Text = "🌐 VI / EN (EN)";
-                btnTheme.Text = isDark ? "🌙 Dark Mode" : "☀ Light Mode";
+                this.Title = "Crystal 5S Audit — All-in-One Single-Screen Installer & Configurator";
+                lblTitle.Text = "CRYSTAL 5S AUDIT — ALL-IN-ONE SYSTEM INSTALLER";
+                lblSubtitle.Text = "Automatically extract payload, apply Company Branding, create Admin user, provision D1/R2 & launch";
+                btnLang.Content = "🇬🇧 English  ⇄  VI";
+                btnTheme.Content = isDark ? "🌙 Dark Theme" : "☀ Light Theme";
 
                 lblSecBrand.Text = "1. COMPANY BRANDING & LOGO";
                 lblCompany.Text = "Company / Factory Display Name:";
-                lblLogo.Text = "Company Logo Image (.png, .jpg, .svg):";
-                btnBrowseLogo.Text = "Browse...";
+                lblLogo.Text = "Company Logo File (.png, .jpg, .svg - optional):";
+                btnBrowseLogo.Content = "Browse...";
 
                 lblSecAdmin.Text = "2. INITIAL ADMINISTRATOR ACCOUNT";
                 lblAdminName.Text = "Administrator Full Name:";
                 lblAdminUser.Text = "Admin Username:";
-                lblAdminPass.Text = "Password (min 6 chars):";
-                chkShowPass.Text = "Show";
+                lblAdminPass.Text = "Admin Password (min 6 chars):";
 
-                lblSecSys.Text = "3. SYSTEM & DEPLOYMENT CONFIGURATION";
+                lblSecSys.Text = "3. SYSTEM & CLOUDFLARE CONFIGURATION";
                 lblDir.Text = "Local Extraction & Installation Directory:";
-                btnBrowseDir.Text = "Browse...";
+                btnBrowseDir.Content = "Browse...";
                 lblSlug.Text = "Cloud Project Slug (Names Worker / D1 / R2):";
                 lblPort.Text = "Local LAN Server Port:";
                 lblTarget.Text = "Default 5S KPI Target (%):";
-                lblSeed.Text = "Initial Factory Areas Data:";
-                rbSeedYes.Text = "✔ Seed 16 sample areas (KNI, GQC, WH, DYE...)";
-                rbSeedNo.Text = "✕ Start empty (Admin creates custom areas)";
+                lblSeed.Text = "Initial Production Areas Data:";
+                rbSeedYes.Content = "✔ Seed 16 sample areas (KNI, GQC, WH, DYE...)";
+                rbSeedNo.Content = "✕ Start empty (Admin creates custom areas)";
 
-                btnLocal.Text = "▶ INSTALL & RUN LOCAL (LAN SERVER)";
-                btnCloud.Text = "☁ DEPLOY TO CLOUDFLARE (INTERNET)";
-                btnOpenWeb.Text = "🌐 Open Web";
-                lblStatus.Text = "Ready. All settings are consolidated into this single screen.";
-                if (txtLog.Text.StartsWith("[Hệ thống"))
+                btnLocal.Content = "▶ INSTALL & RUN LOCAL (LAN SERVER)";
+                btnCloud.Content = "☁ DEPLOY TO CLOUDFLARE (INTERNET)";
+                btnOpenWeb.Content = "🌐 Open Web";
+                lblStatus.Text = "✔ Ready. All Company, Admin & System settings are consolidated into this single screen.";
+
+                if (string.IsNullOrEmpty(txtLog.Text) || txtLog.Text.StartsWith("[Hệ thống"))
                 {
-                    txtLog.Text = "[System Ready] Configure Company Branding, Admin Account & click a button above to start..." + Environment.NewLine;
+                    txtLog.Text = "[System Ready] Fill in Company Branding, Admin Account & click one of the buttons above to start..." + Environment.NewLine;
                 }
             }
         }
 
         private void ApplyTheme()
         {
-            Color bgForm = isDark ? Color.FromArgb(15, 23, 42) : Color.FromArgb(241, 245, 249);
-            Color bgHeader = isDark ? Color.FromArgb(2, 6, 23) : Color.FromArgb(255, 255, 255);
-            Color bgCard = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(255, 255, 255);
-            Color bgInput = isDark ? Color.FromArgb(15, 23, 42) : Color.FromArgb(248, 250, 252);
-            Color fgMain = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(15, 23, 42);
-            Color fgSub = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
-            Color accent = Color.FromArgb(16, 185, 129);
-            Color btnSecBg = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240);
+            Brush bgWindow = new SolidColorBrush(isDark ? Color.FromRgb(15, 23, 42) : Color.FromRgb(241, 245, 249));
+            Brush bgHeader = new SolidColorBrush(isDark ? Color.FromRgb(2, 6, 23) : Color.FromRgb(255, 255, 255));
+            Brush bgCard = new SolidColorBrush(isDark ? Color.FromRgb(30, 41, 59) : Color.FromRgb(255, 255, 255));
+            Brush borderCard = new SolidColorBrush(isDark ? Color.FromRgb(51, 65, 85) : Color.FromRgb(203, 213, 225));
+            Brush bgInput = new SolidColorBrush(isDark ? Color.FromRgb(15, 23, 42) : Color.FromRgb(248, 250, 252));
+            Brush fgPrimary = new SolidColorBrush(isDark ? Color.FromRgb(248, 250, 252) : Color.FromRgb(15, 23, 42));
+            Brush fgSecondary = new SolidColorBrush(isDark ? Color.FromRgb(148, 163, 184) : Color.FromRgb(100, 116, 139));
+            Brush accent = new SolidColorBrush(isDark ? Color.FromRgb(16, 185, 129) : Color.FromRgb(5, 150, 105));
+            Brush bgSecondaryBtn = new SolidColorBrush(isDark ? Color.FromRgb(51, 65, 85) : Color.FromRgb(226, 232, 240));
 
-            this.BackColor = bgForm;
-            this.ForeColor = fgMain;
+            this.Background = bgWindow;
+            rootGrid.Background = bgWindow;
 
-            pnlHeader.BackColor = bgHeader;
-            lblHeader.ForeColor = accent;
-            lblSub.ForeColor = fgSub;
+            headerBorder.Background = bgHeader;
+            headerBorder.BorderBrush = borderCard;
+            lblTitle.Foreground = accent;
+            lblSubtitle.Foreground = fgSecondary;
 
-            btnLang.BackColor = btnSecBg;
-            btnLang.ForeColor = fgMain;
-            btnLang.FlatAppearance.BorderColor = fgSub;
+            btnLang.Background = bgSecondaryBtn;
+            btnLang.Foreground = fgPrimary;
+            btnLang.BorderBrush = borderCard;
 
-            btnTheme.BackColor = btnSecBg;
-            btnTheme.ForeColor = isDark ? Color.FromArgb(251, 191, 36) : Color.FromArgb(30, 41, 59);
-            btnTheme.FlatAppearance.BorderColor = fgSub;
+            btnTheme.Background = bgSecondaryBtn;
+            btnTheme.Foreground = isDark
+                ? new SolidColorBrush(Color.FromRgb(251, 191, 36))
+                : new SolidColorBrush(Color.FromRgb(30, 41, 59));
+            btnTheme.BorderBrush = borderCard;
 
-            cardLeft.BackColor = bgCard;
-            cardRight.BackColor = bgCard;
+            cardLeft.Background = bgCard;
+            cardLeft.BorderBrush = borderCard;
+            cardRight.Background = bgCard;
+            cardRight.BorderBrush = borderCard;
 
-            lblSecBrand.ForeColor = accent;
-            lblSecAdmin.ForeColor = accent;
-            lblSecSys.ForeColor = accent;
+            lblSecBrand.Foreground = accent;
+            lblSecAdmin.Foreground = accent;
+            lblSecSys.Foreground = accent;
 
-            Label[] labels = new Label[] { lblCompany, lblLogo, lblAdminName, lblAdminUser, lblAdminPass, lblDir, lblSlug, lblPort, lblTarget, lblSeed };
-            foreach (Label lb in labels) lb.ForeColor = fgMain;
-
-            chkShowPass.ForeColor = fgSub;
-            rbSeedYes.ForeColor = fgMain;
-            rbSeedNo.ForeColor = fgMain;
-
-            TextBox[] inputs = new TextBox[] { txtCompany, txtLogo, txtAdminName, txtAdminUser, txtAdminPass, txtDir, txtSlug, txtPort };
-            foreach (TextBox tb in inputs)
+            TextBlock[] labels = new TextBlock[]
             {
-                tb.BackColor = bgInput;
-                tb.ForeColor = fgMain;
+                lblCompany, lblLogo, lblAdminName, lblAdminUser, lblAdminPass,
+                lblDir, lblSlug, lblPort, lblTarget, lblSeed
+            };
+            foreach (TextBlock tb in labels) tb.Foreground = fgPrimary;
+
+            TextBox[] inputs = new TextBox[]
+            {
+                txtCompany, txtLogo, txtAdminName, txtAdminUser, txtAdminPass,
+                txtDir, txtSlug, txtPort, txtTarget
+            };
+            foreach (TextBox box in inputs)
+            {
+                box.Background = bgInput;
+                box.Foreground = fgPrimary;
+                box.BorderBrush = borderCard;
+                box.CaretBrush = fgPrimary;
             }
-            numTarget.BackColor = bgInput;
-            numTarget.ForeColor = fgMain;
-            picLogo.BackColor = bgInput;
 
-            btnBrowseLogo.BackColor = btnSecBg;
-            btnBrowseLogo.ForeColor = fgMain;
-            btnBrowseDir.BackColor = btnSecBg;
-            btnBrowseDir.ForeColor = fgMain;
+            logoPreviewBorder.Background = bgInput;
+            logoPreviewBorder.BorderBrush = borderCard;
+            lblLogoPlaceholder.Foreground = fgSecondary;
 
-            btnLocal.BackColor = Color.FromArgb(16, 185, 129);
-            btnLocal.ForeColor = Color.FromArgb(2, 6, 23);
-            btnLocal.FlatAppearance.BorderSize = 0;
+            btnBrowseLogo.Background = bgSecondaryBtn;
+            btnBrowseLogo.Foreground = fgPrimary;
+            btnBrowseLogo.BorderBrush = borderCard;
 
-            btnCloud.BackColor = Color.FromArgb(37, 99, 235);
-            btnCloud.ForeColor = Color.White;
-            btnCloud.FlatAppearance.BorderSize = 0;
+            btnBrowseDir.Background = bgSecondaryBtn;
+            btnBrowseDir.Foreground = fgPrimary;
+            btnBrowseDir.BorderBrush = borderCard;
 
-            btnOpenWeb.BackColor = btnSecBg;
-            btnOpenWeb.ForeColor = fgMain;
+            rbSeedYes.Foreground = fgPrimary;
+            rbSeedNo.Foreground = fgPrimary;
 
-            txtLog.BackColor = isDark ? Color.FromArgb(2, 6, 23) : Color.FromArgb(15, 23, 42);
-            txtLog.ForeColor = Color.FromArgb(52, 211, 153);
-            lblStatus.ForeColor = fgSub;
+            btnOpenWeb.Background = bgSecondaryBtn;
+            btnOpenWeb.Foreground = fgPrimary;
+
+            logBorder.Background = new SolidColorBrush(Color.FromRgb(2, 6, 23));
+            logBorder.BorderBrush = borderCard;
+            txtLog.Foreground = new SolidColorBrush(Color.FromRgb(52, 211, 153));
+
+            lblStatus.Foreground = fgSecondary;
         }
 
         private void AppendLog(string line)
         {
             if (string.IsNullOrEmpty(line)) return;
-            if (this.InvokeRequired)
+            if (!this.Dispatcher.CheckAccess())
             {
-                this.BeginInvoke(new Action<string>(AppendLog), line);
+                this.Dispatcher.BeginInvoke(new Action<string>(AppendLog), line);
                 return;
             }
-            // Strip ANSI color escape sequences
             string clean = Regex.Replace(line, @"\\x1B\\[[0-9;]*[a-zA-Z]", "");
             txtLog.AppendText(clean + Environment.NewLine);
+            txtLog.ScrollToEnd();
         }
 
         private void ExtractEmbeddedPayload(string targetDir)
@@ -514,21 +938,22 @@ namespace Crystal5SInstaller
             if (!Directory.Exists(targetDir))
                 Directory.CreateDirectory(targetDir);
 
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\\\');
             if (File.Exists(Path.Combine(targetDir, "package.json")) &&
-                string.Equals(Path.GetFullPath(targetDir).TrimEnd('\\\\'), Path.GetFullPath(Application.StartupPath).TrimEnd('\\\\'), StringComparison.OrdinalIgnoreCase))
+                string.Equals(Path.GetFullPath(targetDir).TrimEnd('\\\\'), Path.GetFullPath(baseDir).TrimEnd('\\\\'), StringComparison.OrdinalIgnoreCase))
             {
                 AppendLog(lang == "vi"
                     ? "✔ Đang chạy trực tiếp tại thư mục mã nguồn gốc."
-                    : "✔ Running directly inside source repository.");
+                    : "✔ Running directly inside the source repository.");
                 return;
             }
 
-            AppendLog((lang == "vi" ? "▶ Đang giải nén mã nguồn vào: " : "▶ Extracting package payload to: ") + targetDir);
+            AppendLog((lang == "vi" ? "▶ Đang giải nén bộ cài vào: " : "▶ Extracting package payload to: ") + targetDir);
             string tempZip = Path.Combine(Path.GetTempPath(), "crystal5s_payload_" + Guid.NewGuid().ToString("N") + ".zip");
             using (Stream resStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("payload.zip"))
             {
                 if (resStream == null)
-                    throw new Exception("Missing embedded resource payload.zip!");
+                    throw new Exception("Missing embedded payload.zip resource!");
                 using (FileStream fs = new FileStream(tempZip, FileMode.Create, FileAccess.Write))
                 {
                     resStream.CopyTo(fs);
@@ -556,31 +981,36 @@ namespace Crystal5SInstaller
         {
             try
             {
-                string targetDir = txtDir.Text.Trim();
-                string company = txtCompany.Text.Trim();
+                string targetDir = (txtDir.Text ?? "").Trim();
+                string company = (txtCompany.Text ?? "").Trim();
                 if (string.IsNullOrEmpty(company)) company = "CRYSTAL";
-                string logoPath = txtLogo.Text.Trim();
-                string seedFlag = rbSeedYes.Checked ? "1" : "2";
-                string adminName = txtAdminName.Text.Trim();
-                string adminUser = txtAdminUser.Text.Trim();
-                string adminPass = txtAdminPass.Text;
-                string slug = txtSlug.Text.Trim();
-                string port = txtPort.Text.Trim();
+                string logoPath = (txtLogo.Text ?? "").Trim();
+                string seedFlag = (rbSeedYes.IsChecked == true) ? "1" : "2";
+                string adminName = (txtAdminName.Text ?? "System Administrator").Trim();
+                string adminUser = (txtAdminUser.Text ?? "admin").Trim();
+                string adminPass = txtAdminPass.Text ?? "";
+                string slug = (txtSlug.Text ?? "crystal").Trim();
+                string port = (txtPort.Text ?? "5173").Trim();
                 if (string.IsNullOrEmpty(port)) port = "5173";
-                string targetScore = numTarget.Value.ToString();
+                string targetScore = (txtTarget.Text ?? "90").Trim();
 
                 if (!string.IsNullOrEmpty(adminPass) && adminPass.Length < 6)
                 {
                     MessageBox.Show(
                         lang == "vi" ? "Mật khẩu Admin phải từ 6 ký tự trở lên!" : "Admin password must be at least 6 characters!",
                         "Crystal 5S Setup",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
                     return;
                 }
 
                 txtLog.Clear();
                 ExtractEmbeddedPayload(targetDir);
+
+                if (activeProcess != null && !activeProcess.HasExited)
+                {
+                    try { activeProcess.Kill(); } catch { }
+                }
 
                 string args = string.Format(
                     "scripts\\\\auto_setup.mjs --{0} --company=\\"{1}\\" --seed={2} --logo=\\"{3}\\" --admin-user=\\"{4}\\" --admin-pass=\\"{5}\\" --admin-name=\\"{6}\\" --target={7} --port={8} --slug=\\"{9}\\" --lang={10}",
@@ -597,94 +1027,84 @@ namespace Crystal5SInstaller
                     lang
                 );
 
-                if (mode == "local")
+                ProcessStartInfo psi = new ProcessStartInfo()
                 {
-                    // Stream live output right inside txtLog on the same 1 screen!
-                    if (activeProcess != null && !activeProcess.HasExited)
-                    {
-                        try { activeProcess.Kill(); } catch { }
-                    }
+                    FileName = "cmd.exe",
+                    Arguments = "/c chcp 65001 >nul && node " + args,
+                    WorkingDirectory = targetDir,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                };
 
-                    ProcessStartInfo psi = new ProcessStartInfo()
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = "/c chcp 65001 >nul && node " + args,
-                        WorkingDirectory = targetDir,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
-                    };
+                activeProcess = new Process();
+                activeProcess.StartInfo = psi;
+                activeProcess.OutputDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
+                activeProcess.ErrorDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
+                activeProcess.Start();
+                activeProcess.BeginOutputReadLine();
+                activeProcess.BeginErrorReadLine();
 
-                    activeProcess = new Process();
-                    activeProcess.StartInfo = psi;
-                    activeProcess.OutputDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
-                    activeProcess.ErrorDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
-                    activeProcess.Start();
-                    activeProcess.BeginOutputReadLine();
-                    activeProcess.BeginErrorReadLine();
-
-                    lblStatus.Text = lang == "vi"
-                        ? "✔ Đang cài đặt & khởi chạy máy chủ ngay trong màn hình này..."
-                        : "✔ Installing & running local server directly in this window...";
-                }
-                else
-                {
-                    // Cloud mode may open browser for OAuth wrangler login, stream output too
-                    AppendLog(lang == "vi"
-                        ? "☁ Đang khởi chạy tiến trình triển khai Cloudflare..."
-                        : "☁ Starting Cloudflare deployment process...");
-
-                    ProcessStartInfo psi = new ProcessStartInfo()
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = "/c chcp 65001 >nul && node " + args,
-                        WorkingDirectory = targetDir,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
-                    };
-
-                    Process proc = new Process();
-                    proc.StartInfo = psi;
-                    proc.OutputDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
-                    proc.ErrorDataReceived += (s, ev) => { if (ev.Data != null) AppendLog(ev.Data); };
-                    proc.Start();
-                    proc.BeginOutputReadLine();
-                    proc.BeginErrorReadLine();
-
-                    lblStatus.Text = lang == "vi"
-                        ? "☁ Đang tự động đưa hệ thống lên Cloudflare (xem nhật ký bên trên)..."
-                        : "☁ Deploying to Cloudflare automatically (see live log above)...";
-                }
+                lblStatus.Text = (mode == "local")
+                    ? (lang == "vi" ? "▶ Đang cài đặt & khởi chạy máy chủ LAN ngay trong cửa sổ này..." : "▶ Installing & starting local LAN server in this window...")
+                    : (lang == "vi" ? "☁ Đang tự động triển khai lên Cloudflare (theo dõi nhật ký bên trên)..." : "☁ Deploying to Cloudflare automatically (see live log above)...");
             }
             catch (Exception ex)
             {
                 AppendLog("❌ ERROR: " + ex.Message);
-                MessageBox.Show(ex.Message, "Crystal 5S Setup", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Crystal 5S Setup", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        protected override void OnClosed(EventArgs e)
         {
             if (activeProcess != null && !activeProcess.HasExited)
             {
                 try { activeProcess.Kill(); } catch { }
             }
-            base.OnFormClosing(e);
+            base.OnClosed(e);
+        }
+
+        public void SaveRenderedScreenshot(string outPath)
+        {
+            this.UpdateLayout();
+            int w = (int)this.ActualWidth;
+            int h = (int)this.ActualHeight;
+            if (w <= 0) w = 940;
+            if (h <= 0) h = 640;
+
+            RenderTargetBitmap rtb = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+            rtb.Render(rootGrid);
+            PngBitmapEncoder enc = new PngBitmapEncoder();
+            enc.Frames.Add(BitmapFrame.Create(rtb));
+            using (FileStream fs = new FileStream(outPath, FileMode.Create, FileAccess.Write))
+            {
+                enc.Save(fs);
+            }
         }
 
         [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application app = new Application();
+            InstallerWindow win = new InstallerWindow();
+
+            if (args != null && args.Length >= 2 && args[0] == "--capture-screenshots")
+            {
+                string outDir = args[1];
+                win.Show();
+                win.SetModeForTest("vi", true);
+                win.SaveRenderedScreenshot(Path.Combine(outDir, "installer_dark_vi.png"));
+                win.SetModeForTest("en", false);
+                win.SaveRenderedScreenshot(Path.Combine(outDir, "installer_light_en.png"));
+                win.Close();
+                return;
+            }
+
+            app.Run(win);
         }
     }
 }
@@ -692,14 +1112,35 @@ namespace Crystal5SInstaller
 
 fs.writeFileSync(CS_FILE, csCode, 'utf-8');
 
-console.log('2/3. Đang biên dịch Crystal_5S_Setup.exe bằng trình biên dịch .NET (csc.exe)...');
+console.log('3/4. Đang biên dịch Crystal_5S_Setup.exe (WPF Vector UI + Icon đại diện)...');
 try {
   execSync('powershell -NoProfile -Command "Stop-Process -Name Crystal_5S_Setup -Force -ErrorAction SilentlyContinue"', { stdio: 'ignore' });
 } catch {}
-const compileCmd = `"${CSC}" /target:winexe /out:"${OUT_EXE}" /r:System.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /resource:"${PAYLOAD_ZIP}",payload.zip "${CS_FILE}"`;
+
+const compileCmd = [
+  `"${CSC}"`,
+  `/nologo`,
+  `/target:winexe`,
+  `/out:"${OUT_EXE}"`,
+  `/win32icon:"${ICO_PATH}"`,
+  `/r:System.dll`,
+  `/r:System.Core.dll`,
+  `/r:System.Xaml.dll`,
+  `/r:System.Drawing.dll`,
+  `/r:System.Windows.Forms.dll`,
+  `/r:System.IO.Compression.dll`,
+  `/r:System.IO.Compression.FileSystem.dll`,
+  `/r:"${WPF_DIR}\\WindowsBase.dll"`,
+  `/r:"${WPF_DIR}\\PresentationCore.dll"`,
+  `/r:"${WPF_DIR}\\PresentationFramework.dll"`,
+  `/resource:"${PAYLOAD_ZIP}",payload.zip`,
+  `/resource:"${ICO_PATH}",app.ico`,
+  `"${CS_FILE}"`,
+].join(' ');
+
 execSync(compileCmd, { stdio: 'inherit' });
 
-console.log('3/3. Dọn dẹp thư mục tạm...');
+console.log('4/4. Dọn dẹp thư mục tạm...');
 fs.rmSync(BUILD_DIR, { recursive: true, force: true });
 
 const stats = fs.statSync(OUT_EXE);

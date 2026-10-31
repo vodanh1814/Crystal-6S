@@ -44,6 +44,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [clockTime, setClockTime] = useState('');
+  const [logoBroken, setLogoBroken] = useState(false);
+
+  useEffect(() => {
+    setLogoBroken(false);
+  }, [companyLogo]);
 
   // Live Clock in Vietnam time (UTC+7)
   useEffect(() => {
@@ -149,10 +154,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             {/* Sidebar Brand Header */}
             <div className="h-12 px-3 flex items-center justify-between border-b border-slate-800">
               <Link to="/" className="flex items-center gap-2 overflow-hidden group">
-                {companyLogo ? (
+                {companyLogo && !logoBroken ? (
                   <img
                     src={companyLogo}
                     alt={companyName}
+                    onError={() => setLogoBroken(true)}
                     className="w-7 h-7 rounded-md object-contain bg-white/95 p-0.5 shrink-0 border border-white/20 shadow-xs"
                   />
                 ) : (
@@ -326,11 +332,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             {/* Title / Banner */}
             <div className="flex items-center gap-2 truncate">
-              {companyLogo && (
+              {companyLogo && !logoBroken && (
                 <img
                   src={companyLogo}
                   alt={companyName}
-                  className="w-5 h-5 object-contain rounded shrink-0 bg-white/10"
+                  onError={() => setLogoBroken(true)}
+                  className="w-5 h-5 object-contain rounded shrink-0 bg-white/95 p-0.5"
                 />
               )}
               <span className="font-black text-xs sm:text-sm tracking-tight text-white truncate">
@@ -472,13 +479,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {/* Main Workspace */}
         {isDashboard ? (
           // On Dashboard: 100% viewport fit, zero scroll on lg:
-          <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col">
+          <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col bg-slate-950 text-slate-100">
             {children}
           </main>
         ) : (
-          // On other pages: comfortable scrollable dark container
-          <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-            {children}
+          // On other pages: clean high-contrast light workspace for forms, tables, and cards
+          <main className="flex-1 min-h-0 overflow-y-auto bg-slate-50 text-slate-900">
+            <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+              {children}
+            </div>
           </main>
         )}
       </div>
