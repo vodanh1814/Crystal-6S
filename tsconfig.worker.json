@@ -9,6 +9,6 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["worker"],
+  "include": ["worker", "src/version.ts"],
   "exclude": ["worker/**/*.test.ts"]
 }
