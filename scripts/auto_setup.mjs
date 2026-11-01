@@ -80,7 +80,7 @@ function readCurrentConfig() {
   const dbNameMatch = raw.match(/"database_name"\s*:\s*"([^"]+)"/);
   const bucketMatch = raw.match(/"bucket_name"\s*:\s*"([^"]+)"/);
   return {
-    workerName: nameMatch ? nameMatch[1] : 'crystal-5s-audit',
+    workerName: nameMatch ? nameMatch[1] : '5s-audit',
     dbName: dbNameMatch ? dbNameMatch[1] : 'crystal5s-db',
     bucketName: bucketMatch ? bucketMatch[1] : 'crystal5s-photos',
   };
@@ -312,13 +312,14 @@ async function setupCloudflareMode() {
   } else if (cliComp !== null) {
     companyInput = cliComp;
   } else {
-    console.log('── Cấu hình Tên Công ty / Nhà máy (Để tách riêng Web, Database & Kho ảnh) ──');
+    console.log('── Cấu hình Tên Công ty / Nhà máy (Để tách riêng Database & Kho ảnh) ──');
+    const defaultComp = currentCfg.dbName.replace(/-5s-db$/, '') || 'cetvn';
     companyInput = await ask(
-      `Nhập mã tên Công ty/Nhà máy (Enter = "${currentCfg.workerName.replace(/-5s-audit$/, '')}"): `
+      `Nhập mã tên Công ty/Nhà máy (Enter = "${defaultComp}"): `
     );
   }
 
-  let workerName = currentCfg.workerName;
+  let workerName = '5s-audit';
   let dbName = currentCfg.dbName;
   let bucketName = currentCfg.bucketName;
   let defaultDisplayName = 'CRYSTAL';
@@ -326,16 +327,18 @@ async function setupCloudflareMode() {
   if (companyInput) {
     const slug = slugify(companyInput);
     defaultDisplayName = (cliComp || companyInput).toUpperCase();
-    workerName = `${slug}-5s-audit`;
+    workerName = '5s-audit';
     dbName = `${slug}-5s-db`;
     bucketName = `${slug}-5s-photos`;
     updateWranglerConfig({ workerName, dbName, bucketName });
     ok(`Đã cấu hình định danh Cloudflare cho "${slug}":`);
-    console.log(`   • Worker : ${workerName}`);
+    console.log(`   • Worker : ${workerName} (URL rút gọn: https://5s-audit.<subdomain>.workers.dev)`);
     console.log(`   • D1 DB  : ${dbName}`);
     console.log(`   • R2     : ${bucketName}`);
   } else {
-    ok(`Sử dụng cấu hình hiện tại: ${workerName} (DB: ${dbName}, R2: ${bucketName})`);
+    workerName = '5s-audit';
+    updateWranglerConfig({ workerName });
+    ok(`Sử dụng cấu hình Worker: ${workerName} (DB: ${dbName}, R2: ${bucketName})`);
   }
 
   const branding = await promptCompanyBranding(defaultDisplayName);

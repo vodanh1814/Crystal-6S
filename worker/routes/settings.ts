@@ -423,7 +423,7 @@ async function resolveCloudflareConfig(env: Env): Promise<ResolvedCloudflareConf
   let accountId = (env.CLOUDFLARE_ACCOUNT_ID || '').trim();
   let apiToken = (env.CLOUDFLARE_API_TOKEN || '').trim();
   let customDomain = '';
-  let workerName = 'crystal-5s-audit';
+  let workerName = '5s-audit';
   let databaseId = '';
   let bucketName = 'crystal5s-photos';
 
@@ -630,7 +630,7 @@ settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
     const sub = await getCloudflareWorkerSubdomain(apiToken, accountId);
     if (sub) {
       predictedSubdomain = sub;
-      const workerName = String(body.worker_name || 'crystal-5s-audit').trim();
+      const workerName = String(body.worker_name || '5s-audit').trim();
       predictedWorkerUrl = `https://${workerName}.${sub}.workers.dev`;
     }
   }

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "crystal-5s-audit",
+  "name": "5s-audit",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-25",
   "compatibility_flags": [

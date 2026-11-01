@@ -415,7 +415,7 @@ export const AdminTargets: React.FC = () => {
 
   const openCfModal = () => {
     if (cfStatus) {
-      setCfWorkerNameInput(cfStatus.details.worker_name || 'crystal-5s-audit');
+      setCfWorkerNameInput(cfStatus.details.worker_name || '5s-audit');
       setCfCustomDomainInput(cfStatus.domains.custom_domain || '');
     }
     setCfAccountIdInput('');
@@ -800,7 +800,7 @@ export const AdminTargets: React.FC = () => {
                 rel="noreferrer"
                 className="text-xs font-mono font-bold text-sky-700 hover:text-sky-800 hover:underline truncate flex items-center gap-1"
               >
-                <span>{cfStatus?.domains.worker_subdomain || 'crystal-5s-audit.workers.dev'}</span>
+                <span>{cfStatus?.domains.worker_subdomain || '5s-audit.workers.dev'}</span>
                 <ExternalLink className="w-3 h-3 shrink-0" />
               </a>
             </div>
@@ -1505,7 +1505,7 @@ export const AdminTargets: React.FC = () => {
                   type="text"
                   value={cfWorkerNameInput}
                   onChange={(e) => setCfWorkerNameInput(e.target.value)}
-                  placeholder="crystal-5s-audit"
+                  placeholder="5s-audit"
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>

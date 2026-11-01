@@ -1,12 +1,23 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.4.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.4.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.4.2`
+## 1. Điểm nổi bật của phiên bản `v2.4.3`
+
+### ⚡ Chuẩn hóa & Rút gọn Tên miền Cloudflare Worker thành `5s-audit`
+- **Loại bỏ tiền tố công ty bị lặp**: Tên Worker được cố định là `5s-audit`, loại bỏ tiền tố thừa khi subdomain Cloudflare đã mang tên nhà máy.
+  - URL trước đây: `https://cetvn-5s-audit.5scetvn.workers.dev`
+  - URL mới: 👉 **`https://5s-audit.5scetvn.workers.dev`** *(ngắn gọn, trực quan, chuyên nghiệp)*.
+- **Phân lập Dữ liệu Độc lập**: D1 Database (`<slug>-5s-db`) và R2 Storage (`<slug>-5s-photos`) vẫn được phân lập riêng biệt cho từng doanh nghiệp.
+- **Quy trình Phát triển & Triển khai 6 Bước**: Chuẩn hóa quy tắc làm việc theo [GEMINI.md](./GEMINI.md) đảm bảo mọi thay đổi đều qua kiểm thử độc lập 0 lỗi và có sự phê duyệt trước khi xuất bản.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.4.2`
 
 ### 🌐 Tối ưu hóa Điều hướng Kích hoạt Subdomain Cloudflare Mới
 - **Khắc phục triệt để lỗi trang tạo Domain không vào được (do Cloudflare khai tử route `/workers/onboarding`)**:
