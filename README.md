@@ -1,12 +1,44 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.3.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.4.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.3.2`
+## 1. Điểm nổi bật của phiên bản `v2.4.0`
+
+### ☁️ Theo dõi Hạ tầng Cloudflare & Hạn ngạch Free Tier Trọn đời (Admin Only)
+- **Minh bạch hóa tài nguyên & Đảm bảo 0đ chi phí vận hành**:
+  - Tích hợp mục Quản trị Hạ tầng Cloudflare trực quan tại `/admin/targets` dành riêng cho `Admin`.
+  - **3 Thước đo Hạn ngạch Free Tier trực quan theo chuẩn Andon** (Xanh < 70%, Vàng 70-90%, Đỏ > 90%):
+    1. **Workers API Requests**: Đo lường lượt gọi trong ngày so với mức **100.000 req/ngày** *(Reset 00:00 UTC, CPU 10ms)*.
+    2. **Database D1 (SQLite)**: Đo dung lượng sử dụng so với **500 MB / Database** (kèm số dòng đọc `Reads ~X / 5.000.000` và ghi `Writes ~Y / 100.000` mỗi ngày).
+    3. **Kho lưu trữ ảnh R2**: Đo dung lượng ảnh vi phạm so với **10 GB miễn phí trọn đời**, hiển thị số lượng ảnh đã lưu và **ước tính số ảnh vi phạm còn có thể lưu thêm (> 50.000 ảnh vi phạm hoàn toàn 0đ)**.
+- **Thẻ thông tin Tài khoản & Tên miền**:
+  - Hiển thị Masked Account ID (`cf-••••••••3f8a`), môi trường (Edge Network vs Local Emulation), liên kết Subdomain Worker mặc định (`*.workers.dev`), huy hiệu xanh **SSL/HTTPS Hoạt động** và Tên miền riêng nhà máy (`Custom Domain`).
+
+---
+
+### 📦 Di chuyển Dữ liệu Không mất mát khi Switch Tài khoản (Zero-Loss Migration)
+- **Nút Tải bản sao lưu toàn bộ (SQL Dump)**:
+  - Cho phép Admin tải về file `crystal5s_backup_YYYY-MM-DD.sql` bao gồm **100% cấu trúc và dữ liệu của cả 12 bảng** (Tài khoản người dùng, 24 tiêu chí, 16 khu vực, toàn bộ audits, lỗi vi phạm, ảnh Before/After và điểm KPI).
+  - Tương thích hoàn hảo chuẩn transaction ACID của SQLite, sẵn sàng khôi phục vào bất kỳ Database D1 nào.
+- **Quy trình Di chuyển Tự động 6 bước trong CLI Setup (`scripts/auto_setup.mjs`)**:
+  - Bổ sung tùy chọn `[3] Di chuyển sang Tài khoản Cloudflare MỚI` (hoặc cờ `--migrate`) tự động export dữ liệu cũ, đăng nhập tài khoản Cloudflare mới, tạo Database D1 & R2 mới, nạp 100% dữ liệu cũ sang DB mới và xuất bản hệ thống.
+
+---
+
+### 🌐 Nhận diện Subdomain & Xem trước Tên miền mới khi Đổi Tài khoản
+- **Xem trước URL mới ngay khi bấm "Kiểm tra kết nối"**:
+  - Trong Modal cấu hình tài khoản Cloudflare, hệ thống tự động gọi API Cloudflare v4 để lấy chính xác Subdomain của tài khoản mới và hiển thị: `https://crystal-5s-audit.<subdomain-mới>.workers.dev`.
+  - Tích hợp nút **"Sao chép link"** và mở tab mới để Admin kịp thời lưu lại link mới trước khi bấm xác nhận chuyển.
+- **File Cứu hộ Offline (`CLOUDFLARE_LIVE_URL.txt`)**:
+  - Tự động lưu thông tin URL mới nhất, ngày giờ, tên Worker và tên DB D1 vào file văn bản tại máy tính ngay khi triển khai.
+
+---
+
+## 2. Các tính năng nổi bật từ các phiên bản trước
 
 ### 🧹 Tích hợp Nút Xóa Dữ Liệu Demo & Dọn Dẹp Khởi Tạo (Admin Only)
 - **Dọn dẹp sạch sẽ sau khi chạy thử nghiệm**:

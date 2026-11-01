@@ -7,3 +7,5 @@ cookies*.txt
 .exe_build
 .tmp*
 .backups
+migration_temp_backup.sql
+crystal5s_backup_*.sql

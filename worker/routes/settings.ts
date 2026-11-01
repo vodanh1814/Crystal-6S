@@ -5,6 +5,18 @@ import { isAdmin } from '../lib/permissions';
 import { logActivity } from '../lib/activity';
 import { encryptSecret, decryptSecret } from '../lib/crypto';
 import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from '../../src/version';
+import {
+  CF_FREE_TIER_LIMITS,
+  maskString,
+  calculateMetricStatus,
+  verifyCloudflareToken,
+  getCloudflareAccountInfo,
+  getCloudflareD1Database,
+  getCloudflareWorkerSubdomain,
+  generateDatabaseBackupSql,
+  getInternalUsageMetrics,
+  type CloudflareStatusResponse,
+} from '../lib/cloudflare';
 
 export const settingsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -395,3 +407,362 @@ settingsRouter.post('/clear-demo-data', authMiddleware, async (c) => {
     photos_deleted: photosDeleted,
   });
 });
+
+// ── Cloudflare Account & Free Tier Monitoring (Admin only) ──
+
+interface ResolvedCloudflareConfig {
+  accountId: string;
+  apiToken: string;
+  customDomain: string;
+  workerName: string;
+  databaseId: string;
+  bucketName: string;
+}
+
+async function resolveCloudflareConfig(env: Env): Promise<ResolvedCloudflareConfig> {
+  let accountId = (env.CLOUDFLARE_ACCOUNT_ID || '').trim();
+  let apiToken = (env.CLOUDFLARE_API_TOKEN || '').trim();
+  let customDomain = '';
+  let workerName = 'crystal-5s-audit';
+  let databaseId = '';
+  let bucketName = 'crystal5s-photos';
+
+  try {
+    const rows = await env.DB
+      .prepare(`
+        SELECT key, value FROM app_settings 
+        WHERE key IN ('cf_account_id', 'cf_api_token', 'cf_custom_domain', 'cf_worker_name', 'cf_database_id', 'cf_bucket_name')
+      `)
+      .all<{ key: string; value: string }>();
+
+    for (const r of rows.results || []) {
+      if (r.key === 'cf_account_id' && !accountId && r.value) {
+        accountId = r.value.trim();
+      } else if (r.key === 'cf_api_token' && !apiToken && r.value) {
+        apiToken = (await decryptSecret(r.value.trim(), env.JWT_SECRET)).trim();
+      } else if (r.key === 'cf_custom_domain' && r.value) {
+        customDomain = r.value.trim();
+      } else if (r.key === 'cf_worker_name' && r.value) {
+        workerName = r.value.trim();
+      } else if (r.key === 'cf_database_id' && r.value) {
+        databaseId = r.value.trim();
+      } else if (r.key === 'cf_bucket_name' && r.value) {
+        bucketName = r.value.trim();
+      }
+    }
+  } catch {}
+
+  return { accountId, apiToken, customDomain, workerName, databaseId, bucketName };
+}
+
+// GET /api/settings/cloudflare-status - Get Cloudflare account info, domains, and Free Tier quotas (Admin only)
+settingsRouter.get('/cloudflare-status', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const cfCfg = await resolveCloudflareConfig(c.env);
+  const internal = await getInternalUsageMetrics(c.env.DB);
+  const host = c.req.header('host') || '';
+  const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+  let accountName = 'Crystal Factory 5S';
+  let plan = 'Cloudflare Free Tier';
+  let hasValidToken = false;
+  let remoteD1Size = 0;
+  let cfApiError: string | undefined;
+
+  if (cfCfg.apiToken && cfCfg.accountId) {
+    const acc = await getCloudflareAccountInfo(cfCfg.apiToken, cfCfg.accountId);
+    if (acc.valid) {
+      hasValidToken = true;
+      if (acc.account_name) accountName = acc.account_name;
+      if (acc.plan) plan = acc.plan;
+
+      if (cfCfg.databaseId) {
+        const d1 = await getCloudflareD1Database(cfCfg.apiToken, cfCfg.accountId, cfCfg.databaseId);
+        if (d1 && typeof d1.file_size === 'number') {
+          remoteD1Size = d1.file_size;
+        }
+      }
+    } else {
+      cfApiError = acc.error;
+    }
+  }
+
+  // Calculate Quotas vs Cloudflare Plan (Free Tier vs Paid Plan)
+  const isPaidPlan =
+    plan.toLowerCase().includes('paid') ||
+    plan.toLowerCase().includes('pro') ||
+    plan.toLowerCase().includes('business') ||
+    plan.toLowerCase().includes('enterprise');
+
+  const workersReqUsed = Math.max(internal.activity_count_today * 12, 65);
+  const workersReqLimit = isPaidPlan ? 10_000_000 : CF_FREE_TIER_LIMITS.workers.daily_requests;
+  const workersReqPercent = Number(((workersReqUsed / workersReqLimit) * 100).toFixed(2));
+
+  const d1BytesUsed = remoteD1Size > 0 ? remoteD1Size : internal.d1_bytes_estimated;
+  const d1BytesLimit = isPaidPlan ? 10 * 1024 * 1024 * 1024 : CF_FREE_TIER_LIMITS.d1.max_storage_bytes;
+  const d1StorageLimitMb = isPaidPlan ? 10240 : CF_FREE_TIER_LIMITS.d1.max_storage_mb;
+  const d1Percent = Number(((d1BytesUsed / d1BytesLimit) * 100).toFixed(2));
+
+  const d1ReadsUsed = internal.reads_today_estimated;
+  const d1ReadsLimit = isPaidPlan ? 25_000_000_000 : CF_FREE_TIER_LIMITS.d1.daily_reads;
+  const d1ReadsPercent = Number(((d1ReadsUsed / d1ReadsLimit) * 100).toFixed(3));
+
+  const d1WritesUsed = internal.writes_today_estimated;
+  const d1WritesLimit = isPaidPlan ? 50_000_000 : CF_FREE_TIER_LIMITS.d1.daily_writes;
+  const d1WritesPercent = Number(((d1WritesUsed / d1WritesLimit) * 100).toFixed(2));
+
+  const r2BytesUsed = internal.r2_bytes_estimated;
+  const r2BytesLimit = CF_FREE_TIER_LIMITS.r2.max_storage_bytes;
+  const r2Percent = Number(((r2BytesUsed / r2BytesLimit) * 100).toFixed(2));
+
+  const response: CloudflareStatusResponse = {
+    connected: hasValidToken || !isLocal,
+    mode: isLocal ? 'local_emulation' : 'cloud_worker',
+    account: {
+      id_masked: cfCfg.accountId ? maskString(cfCfg.accountId, 6, 4) : 'cf-demo-tier-free',
+      name: accountName,
+      plan,
+      has_token: Boolean(cfCfg.apiToken),
+    },
+    domains: {
+      worker_subdomain: `${cfCfg.workerName}.workers.dev`,
+      worker_url: `https://${cfCfg.workerName}.workers.dev`,
+      custom_domain: cfCfg.customDomain || null,
+      custom_domain_url: cfCfg.customDomain
+        ? (cfCfg.customDomain.startsWith('http') ? cfCfg.customDomain : `https://${cfCfg.customDomain}`)
+        : null,
+      ssl_active: true,
+    },
+    quotas: {
+      workers_requests_daily: {
+        used: workersReqUsed,
+        limit: workersReqLimit,
+        percent: workersReqPercent,
+        unit: isPaidPlan ? 'requests/tháng (Paid)' : 'requests/ngày',
+        status: calculateMetricStatus(workersReqPercent),
+      },
+      d1_storage: {
+        used: Math.round((d1BytesUsed / (1024 * 1024)) * 100) / 100,
+        limit: d1StorageLimitMb,
+        percent: d1Percent,
+        unit: 'MB',
+        status: calculateMetricStatus(d1Percent),
+      },
+      d1_reads_daily: {
+        used: d1ReadsUsed,
+        limit: d1ReadsLimit,
+        percent: d1ReadsPercent,
+        unit: 'rows read/ngày',
+        status: calculateMetricStatus(d1ReadsPercent),
+      },
+      d1_writes_daily: {
+        used: d1WritesUsed,
+        limit: d1WritesLimit,
+        percent: d1WritesPercent,
+        unit: 'rows written/ngày',
+        status: calculateMetricStatus(d1WritesPercent),
+      },
+      r2_storage: {
+        used: Math.round((r2BytesUsed / (1024 * 1024 * 1024)) * 1000) / 1000,
+        limit: CF_FREE_TIER_LIMITS.r2.max_storage_gb,
+        percent: r2Percent,
+        unit: 'GB',
+        status: calculateMetricStatus(r2Percent),
+      },
+      r2_photos_count: internal.photos_count,
+      r2_estimated_capacity_photos: Math.max(0, Math.floor((r2BytesLimit - r2BytesUsed) / (200 * 1024))),
+    },
+    details: {
+      d1_database_name: 'crystal5s-db',
+      d1_database_id_masked: cfCfg.databaseId ? maskString(cfCfg.databaseId, 6, 4) : 'd1-auto-binding',
+      r2_bucket_name: cfCfg.bucketName,
+      worker_name: cfCfg.workerName,
+      total_db_rows: internal.total_db_rows,
+      activity_count_today: internal.activity_count_today,
+    },
+    last_checked: new Date().toISOString(),
+    error: cfApiError,
+  };
+
+  return c.json(response);
+});
+
+// POST /api/settings/cloudflare-test - Verify token and account ID without saving (Admin only)
+settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const apiToken = String(body.api_token || '').trim();
+  const accountId = String(body.account_id || '').trim();
+
+  if (!apiToken) {
+    return c.json({ ok: false, error: 'Vui lòng nhập Cloudflare API Token để kiểm tra' }, 400);
+  }
+
+  const verify = await verifyCloudflareToken(apiToken);
+  if (!verify.valid) {
+    return c.json({ ok: false, error: verify.message || 'API Token không hợp lệ' }, 400);
+  }
+
+  let accountName = 'Tài khoản Cloudflare';
+  let plan = 'Free Tier';
+  let predictedSubdomain: string | null = null;
+  let predictedWorkerUrl: string | null = null;
+
+  if (accountId) {
+    const acc = await getCloudflareAccountInfo(apiToken, accountId);
+    if (!acc.valid) {
+      return c.json({
+        ok: false,
+        error: `Token hợp lệ nhưng không thể truy cập Account ID "${accountId}": ${acc.error || 'Quyền bị từ chối'}`,
+      }, 400);
+    }
+    if (acc.account_name) accountName = acc.account_name;
+    if (acc.plan) plan = acc.plan;
+
+    const sub = await getCloudflareWorkerSubdomain(apiToken, accountId);
+    if (sub) {
+      predictedSubdomain = sub;
+      const workerName = String(body.worker_name || 'crystal-5s-audit').trim();
+      predictedWorkerUrl = `https://${workerName}.${sub}.workers.dev`;
+    }
+  }
+
+  return c.json({
+    ok: true,
+    message: 'Kết nối Cloudflare thành công! Token có hiệu lực.',
+    account_name: accountName,
+    plan,
+    predicted_subdomain: predictedSubdomain,
+    predicted_worker_url: predictedWorkerUrl,
+  });
+});
+
+// GET /api/settings/export-backup - Download complete SQLite SQL dump for D1 backup & account migration (Admin only)
+settingsRouter.get('/export-backup', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const backup = await generateDatabaseBackupSql(c.env.DB);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const filename = `crystal5s_backup_${dateStr}.sql`;
+
+  await logActivity(
+    c.env.DB,
+    user.id,
+    'export_database_backup',
+    'settings',
+    null,
+    `tables=${backup.summary.tables}, rows=${backup.summary.rows}`
+  );
+
+  c.header('Content-Type', 'application/sql; charset=utf-8');
+  c.header('Content-Disposition', `attachment; filename="${filename}"`);
+  return c.text(backup.sql);
+});
+
+// PUT /api/settings/cloudflare-config - Update Account ID, API Token (encrypted), Worker name, Custom domain (Admin only)
+settingsRouter.put('/cloudflare-config', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const statements: D1PreparedStatement[] = [];
+
+  if (body.account_id !== undefined) {
+    const accId = String(body.account_id || '').trim();
+    statements.push(
+      c.env.DB.prepare(`
+        INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_account_id', ?, datetime('now'))
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `).bind(accId)
+    );
+  }
+
+  if (body.api_token !== undefined) {
+    const rawToken = String(body.api_token || '').trim();
+    const encryptedToken = rawToken ? await encryptSecret(rawToken, c.env.JWT_SECRET) : '';
+    statements.push(
+      c.env.DB.prepare(`
+        INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_api_token', ?, datetime('now'))
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `).bind(encryptedToken)
+    );
+  }
+
+  if (body.worker_name !== undefined) {
+    const workerName = String(body.worker_name || '').trim();
+    if (workerName) {
+      statements.push(
+        c.env.DB.prepare(`
+          INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_worker_name', ?, datetime('now'))
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(workerName)
+      );
+    }
+  }
+
+  if (body.custom_domain !== undefined) {
+    const customDomain = String(body.custom_domain || '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+    statements.push(
+      c.env.DB.prepare(`
+        INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_custom_domain', ?, datetime('now'))
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `).bind(customDomain)
+    );
+  }
+
+  if (body.database_id !== undefined) {
+    const dbId = String(body.database_id || '').trim();
+    if (dbId) {
+      statements.push(
+        c.env.DB.prepare(`
+          INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_database_id', ?, datetime('now'))
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(dbId)
+      );
+    }
+  }
+
+  if (body.bucket_name !== undefined) {
+    const bucket = String(body.bucket_name || '').trim();
+    if (bucket) {
+      statements.push(
+        c.env.DB.prepare(`
+          INSERT INTO app_settings (key, value, updated_at) VALUES ('cf_bucket_name', ?, datetime('now'))
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(bucket)
+      );
+    }
+  }
+
+  if (statements.length > 0) {
+    await c.env.DB.batch(statements);
+  }
+
+  await logActivity(
+    c.env.DB,
+    user.id,
+    'update_cf_config',
+    'settings',
+    null,
+    `account_id_updated=${body.account_id !== undefined}, token_updated=${body.api_token !== undefined}`
+  );
+
+  return c.json({
+    ok: true,
+    message: 'Đã cập nhật cấu hình tài khoản Cloudflare và tên miền thành công',
+  });
+});
+

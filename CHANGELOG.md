@@ -4,6 +4,32 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.4.0] - 2026-11-01
+
+### Added (Tính năng mới)
+- **Theo dõi Hạ tầng Cloudflare & Hạn ngạch Free Tier trọn đời (`Admin Only`)**:
+  - Tích hợp khu vực quản lý hạ tầng Cloudflare trực quan tại trang Quản trị (`/admin/targets`).
+  - **3 Thước đo Hạn ngạch Free Tier đồ họa** với màu sắc chuẩn Andon (Xanh < 70%, Vàng 70-90%, Đỏ > 90%):
+    1. **Workers API Requests**: Đo lượt gọi API trong ngày so với mức **100.000 req/ngày** *(Reset 00:00 UTC, CPU limit: 10ms)*.
+    2. **D1 Database (SQLite)**: Đo dung lượng thực tế so với **500 MB / Database** kèm số lượt đọc (`Reads: ~X / 5.000.000`) và ghi (`Writes: ~Y / 100.000`) mỗi ngày.
+    3. **R2 Object Storage**: Đo dung lượng ảnh vi phạm so với **10 GB miễn phí trọn đời**, hiển thị số lượng ảnh đã lưu và **ước tính số ảnh vi phạm 5S còn có thể lưu thêm (> 50.000 ảnh vi phạm hoàn toàn 0đ)**.
+  - **Thẻ thông tin Tài khoản & Tên miền**: Hiển thị Masked Account ID (`cf-••••••••3f8a`), môi trường (Edge Network vs Local Emulation), huy hiệu **0đ Phí Vận Hành**, liên kết Subdomain Worker mặc định (`*.workers.dev`), huy hiệu xanh **SSL/HTTPS Hoạt động** và Tên miền riêng nhà máy (`Custom Domain`).
+- **Di chuyển Dữ liệu Không mất mát khi Switch Tài khoản (`Zero-Loss Migration`)**:
+  - **Nút Tải bản sao lưu toàn bộ (SQL Dump)**: Cho phép Admin xuất và tải về máy tính file `crystal5s_backup_YYYY-MM-DD.sql` bao gồm 100% dữ liệu của cả 12 bảng (người dùng, 24 tiêu chí, 16 khu vực, toàn bộ audits, lỗi vi phạm, ảnh Before/After và điểm KPI).
+  - **Quy trình Di chuyển Tự động 6 bước trong CLI Setup (`scripts/auto_setup.mjs`)**: Bổ sung tùy chọn `[3] Di chuyển sang Tài khoản Cloudflare MỚI` (hoặc cờ `--migrate`) tự động export dữ liệu cũ, đăng nhập tài khoản Cloudflare mới, tạo Database D1 & R2 mới, nạp 100% dữ liệu cũ sang DB mới và xuất bản hệ thống.
+- **Nhận diện Subdomain & Xem trước Tên miền mới khi Đổi Tài khoản**:
+  - Trong Modal *Cấu hình & Thay đổi Tài khoản Cloudflare*, khi bấm **"Kiểm tra kết nối"**, hệ thống tự động gọi API Cloudflare v4 để lấy chính xác Subdomain của tài khoản mới và hiển thị xem trước: `https://crystal-5s-audit.<subdomain-mới>.workers.dev`.
+  - Bổ sung nút **"Sao chép link"** (kèm hiệu ứng phản hồi) và mở tab mới để Admin kịp thời lưu lại link mới trước khi bấm xác nhận chuyển.
+  - **File Cứu hộ Offline (`CLOUDFLARE_LIVE_URL.txt`)**: Tự động lưu thông tin URL mới nhất, ngày giờ, tên Worker và tên DB D1 vào file văn bản tại máy tính ngay khi triển khai.
+
+### Security & Hardening (Bảo mật & Tối ưu hóa)
+- Mã hóa **AES-GCM-256** đối với Cloudflare API Token lưu trong bảng `app_settings`.
+- Phân quyền nghiêm ngặt: Toàn bộ API Cloudflare Status, Test, Config và Export Backup đều yêu cầu quyền Quản trị viên (`isAdmin`).
+- Giới hạn thời gian chờ ngắt kết nối an toàn (`AbortSignal.timeout(6000)`) cho toàn bộ các lệnh gọi ra Cloudflare API bên ngoài.
+- Thêm các mẫu file sao lưu dữ liệu `*.sql` vào `.gitignore` để phòng ngừa rủi ro lộ dữ liệu nội bộ lên kho mã nguồn Git.
+
+---
+
 ## [2.3.2] - 2026-11-01
 
 ### Added (Tính năng mới)

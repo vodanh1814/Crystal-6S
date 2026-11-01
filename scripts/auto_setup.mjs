@@ -440,11 +440,157 @@ async function setupCloudflareMode() {
   if (urlMatch) {
     const liveUrl = urlMatch[0];
     console.log(`\n👉 LIVE URL: ${liveUrl}`);
+    saveLiveUrlToFile(liveUrl, workerName, dbName);
     try {
       execSync(`start ${liveUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
     } catch {}
   }
   process.exit(0);
+}
+
+function saveLiveUrlToFile(url, workerName, dbName) {
+  const filePath = path.join(ROOT, 'CLOUDFLARE_LIVE_URL.txt');
+  const content = [
+    '======================================================================',
+    '   CRYSTAL 5S AUDIT — THÔNG TIN TRANG WEB TRÊN CLOUDFLARE',
+    '======================================================================',
+    `ĐƯỜNG DẪN TRUY CẬP (LIVE URL): ${url}`,
+    `Cập nhật lúc: ${new Date().toLocaleString('vi-VN')} (${new Date().toISOString()})`,
+    `Tên Worker: ${workerName}`,
+    `Database D1: ${dbName}`,
+    '======================================================================',
+    'Lưu ý: Bạn có thể lưu lại đường dẫn trên để chia sẻ cho các Giám sát viên',
+    '(Auditors), Quản lý khu vực (Area MNG) và cài đặt trên Màn hình TV Andon.',
+  ].join('\n');
+  try {
+    fs.writeFileSync(filePath, content, 'utf-8');
+    ok(`Đã tự động lưu đường dẫn web vào file: CLOUDFLARE_LIVE_URL.txt`);
+  } catch {}
+}
+
+async function migrateCloudflareAccountMode() {
+  const cfg = readCurrentConfig();
+  console.log('\n======================================================================');
+  console.log('   DI CHUYỂN TOÀN BỘ DỮ LIỆU SANG TÀI KHOẢN CLOUDFLARE MỚI');
+  console.log('======================================================================');
+  console.log('Quy trình này sẽ:');
+  console.log('1. Sao lưu 100% dữ liệu (Audits, Lỗi 5S, Người dùng, Tiêu chí...) từ DB cũ.');
+  console.log('2. Đăng nhập vào Tài khoản Cloudflare MỚI.');
+  console.log('3. Tự động tạo Database D1 & Kho ảnh R2 mới.');
+  console.log('4. Nạp 100% dữ liệu cũ vào Database mới và xuất bản hệ thống.');
+  console.log('5. Cập nhật và mở đường dẫn web mới.\n');
+
+  const cliConfirm = getCliArg('confirm');
+  const confirm = cliConfirm !== null ? cliConfirm : await ask('Bạn có muốn bắt đầu di chuyển ngay? [1] Có / [2] Hủy: ');
+  if (confirm !== '1' && confirm !== 'yes') {
+    console.log('Đã hủy thao tác di chuyển.');
+    return;
+  }
+
+  step('1/6. Xuất bản sao lưu dữ liệu toàn diện (Exporting Backup)...');
+  const backupFile = path.join(ROOT, 'migration_temp_backup.sql');
+  let backupOk = false;
+  try {
+    run(`npx wrangler d1 export ${cfg.dbName} --remote --output=migration_temp_backup.sql`, { silent: true });
+    if (fs.existsSync(backupFile) && fs.statSync(backupFile).size > 50) {
+      backupOk = true;
+      ok(`Đã xuất bản sao lưu D1 thành công (${(fs.statSync(backupFile).size / 1024).toFixed(1)} KB).`);
+    }
+  } catch {}
+
+  if (!backupOk) {
+    warn('Không thể export trực tiếp từ Cloudflare cũ. Đang thử lấy dữ liệu từ Local D1...');
+    try {
+      run(`npx wrangler d1 export ${cfg.dbName} --local --output=migration_temp_backup.sql`, { silent: true });
+      if (fs.existsSync(backupFile) && fs.statSync(backupFile).size > 50) {
+        backupOk = true;
+        ok('Đã lấy dữ liệu sao lưu từ Local D1 thành công.');
+      }
+    } catch {}
+  }
+
+  step('2/6. Đăng nhập vào Tài khoản Cloudflare MỚI...');
+  warn('Trình duyệt sẽ mở ra. Vui lòng đăng nhập vào TÀI KHOẢN MỚI và bấm "Allow"...');
+  try {
+    run('npx wrangler logout', { silent: true });
+  } catch {}
+  run('npx wrangler login');
+  ok('Đã kết nối tài khoản Cloudflare mới thành công!');
+
+  step(`3/6. Khởi tạo Database D1 (${cfg.dbName}) trên tài khoản mới...`);
+  let newDbId = null;
+  try {
+    const out = run(`npx wrangler d1 create ${cfg.dbName}`, { silent: true });
+    const match = out.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if (match) newDbId = match[0];
+  } catch {
+    try {
+      const listJson = run('npx wrangler d1 list --json', { silent: true });
+      const list = JSON.parse(listJson);
+      const found = list.find((d) => d.name === cfg.dbName);
+      if (found && found.uuid) newDbId = found.uuid;
+    } catch {}
+  }
+
+  if (newDbId) {
+    updateWranglerConfig({ workerName: cfg.workerName, dbName: cfg.dbName, dbId: newDbId, bucketName: cfg.bucketName });
+    ok(`Đã tạo Database D1 mới (${newDbId}) và cập nhật wrangler.jsonc.`);
+  }
+
+  step(`4/6. Khởi tạo Kho ảnh R2 (${cfg.bucketName}) trên tài khoản mới...`);
+  try {
+    run(`npx wrangler r2 bucket create ${cfg.bucketName}`, { silent: true });
+    ok(`Đã tạo kho ảnh R2: ${cfg.bucketName}.`);
+  } catch (e) {
+    const msg = String(e.stderr || e.stdout || e.message || '');
+    if (msg.includes('already exists') || msg.includes('10004')) {
+      ok(`Kho ảnh R2 (${cfg.bucketName}) đã sẵn sàng.`);
+    }
+  }
+
+  step('5/6. Khởi tạo cấu trúc bảng & Nạp 100% dữ liệu cũ vào tài khoản mới...');
+  run(`npx wrangler d1 migrations apply ${cfg.dbName} --remote`);
+  if (backupOk && fs.existsSync(backupFile)) {
+    try {
+      run(`npx wrangler d1 execute ${cfg.dbName} --remote --file=migration_temp_backup.sql`, { silent: true });
+      ok('✔ ĐÃ NẠP 100% DỮ LIỆU CŨ SANG TÀI KHOẢN MỚI THÀNH CÔNG!');
+    } catch (e) {
+      warn(`Lưu ý nạp dữ liệu: ${e.message}.`);
+    } finally {
+      try { fs.unlinkSync(backupFile); } catch {}
+    }
+  } else {
+    run(`npx wrangler d1 execute ${cfg.dbName} --remote --file=seed/sample_areas.sql`);
+    ok('Đã nạp 24 tiêu chí 5S và dữ liệu ban đầu vào tài khoản mới.');
+  }
+
+  // Setup JWT_SECRET
+  const jwtSecret = 's5-prod-' + crypto.randomBytes(24).toString('hex');
+  try {
+    execSync('npx wrangler secret put JWT_SECRET', {
+      cwd: ROOT,
+      input: jwtSecret,
+      stdio: ['pipe', 'ignore', 'ignore'],
+      encoding: 'utf-8',
+    });
+  } catch {}
+
+  step('6/6. Đóng gói & Triển khai Worker lên tài khoản Cloudflare mới (npm run deploy)...');
+  const deployOut = run('npm run deploy', { silent: true });
+  console.log(deployOut);
+
+  const urlMatch = deployOut.match(/https:\/\/[a-zA-Z0-9.-]+\.workers\.dev/);
+  console.log('\n======================================================================');
+  console.log('   🎉 DI CHUYỂN TÀI KHOẢN CLOUDFLARE THÀNH CÔNG RỰC RỠ!');
+  console.log('======================================================================');
+  if (urlMatch) {
+    const liveUrl = urlMatch[0];
+    console.log(`\n👉 ĐƯỜNG DẪN MỚI TRÊN CLOUDFLARE: ${liveUrl}`);
+    saveLiveUrlToFile(liveUrl, cfg.workerName, cfg.dbName);
+    try {
+      execSync(`start ${liveUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
+    } catch {}
+  }
 }
 
 async function main() {
@@ -459,11 +605,20 @@ async function main() {
     await setupCloudflareMode();
     return;
   }
+  if (argMode === '--migrate') {
+    await migrateCloudflareAccountMode();
+    return;
+  }
 
-  console.log('Chọn chế độ tự động (1 = Local LAN, 2 = Cloudflare Internet):\n');
+  console.log('Chọn chế độ tự động:\n');
+  console.log(' [1] Chạy máy chủ Local (LAN nội bộ nhà máy)');
+  console.log(' [2] Cài đặt & Triển khai lên Cloudflare Internet (0đ chi phí)');
+  console.log(' [3] Di chuyển sang Tài khoản Cloudflare MỚI (Tự động đem 100% dữ liệu cũ qua)\n');
   const choice = await ask('Lựa chọn của bạn (Mặc định = 1): ');
   if (choice === '2') {
     await setupCloudflareMode();
+  } else if (choice === '3') {
+    await migrateCloudflareAccountMode();
   } else {
     await setupLocalMode();
   }

@@ -14,6 +14,20 @@ import {
   ShieldAlert,
   FileText,
   ExternalLink,
+  Cloud,
+  Database,
+  HardDrive,
+  Globe,
+  Activity,
+  Key,
+  Settings2,
+  ShieldCheck,
+  AlertTriangle,
+  Lock,
+  Download,
+  Copy,
+  Check,
+  Info,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +36,73 @@ import { Modal } from '../components/Modal';
 import { fileToLogoDataUrl } from '../lib/imageCompression';
 import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL } from '../version';
 import type { YearlyTarget } from '../api/types';
+
+interface CfStatusData {
+  connected: boolean;
+  mode: 'cloud_worker' | 'local_emulation';
+  account: {
+    id_masked: string;
+    name: string;
+    plan: string;
+    has_token: boolean;
+  };
+  domains: {
+    worker_subdomain: string;
+    worker_url: string;
+    custom_domain: string | null;
+    custom_domain_url: string | null;
+    ssl_active: boolean;
+  };
+  quotas: {
+    workers_requests_daily: {
+      used: number;
+      limit: number;
+      percent: number;
+      unit: string;
+      status: 'safe' | 'warning' | 'danger';
+    };
+    d1_storage: {
+      used: number;
+      limit: number;
+      percent: number;
+      unit: string;
+      status: 'safe' | 'warning' | 'danger';
+    };
+    d1_reads_daily: {
+      used: number;
+      limit: number;
+      percent: number;
+      unit: string;
+      status: 'safe' | 'warning' | 'danger';
+    };
+    d1_writes_daily: {
+      used: number;
+      limit: number;
+      percent: number;
+      unit: string;
+      status: 'safe' | 'warning' | 'danger';
+    };
+    r2_storage: {
+      used: number;
+      limit: number;
+      percent: number;
+      unit: string;
+      status: 'safe' | 'warning' | 'danger';
+    };
+    r2_photos_count: number;
+    r2_estimated_capacity_photos: number;
+  };
+  details: {
+    d1_database_name: string;
+    d1_database_id_masked: string;
+    r2_bucket_name: string;
+    worker_name: string;
+    total_db_rows: number;
+    activity_count_today: number;
+  };
+  last_checked: string;
+  error?: string;
+}
 
 export const AdminTargets: React.FC = () => {
   const { t, lang } = useI18n();
@@ -265,6 +346,146 @@ export const AdminTargets: React.FC = () => {
     }
   };
 
+  // ── 5. Cloudflare & Free Tier Monitoring State ──
+  const [cfStatus, setCfStatus] = useState<CfStatusData | null>(null);
+  const [loadingCfStatus, setLoadingCfStatus] = useState(false);
+  const [cfModalOpen, setCfModalOpen] = useState(false);
+  const [cfAccountIdInput, setCfAccountIdInput] = useState('');
+  const [cfApiTokenInput, setCfApiTokenInput] = useState('');
+  const [cfWorkerNameInput, setCfWorkerNameInput] = useState('');
+  const [cfCustomDomainInput, setCfCustomDomainInput] = useState('');
+  const [testingCfConn, setTestingCfConn] = useState(false);
+  const [savingCfConfig, setSavingCfConfig] = useState(false);
+  const [cfModalMessage, setCfModalMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [cfSuccessBanner, setCfSuccessBanner] = useState<string | null>(null);
+  const [downloadingBackup, setDownloadingBackup] = useState(false);
+  const [predictedNewUrl, setPredictedNewUrl] = useState<string | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [showCustomDomainGuide, setShowCustomDomainGuide] = useState(false);
+
+  const handleDownloadBackup = async () => {
+    setDownloadingBackup(true);
+    try {
+      const res = await fetch('/api/settings/export-backup', {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new Error(`Lỗi tải backup: HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `crystal5s_backup_${dateStr}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || 'Không thể tải bản sao lưu');
+    } finally {
+      setDownloadingBackup(false);
+    }
+  };
+
+  const copyPredictedUrl = () => {
+    if (!predictedNewUrl) return;
+    navigator.clipboard.writeText(predictedNewUrl);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 3000);
+  };
+
+  const fetchCfStatus = useCallback(async () => {
+    if (!isAdmin) return;
+    setLoadingCfStatus(true);
+    try {
+      const res = await api.get<CfStatusData>('/settings/cloudflare-status');
+      setCfStatus(res);
+    } catch (err: any) {
+      console.warn('Failed to load Cloudflare status:', err);
+    } finally {
+      setLoadingCfStatus(false);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    fetchCfStatus();
+  }, [fetchCfStatus]);
+
+  const openCfModal = () => {
+    if (cfStatus) {
+      setCfWorkerNameInput(cfStatus.details.worker_name || 'crystal-5s-audit');
+      setCfCustomDomainInput(cfStatus.domains.custom_domain || '');
+    }
+    setCfAccountIdInput('');
+    setCfApiTokenInput('');
+    setPredictedNewUrl(null);
+    setCopiedUrl(false);
+    setCfModalMessage(null);
+    setCfModalOpen(true);
+  };
+
+  const handleTestCfConnection = async () => {
+    setTestingCfConn(true);
+    setCfModalMessage(null);
+    try {
+      const res = await api.post<{
+        ok: boolean;
+        message: string;
+        account_name?: string;
+        plan?: string;
+        predicted_worker_url?: string | null;
+      }>(
+        '/settings/cloudflare-test',
+        {
+          account_id: cfAccountIdInput.trim(),
+          api_token: cfApiTokenInput.trim(),
+          worker_name: cfWorkerNameInput.trim() || undefined,
+        }
+      );
+      if (res.predicted_worker_url) {
+        setPredictedNewUrl(res.predicted_worker_url);
+      }
+      setCfModalMessage({
+        type: 'success',
+        text: `${res.message} (${res.account_name || 'Cloudflare'} - ${res.plan || 'Free Tier'})`,
+      });
+    } catch (err: any) {
+      setCfModalMessage({
+        type: 'error',
+        text: err.message || 'Không thể xác thực với Cloudflare API',
+      });
+    } finally {
+      setTestingCfConn(false);
+    }
+  };
+
+  const handleSaveCfConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCfConfig(true);
+    setCfModalMessage(null);
+    try {
+      await api.put('/settings/cloudflare-config', {
+        account_id: cfAccountIdInput.trim() || undefined,
+        api_token: cfApiTokenInput.trim() || undefined,
+        worker_name: cfWorkerNameInput.trim() || undefined,
+        custom_domain: cfCustomDomainInput.trim() || undefined,
+      });
+      setCfModalOpen(false);
+      setCfSuccessBanner(t('cf_saved_success'));
+      setTimeout(() => setCfSuccessBanner(null), 5000);
+      await fetchCfStatus();
+    } catch (err: any) {
+      setCfModalMessage({
+        type: 'error',
+        text: err.message || 'Lỗi khi lưu cấu hình Cloudflare',
+      });
+    } finally {
+      setSavingCfConfig(false);
+    }
+  };
+
   if (!isAdmin) {
     return null;
   }
@@ -468,7 +689,320 @@ export const AdminTargets: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 2: COMPANY BRANDING */}
+      {/* SECTION 2: CLOUDFLARE INFRASTRUCTURE & FREE TIER MONITORING */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Cloud className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                  {t('cf_monitoring_title')}
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[11px] font-bold">
+                  {cfStatus?.account.plan || t('cf_plan_badge')}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  {t('cf_zero_cost_badge')}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {t('cf_monitoring_desc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleDownloadBackup}
+              disabled={downloadingBackup}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+              title="Tải bản sao lưu toàn bộ dữ liệu (Audits, Lỗi 5S, Tiêu chí, Điểm...) dạng SQL"
+            >
+              <Download className={`w-3.5 h-3.5 text-slate-600 ${downloadingBackup ? 'animate-bounce' : ''}`} />
+              <span>{downloadingBackup ? t('cf_downloading_backup') : t('cf_download_backup_btn')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={fetchCfStatus}
+              disabled={loadingCfStatus}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingCfStatus ? 'animate-spin' : ''}`} />
+              <span>{t('cf_refresh_btn')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={openCfModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition shadow-sm shadow-sky-600/20 cursor-pointer"
+            >
+              <Settings2 className="w-3.5 h-3.5" />
+              <span>{t('cf_switch_account_btn')}</span>
+            </button>
+          </div>
+        </div>
+
+        {cfSuccessBanner && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+            <span>{cfSuccessBanner}</span>
+          </div>
+        )}
+
+        {/* Account & Domains Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card A: Account Details */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-sky-600" />
+                {t('cf_account_name')}
+              </span>
+              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                {cfStatus?.account.id_masked || 'cf-account-id'}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-base font-black text-slate-900">
+                {cfStatus?.account.name || 'Crystal 5S Audit'}
+              </div>
+              <span className="text-xs font-semibold text-slate-500">
+                {cfStatus?.mode === 'cloud_worker' ? 'Cloudflare Workers (Edge)' : 'Local Emulation'}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 flex items-center gap-2">
+              <span className="font-semibold text-slate-600">Database:</span> {cfStatus?.details.d1_database_name} • <span className="font-semibold text-slate-600">Bucket:</span> {cfStatus?.details.r2_bucket_name}
+            </div>
+          </div>
+
+          {/* Card B: Routing & Domains */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-emerald-600" />
+                {t('cf_default_domain')}
+              </span>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <Lock className="w-3 h-3 text-emerald-600" />
+                {t('cf_ssl_active')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <a
+                href={cfStatus?.domains.worker_url || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-mono font-bold text-sky-700 hover:text-sky-800 hover:underline truncate flex items-center gap-1"
+              >
+                <span>{cfStatus?.domains.worker_subdomain || 'crystal-5s-audit.workers.dev'}</span>
+                <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            </div>
+            <div className="text-[11px] text-slate-600 pt-1 border-t border-slate-200/60 flex items-center justify-between">
+              <span className="font-semibold text-slate-500">{t('cf_custom_domain')}:</span>
+              {cfStatus?.domains.custom_domain ? (
+                <a
+                  href={cfStatus.domains.custom_domain_url || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                >
+                  <span>{cfStatus.domains.custom_domain}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <span className="italic text-slate-400">{t('cf_custom_domain_not_set')}</span>
+              )}
+            </div>
+
+            <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowCustomDomainGuide(!showCustomDomainGuide)}
+                className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 hover:underline font-bold cursor-pointer"
+              >
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>{showCustomDomainGuide ? 'Ẩn hướng dẫn gắn tên miền' : 'Cách gắn tên miền riêng công ty (5s.congty.com)'}</span>
+              </button>
+            </div>
+
+            {showCustomDomainGuide && (
+              <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5 text-[11px] text-slate-600">
+                <div className="font-bold text-slate-800">Hướng dẫn 3 bước gắn Tên miền riêng (Miễn phí 100%):</div>
+                <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                  <li>Vào Cloudflare Dashboard &gt; Workers &gt; Chọn Worker &gt; Tab <strong>Settings</strong> &gt; <strong>Domains & Routes</strong>.</li>
+                  <li>Bấm <strong>Add Custom Domain</strong> &gt; Nhập tên miền (vd: <code>5s.nhamaycrystal.vn</code>) &gt; Bấm Add. Cloudflare tự cấp SSL xanh trong 30 giây.</li>
+                  <li>Bấm <strong>Cấu hình / Đổi tài khoản</strong> bên trên &gt; Nhập tên miền đó vào ô Custom Domain &gt; Lưu cấu hình.</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Free Tier Quota Gauges (3 Progress Bars) */}
+        <div className="space-y-4">
+          <div className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center justify-between">
+            <span>Tiêu chuẩn Hạn ngạch Free Tier & Mức dùng hiện tại</span>
+            <span className="text-[11px] font-bold text-slate-400 lowercase">cập nhật lúc {cfStatus?.last_checked ? new Date(cfStatus.last_checked).toLocaleTimeString() : 'mới đây'}</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Metric 1: Workers Requests */}
+            {cfStatus?.quotas && (
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-sky-600" />
+                    {t('cf_workers_quota')}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[11px] font-black font-mono ${
+                    cfStatus.quotas.workers_requests_daily.status === 'danger'
+                      ? 'bg-rose-100 text-rose-800'
+                      : cfStatus.quotas.workers_requests_daily.status === 'warning'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {cfStatus.quotas.workers_requests_daily.percent}%
+                  </span>
+                </div>
+
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      cfStatus.quotas.workers_requests_daily.status === 'danger'
+                        ? 'bg-rose-500'
+                        : cfStatus.quotas.workers_requests_daily.status === 'warning'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(1, cfStatus.quotas.workers_requests_daily.percent))}%` }}
+                  />
+                </div>
+
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="font-bold text-slate-900 font-mono">
+                    {cfStatus.quotas.workers_requests_daily.used.toLocaleString()} req
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Hạn mức: 100,000 / ngày
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-tight">
+                  Tự động làm mới mỗi 00:00 UTC. Thời gian CPU tối đa: 10ms.
+                </p>
+              </div>
+            )}
+
+            {/* Metric 2: D1 Database */}
+            {cfStatus?.quotas && (
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Database className="w-4 h-4 text-indigo-600" />
+                    {t('cf_d1_quota')}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[11px] font-black font-mono ${
+                    cfStatus.quotas.d1_storage.status === 'danger'
+                      ? 'bg-rose-100 text-rose-800'
+                      : cfStatus.quotas.d1_storage.status === 'warning'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {cfStatus.quotas.d1_storage.percent}%
+                  </span>
+                </div>
+
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      cfStatus.quotas.d1_storage.status === 'danger'
+                        ? 'bg-rose-500'
+                        : cfStatus.quotas.d1_storage.status === 'warning'
+                        ? 'bg-amber-500'
+                        : 'bg-indigo-500'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(1, cfStatus.quotas.d1_storage.percent))}%` }}
+                  />
+                </div>
+
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="font-bold text-slate-900 font-mono">
+                    {cfStatus.quotas.d1_storage.used} MB
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Hạn mức: 500 MB / DB
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-tight">
+                  Đọc: ~{cfStatus.quotas.d1_reads_daily.used} / 5M • Ghi: ~{cfStatus.quotas.d1_writes_daily.used} / 100k / ngày
+                </p>
+              </div>
+            )}
+
+            {/* Metric 3: R2 Storage */}
+            {cfStatus?.quotas && (
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <HardDrive className="w-4 h-4 text-emerald-600" />
+                    {t('cf_r2_quota')}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[11px] font-black font-mono ${
+                    cfStatus.quotas.r2_storage.status === 'danger'
+                      ? 'bg-rose-100 text-rose-800'
+                      : cfStatus.quotas.r2_storage.status === 'warning'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {cfStatus.quotas.r2_storage.percent}%
+                  </span>
+                </div>
+
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      cfStatus.quotas.r2_storage.status === 'danger'
+                        ? 'bg-rose-500'
+                        : cfStatus.quotas.r2_storage.status === 'warning'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(1, cfStatus.quotas.r2_storage.percent))}%` }}
+                  />
+                </div>
+
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="font-bold text-slate-900 font-mono">
+                    {cfStatus.quotas.r2_storage.used} GB
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Hạn mức: 10 GB (Free trọn đời)
+                  </span>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-medium leading-tight">
+                  {cfStatus.quotas.r2_photos_count} ảnh • {t('cf_estimated_photos', { n: cfStatus.quotas.r2_estimated_capacity_photos.toLocaleString() })}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tip / Note on 0-cost operations */}
+        <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-100 flex items-start gap-2.5 text-xs text-sky-900">
+          <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            {t('cf_storage_cost_note')}
+          </p>
+        </div>
+      </div>
+
+      {/* SECTION 3: COMPANY BRANDING */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -887,6 +1421,173 @@ export const AdminTargets: React.FC = () => {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal: Cloudflare Account Configuration */}
+      <Modal
+        isOpen={cfModalOpen}
+        onClose={() => setCfModalOpen(false)}
+        title={t('cf_modal_title')}
+        maxWidth="lg"
+      >
+        <form onSubmit={handleSaveCfConfig} className="space-y-4">
+          <p className="text-xs text-slate-500">
+            {t('cf_modal_desc')}
+          </p>
+
+          {cfModalMessage && (
+            <div
+              className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+                cfModalMessage.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}
+            >
+              {cfModalMessage.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+              )}
+              <span>{cfModalMessage.text}</span>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t('cf_account_id')}
+              </label>
+              <input
+                type="text"
+                value={cfAccountIdInput}
+                onChange={(e) => setCfAccountIdInput(e.target.value)}
+                placeholder="Ví dụ: e4c9a81b2f34567890abcdef12345678"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Tìm thấy trong Cloudflare Dashboard &gt; Trang chủ &gt; Cột bên phải mục Account ID.
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  {t('cf_api_token_label')}
+                </label>
+                <a
+                  href="https://dash.cloudflare.com/profile/api-tokens"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1 font-semibold"
+                >
+                  <span>Tạo token trên Cloudflare</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <input
+                type="password"
+                value={cfApiTokenInput}
+                onChange={(e) => setCfApiTokenInput(e.target.value)}
+                placeholder={t('cf_api_token_placeholder')}
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Token được mã hóa bảo mật chuẩn AES-GCM-256 trước khi lưu. Cần quyền: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  {t('cf_worker_name_label')}
+                </label>
+                <input
+                  type="text"
+                  value={cfWorkerNameInput}
+                  onChange={(e) => setCfWorkerNameInput(e.target.value)}
+                  placeholder="crystal-5s-audit"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  {t('cf_custom_domain_label')}
+                </label>
+                <input
+                  type="text"
+                  value={cfCustomDomainInput}
+                  onChange={(e) => setCfCustomDomainInput(e.target.value)}
+                  placeholder="5s.yourfactory.com"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+            </div>
+
+            {predictedNewUrl && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-emerald-600" />
+                    {t('cf_predicted_new_url')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyPredictedUrl}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer transition shadow-xs"
+                  >
+                    {copiedUrl ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedUrl ? t('cf_copied') : t('cf_copy_url')}</span>
+                  </button>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white border border-emerald-200 font-mono text-xs font-black text-emerald-900 break-all select-all flex items-center justify-between gap-2">
+                  <span>{predictedNewUrl}</span>
+                  <a
+                    href={predictedNewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700 p-1 shrink-0"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-snug">
+                  {t('cf_new_url_notice')}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleTestCfConnection}
+              disabled={testingCfConn || !cfApiTokenInput.trim()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-40"
+            >
+              {testingCfConn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+              <span>{testingCfConn ? t('cf_testing_conn') : t('cf_test_conn_btn')}</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCfModalOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={savingCfConfig}
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm shadow-sky-600/25 cursor-pointer disabled:opacity-50 transition"
+              >
+                {savingCfConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>{savingCfConfig ? t('cf_saving_config') : t('cf_save_config_btn')}</span>
+              </button>
+            </div>
+          </div>
+        </form>
       </Modal>
     </div>
   );

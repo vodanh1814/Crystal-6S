@@ -142,6 +142,8 @@ export interface Env {
   PHOTOS: R2Bucket;
   JWT_SECRET: string;
   GITHUB_TOKEN?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
+  CLOUDFLARE_API_TOKEN?: string;
 }
 
 export interface Variables {
