@@ -2,60 +2,118 @@
 
 **Phiên bản hiện tại: `v2.3.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
-Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.1.0`
+## 1. Điểm nổi bật của phiên bản `v2.3.1`
 
-### 🚀 Bộ cài đặt độc lập 1-File `Crystal_5S_Setup.exe` (All-in-One Single-Screen Installer)
-- **Đồ họa Vector WPF sắc nét**: Tự động tương thích mọi độ phân giải màn hình Windows (100%, 125%, 150%, 2K, 4K), không bị vỡ hình hay nhòe chữ, đi kèm bộ biểu tượng **Crystal 5S** đa độ phân giải (`assets/crystal_5s.ico`).
-- **Song ngữ (`🇻🇳 Tiếng Việt ⇄ 🇬🇧 English`) & Giao diện Sáng / Tối (`☀ Light / 🌙 Dark`)**: Chuyển đổi trực tiếp ngay trên thanh tiêu đề của bộ cài đặt `.exe`, màn hình khởi tạo `/setup` và màn hình đăng nhập `/login`.
+### 📊 Dashboard & Báo cáo Hiệu quả Khắc phục (Remediation Effectiveness)
+- **Theo dõi toàn diện 3 chỉ số khắc phục cốt lõi**:
+  1. **Tỷ lệ đóng lỗi đúng hạn (`On-Time Closure Rate %`)**: Đo lường tỷ lệ các vấn đề 5S được xử lý và đóng trong thời hạn quy định (7 ngày), giúp đánh giá tính chủ động của các xưởng.
+  2. **Thời gian khắc phục trung bình (`MTTR / Avg Remediation Time` — ngày)**: Thời gian trung bình từ lúc ghi nhận lỗi đến khi hoàn tất nghiệm thu và đóng lỗi.
+  3. **Tỷ lệ lỗi tái diễn (`Recurrence / Repeat Rate %`) & Tỷ lệ giải quyết (`Resolution Rate %`)**: Đánh giá chiều sâu của biện pháp khắc phục, phát hiện các điểm nghẽn thường xuyên phát sinh lỗi lặp.
+- **Tích hợp kép**:
+  - Trực tiếp trên **Màn hình TV Andon Dashboard (`/`)**: Hiển thị dải nhãn 3 chỉ số tinh gọn ngay tại khung Cảnh báo 7 ngày.
+  - Tab chuyên sâu **"Hiệu quả khắc phục"** tại trang **Báo cáo (`/reports`)**: Bảng thống kê chi tiết theo từng khu vực sản xuất (`Area Code`), phân loại trạng thái xử lý và hỗ trợ xuất báo cáo Excel (`Crystal_5S_Remediation_*.xlsx`).
+- **Giao diện thẻ cảnh báo tối ưu cho TV**:
+  - Dải nhãn 1 dòng gọn gàng, mã tiêu chí 5S rút gọn song ngữ (`S1.1` → `S5.3`, giữ tooltip nội dung đầy đủ).
+  - Ngăn ngừa hoàn toàn hiện tượng tràn khung ngang hoặc cắt viền/chữ trên mọi tỷ lệ màn hình TV và thiết bị di động.
+
+---
+
+### 🔄 Quy trình Auto-Update 5 Bước An toàn & Hỗ trợ Cloudflare CI/CD
+- **Nâng cấp an toàn tuyệt đối cho môi trường Local**:
+  1. **Preflight Check**: Tự động kiểm tra trạng thái Git cục bộ; nếu phát hiện thay đổi mã nguồn chưa commit, hệ thống từ chối cập nhật (`409 Conflict`) nhằm ngăn ngừa mất mát mã nguồn.
+  2. **Tự động Sao lưu (Auto-Backup)**: Tự động sao lưu toàn bộ mã nguồn và Database SQLite D1 cục bộ (`.wrangler/state/v3/d1`) vào thư mục `.backups/` trước khi kéo mã mới.
+  3. **Đồng bộ mã nguồn (`git fetch` & checkout)**: Nhận bản phát hành chính thức từ GitHub repository mà không sử dụng các lệnh xóa nguy hiểm.
+  4. **Kiểm tra di chuyển cấu trúc DB & Kiểu dữ liệu**: Xác minh nghiêm ngặt bảng `d1_migrations` và chạy kiểm tra kiểu dữ liệu TypeScript (`tsc -b`).
+  5. **Tự động Rollback**: Nếu bất kỳ bước nào trong quy trình cập nhật gặp sự cố, hệ thống tự động hoàn nguyên về commit trước đó và phục hồi nguyên vẹn Database D1 từ bản sao lưu.
+- **Hỗ trợ Cloudflare CI/CD Auto-Update**:
+  - Tích hợp GitHub Actions workflow (`.github/workflows/deploy.yml`) và API quản trị `POST /api/settings/cloud-update-apply` cho phép kích hoạt cập nhật trên hạ tầng Cloudflare Workers & D1.
+
+---
+
+### 🛡️ Tăng cường Bảo mật Toàn diện & Phân tách TV Công khai
+- **Chống tấn công dò mật khẩu (Brute-Force Rate Limiting)**:
+  - Tự động ghi nhận số lần đăng nhập thất bại liên tiếp; khóa tạm thời tài khoản 15 phút sau 5 lần nhập sai mật khẩu (migration `0007_security_and_rate_limit.sql`).
+- **Mã hóa AES-GCM-256 an toàn**:
+  - Khóa truy cập GitHub (`github_token`) và các thông tin cấu hình nhạy cảm được mã hóa chuẩn công nghiệp bằng thuật toán **AES-GCM-256** trước khi ghi vào cơ sở dữ liệu (`app_settings`).
+- **Bảo vệ API hình ảnh thực tế xưởng (`GET /api/photos/:id`)**:
+  - Yêu cầu xác thực phiên đăng nhập trước khi tải ảnh hiện trường độ phân giải cao; ẩn stack trace và cause trong thông báo lỗi trả về cho client.
+- **Phân tách chế độ TV công khai**:
+  - Cho phép màn hình TV Andon tại xưởng truy cập không cần đăng nhập nhưng tự động ẩn các thông tin nội bộ nhạy cảm (như tên nhân sự, mô tả sự cố chi tiết) để đảm bảo quyền riêng tư.
+
+---
+
+### 👥 Phân định Quyền hạn Nghiệp vụ Chính xác
+Hệ thống phân tách rõ ràng trách nhiệm của 4 vai trò, không chồng chéo quyền hạn:
+- **`Auditor` (Đánh giá viên 5S Toàn nhà máy)**:
+  - Hoạt động độc lập, không gắn cố định vào bất kỳ khu vực nào.
+  - Có toàn quyền thực hiện đánh giá tuần, chấm điểm và nghiệm thu / đóng lỗi (`Verify & Close / Reject`) cho **toàn bộ 16 khu vực** trong toàn nhà máy.
+- **`Area MNG` (`manager` — Quản lý Khu vực)**:
+  - Được phân công phụ trách một hoặc nhiều khu vực cụ thể.
+  - Chỉ có quyền tiếp nhận cảnh báo, tải ảnh khắc phục thực tế (`After`) và gửi báo cáo giải trình cho **đúng khu vực mình quản lý**.
+- **`Admin` (Quản trị viên Hệ thống)**:
+  - Cấu hình chỉ tiêu KPI, thương hiệu, danh mục tiêu chí, tài khoản người dùng, nhập điểm lịch sử và kích hoạt cập nhật hệ thống.
+- **`Viewer` (Người xem)**:
+  - Xem bảng điện tử TV Dashboard, danh mục lỗi, thư viện ảnh và xuất báo cáo.
+
+---
+
+### 📅 Chuẩn hóa Hiển thị Tên Tháng Quốc tế (`Jan, Feb, Mar...`)
+- Toàn bộ nhãn tháng cũ (`M1..M12` hoặc `T1..T12`) đã được chuyển đổi đồng bộ sang tên tháng chuẩn quốc tế:
+  `Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec`
+- Áp dụng thống nhất trên:
+  - Bảng Báo cáo tháng (`/reports`) và cửa sổ Nhập điểm lịch sử từ Excel.
+  - File Excel xuất báo cáo năm (`Crystal_5S_Monthly_*.xlsx`).
+  - Thẻ điểm trung bình tháng trên TV Dashboard và các nhãn kỳ Audit (`Oct 2026`, `Nov 2026`...).
+
+---
+
+### 🚀 Bộ cài đặt độc lập 1-File `Crystal_5S_Setup.exe` (WPF Vector UI)
+- **Đồ họa Vector WPF sắc nét**: Tương thích hoàn hảo mọi độ phân giải màn hình Windows (100%, 125%, 150%, 2K, 4K), không nhòe chữ hay vỡ hạt, tích hợp bộ icon **Crystal 5S** đa kích thước (`assets/crystal_5s.ico`).
+- **Song ngữ (`🇻🇳 Tiếng Việt ⇄ 🇬🇧 English`) & Giao diện Sáng / Tối (`☀ Light / 🌙 Dark`)**: Chuyển đổi trực tiếp ngay trên thanh tiêu đề của bộ cài đặt `.exe`, màn hình `/setup` và `/login`.
 - **Gói gọn toàn bộ cấu hình trong 1 màn hình duy nhất**:
-  1. **Thương hiệu Công ty**: Nhập Tên Công ty / Nhà máy + Chọn file ảnh Logo (`.png`, `.jpg`, `.svg`, `.webp`) kèm ô xem trước (Live Preview).
-  2. **Tài khoản Quản trị viên (Admin)**: Nhập Họ tên, Tài khoản (`admin`), Mật khẩu (`>= 6 ký tự`) — tự động khởi tạo vào Database D1 ngay trong quá trình cài.
-  3. **Cấu hình Hệ thống & Đám mây**: Chọn thư mục cài đặt, Mã định danh Cloud (`Slug` tự động tạo tên riêng cho Worker / D1 / R2 khi triển khai cho công ty khác), Cổng mạng LAN (`Port`), Chỉ tiêu KPI 5S mặc định (`%`) và tùy chọn nạp sẵn **16 khu vực mẫu** hoặc **Để trống hoàn toàn**.
-  4. **Nhật ký trực tiếp (Embedded Live Console Log)**: Theo dõi toàn bộ tiến trình cài đặt ngay trong cùng một cửa sổ ứng dụng.
+  1. **Thương hiệu**: Tên Công ty + Chọn ảnh Logo (Live Preview).
+  2. **Tài khoản Admin đầu tiên**: Khởi tạo tự động vào Database D1 ngay trong quá trình cài.
+  3. **Cấu hình Đám mây & Mạng LAN**: Thư mục cài đặt, Mã slug Cloud, Cổng mạng (`Port`), Chỉ tiêu KPI 5S mặc định (`%`), nạp 16 khu vực mẫu.
+  4. **Nhật ký trực tiếp (Embedded Live Console Log)**: Theo dõi tiến trình cài đặt ngay trong cửa sổ.
+
+---
 
 ### 📺 Màn hình TV Smart Factory Andon (`/` Mặc định Công khai)
-- Truy cập trực tiếp vào `/` là hiển thị ngay bảng **Smart Factory Andon Dashboard** dành cho màn hình TV tại xưởng mà không bắt buộc đăng nhập (bấm biểu tượng người dùng góc phải trên cùng để đăng nhập khi cần thao tác).
-- **Thiết kế vừa khít 100% khung hình TV (Zero Scroll)**: Hiển thị đồng thời 6 thẻ KPI tổng hợp, ma trận nhiệt 4×4 của 16 khu vực sản xuất, bảng cảnh báo lỗi quá hạn 7 ngày & lỗi lặp lại, biểu đồ xu hướng 12 tuần, phân bổ lỗi theo nhóm S1–S5 và bảng xếp hạng Top/Bottom khu vực.
-- **Thanh bên thông minh 3 trạng thái (`Thu gọn` → `Ẩn thanh bên` → `Hiện thanh bên`)** kèm nút **Full TV** phóng toàn màn hình.
-
-### 📋 Mô hình Kỳ Audit 5S Toàn Nhà Máy Theo Tuần (Plant-Wide Weekly Audit)
-- Mỗi tuần ISO (Thứ Hai – Chủ Nhật) nhà máy có **1 kỳ Audit chung duy nhất** bao gồm toàn bộ các khu vực đang hoạt động:
-  - Điểm khởi đầu của mỗi khu vực = `100%`.
-  - Khi phát hiện lỗi thực địa (`S1.1` → `S5.1`), chọn **Khu vực + Tiêu chí + Mô tả + Ảnh chụp thực tế (Before)**, hệ thống tự động trừ điểm khu vực đó.
-  - **Tự động phạt lũy tiến trong tháng**: Nếu cùng một `(Khu vực, Tiêu chí)` đã từng bị ghi nhận lỗi ở các kỳ Audit đã hoàn thành trước đó trong **cùng tháng** (dù lỗi tuần trước đã đóng hay chưa đóng), mức phạt tự động tăng thêm `+1 điểm` cho mỗi tuần lặp (`applied_penalty = base_penalty + (repeat_level - 1)`). Sang tháng mới, hệ số lặp tự động reset về `1`.
-  - **Bảng nhập nhanh 3 mục đánh giá ngoài (`S5.2-BOD`, `S5.2-CUS`, `S5.3`)**: Chỉ cần nhập số lần vi phạm cho từng khu vực, không cần tải ảnh và không tính lũy tiến.
-
-### 👥 Tách biệt hoàn toàn 4 Vai trò Người dùng
-- Mỗi tài khoản chỉ giữ **1 vai trò duy nhất** (không kiêm nhiệm chồng chéo):
-  - **`Admin` (Quản trị viên)**: Toàn quyền quản lý hệ thống, thương hiệu, người dùng, khu vực, bộ tiêu chí, chỉ tiêu KPI và nhập điểm lịch sử.
-  - **`Auditor` (Đánh giá viên 5S)**: Thực hiện kiểm tra 5S, ghi nhận lỗi + ảnh `Before`, nghiệm thu & đóng lỗi sau khi khu vực đã khắc phục.
-  - **`Area MNG` (Quản lý khu vực - `manager`)**: Nhận cảnh báo lỗi tại khu vực mình phụ trách, tải ảnh khắc phục (`After`) và gửi báo cáo hoàn thành.
-  - **`Viewer` (Người xem)**: Xem bảng điện tử Dashboard, danh sách lỗi, thư viện ảnh và xuất báo cáo Excel.
-
-### 🖼️ Kho ảnh 2K trên Cloudflare R2 & Thư viện Ảnh Khu vực
-- Ảnh `Before` / `After` được xử lý tối ưu ở độ phân giải **2K (`2048px`, JPEG quality `0.85`)** sắc nét và lưu trữ trên Cloudflare R2 với `Cache-Control: public, max-age=31536000, immutable`.
-- Trang **Lỗi ghi nhận (`/findings`)** và **Chi tiết kỳ Audit (`/audits/:id`)** có thanh chọn nhanh từng khu vực (`KNI`, `GQC`, `WH`, `DYE`...), chuyển đổi giữa chế độ **Danh sách kèm ảnh** và **Thư viện ảnh (Photo Gallery)** đối chiếu trực quan `TRƯỚC` – `SAU` kèm trình xem ảnh phóng to **Lightbox**.
-
-### 📥 Nhập dữ liệu Điểm lịch sử theo tháng (`T1..T12`) & Xuất Báo cáo Excel
-- Tại trang **Báo cáo (`/reports`) → Báo cáo tháng → 📥 Nhập điểm lịch sử**, Admin có thể nhập hoặc **copy-paste trực tiếp vùng dữ liệu từ file Excel** để cập nhật điểm 5S của các tháng trước trong năm (`T1` đến `T12`).
-- Tự động kết hợp điểm lịch sử (cho các tháng chưa chạy phần mềm) với điểm tính tự động từ các kỳ Audit thực tế và xuất báo cáo ma trận ra file `.xlsx`.
+- Truy cập trực tiếp tại `/` hiển thị ngay bảng **Smart Factory Andon Dashboard** cho TV xưởng mà không bắt buộc đăng nhập.
+- **Thiết kế vừa khít 100% khung hình TV (Zero Scroll)**: 6 thẻ KPI tổng hợp, ma trận nhiệt 4×4 của 16 khu vực, bảng cảnh báo lỗi quá hạn 7 ngày & lỗi lặp, biểu đồ xu hướng 12 tuần, phân bổ lỗi theo nhóm S1–S5 và bảng xếp hạng Top/Bottom.
+- **Thanh bên thông minh 3 trạng thái (`Thu gọn` → `Ẩn thanh bên` → `Hiện thanh bên`)** kèm nút **Full TV** toàn màn hình.
 
 ---
 
-## 2. Cách cài đặt & Sử dụng nhanh (Dành cho Người dùng / Triển khai Nhà máy)
+### 📋 Mô hình Kỳ Audit 5S Toàn Nhà Máy & Phạt Lũy Tiến Trong Tháng
+- Mỗi tuần ISO (Thứ Hai – Chủ Nhật) nhà máy thực hiện **1 kỳ Audit chung duy nhất** bao gồm toàn bộ khu vực hoạt động:
+  - Điểm khởi đầu của mỗi khu vực = `100%`.
+  - Ghi nhận lỗi (`S1.1` → `S5.1`): Chọn **Khu vực + Tiêu chí + Mô tả + Ảnh chụp Before**, hệ thống tự động trừ điểm.
+  - **Tự động phạt lũy tiến trong tháng**: Cùng một `(Khu vực, Tiêu chí)` bị lặp lỗi ở các kỳ Audit đã hoàn thành trước đó trong **cùng tháng**, mức phạt tự động tăng thêm `+1 điểm` cho mỗi tuần lặp (`applied_penalty = base_penalty + (repeat_level - 1)`). Sang tháng mới, hệ số lặp tự động reset về `1`.
+  - **Bảng nhập nhanh 3 tiêu chí đánh giá ngoài (`S5.2-BOD`, `S5.2-CUS`, `S5.3`)**: Nhập số lần vi phạm trực tiếp cho từng khu vực, không cần ảnh và không tính lũy tiến.
+
+---
+
+### 🖼️ Kho ảnh 2K trên Cloudflare R2 & Thư viện Ảnh Khu vực
+- Ảnh `Before` / `After` được tối ưu hóa độ phân giải **2K (`2048px`, JPEG quality `0.85`)** và lưu trữ trên Cloudflare R2 với `Cache-Control: public, max-age=31536000, immutable`.
+- Trang **Lỗi ghi nhận (`/findings`)** và **Chi tiết kỳ Audit (`/audits/:id`)** cung cấp bộ lọc nhanh khu vực, chuyển đổi linh hoạt giữa chế độ danh sách và **Thư viện ảnh (Photo Gallery)** đối chiếu `TRƯỚC` – `SAU` kèm trình xem ảnh phóng to **Lightbox**.
+
+---
+
+## 2. Cách cài đặt & Sử dụng nhanh
 
 ### Cách 1: Chạy trực tiếp bằng file `Crystal_5S_Setup.exe` (Khuyên dùng)
 1. Nhấp đúp mở file **`Crystal_5S_Setup.exe`**.
 2. Chọn ngôn ngữ (`🇻🇳 Tiếng Việt` / `🇬🇧 English`) và giao diện (`🌙 Tối` / `☀ Sáng`).
 3. Điền **Tên Công ty**, chọn **Logo công ty**, kiểm tra thông tin **Tài khoản Admin** (`admin` / `admin123`) và nhấn:
-   - **▶ CÀI ĐẶT & CHẠY LOCAL (MẠNG LAN)**: Để tự động cài đặt và mở hệ thống ngay tại `http://localhost:5173`.
-   - **☁ ĐƯA LÊN CLOUDFLARE (INTERNET)**: Để tự động khởi tạo Database D1, Kho ảnh R2 và xuất bản ra địa chỉ web `https://<mã-công-ty>-5s-audit.<subdomain>.workers.dev`.
+   - **▶ CÀI ĐẶT & CHẠY LOCAL (MẠNG LAN)**: Tự động cài đặt, đồng bộ database và mở hệ thống tại `http://localhost:5173`.
+   - **☁ ĐƯA LÊN CLOUDFLARE (INTERNET)**: Tự động khởi tạo Database D1, Kho ảnh R2 và xuất bản ra địa chỉ web `https://<slug>-5s-audit.<subdomain>.workers.dev`.
 
-### Cách 2: Chạy bằng dòng lệnh (Dành cho Lập trình viên)
+### Cách 2: Chạy bằng dòng lệnh (Dành cho Lập trình viên & Kỹ thuật)
 ```powershell
 # 1. Cài đặt thư viện
 npm install
@@ -75,11 +133,11 @@ npm run dev
 | Lệnh | Mô tả |
 | :--- | :--- |
 | `npm run dev` | Khởi chạy máy chủ phát triển tại `http://localhost:5173` |
-| `npm run build` | Kiểm tra TypeScript và biên dịch bản Production (`dist/`) |
+| `npm run build` | Kiểm tra TypeScript và biên dịch gói Production (`dist/`) |
 | `npm run build:exe` | Đóng gói lại toàn bộ mã nguồn + Icon vào file độc lập `Crystal_5S_Setup.exe` |
 | `npm run setup:local` | Chạy trình cài đặt tự động chế độ Mạng LAN qua CLI |
 | `npm run setup:cloud` | Chạy trình cài đặt & triển khai tự động lên Cloudflare qua CLI |
-| `npm test` | Chạy bộ 18 Unit Tests kiểm증 công thức chấm điểm, lũy tiến, phân quyền & tuần ISO |
+| `npm test` | Chạy bộ 20 Unit Tests kiểm chứng tính điểm, lũy tiến, phân quyền, mã hóa bảo mật & tuần ISO |
 | `npm run typecheck` | Kiểm tra kiểu dữ liệu TypeScript trên toàn bộ Frontend (`src/`) và Backend (`worker/`) |
 
 ---
@@ -87,7 +145,8 @@ npm run dev
 ## 4. Quy tắc Quản lý Phiên bản (Versioning & Changelog)
 
 Mỗi khi cập nhật tính năng hoặc sửa lỗi mới:
-1. Nâng số phiên bản trong [`package.json`](./package.json) và [`scripts/build_exe.mjs`](./scripts/build_exe.mjs) theo chuẩn **Semantic Versioning (`MAJOR.MINOR.PATCH`)**.
+1. Nâng số phiên bản trong [`package.json`](./package.json), [`src/version.ts`](./src/version.ts) và [`scripts/build_exe.mjs`](./scripts/build_exe.mjs) theo chuẩn **Semantic Versioning (`MAJOR.MINOR.PATCH`)**.
 2. Ghi nhận chi tiết các thay đổi vào [`CHANGELOG.md`](./CHANGELOG.md).
-3. Chạy `npm run build:exe` để cập nhật lại file bộ cài đặt [`Crystal_5S_Setup.exe`](./Crystal_5S_Setup.exe).
-4. Commit, gắn thẻ phiên bản (`git tag vX.Y.Z`) và đẩy lên GitHub (`git push origin main --tags`).
+3. Cập nhật tài liệu [`README.md`](./README.md) phản ánh các cải tiến mới.
+4. Chạy `npm test && npm run build && npm run build:exe` để đóng gói lại [`Crystal_5S_Setup.exe`](./Crystal_5S_Setup.exe).
+5. Commit, gắn thẻ phiên bản (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`) và đẩy lên GitHub (`git push origin main --tags`).

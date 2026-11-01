@@ -5,7 +5,7 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APP_VERSION, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from './src/version';
+import { APP_VERSION, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from './src/version.ts';
 
 function runCmd(cmd: string, cwd = process.cwd()): string {
   return execSync(cmd, {
