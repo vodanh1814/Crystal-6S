@@ -1,12 +1,23 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.3.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.3.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.3.1`
+## 1. Điểm nổi bật của phiên bản `v2.3.2`
+
+### 🧹 Tích hợp Nút Xóa Dữ Liệu Demo & Dọn Dẹp Khởi Tạo (Admin Only)
+- **Dọn dẹp sạch sẽ sau khi chạy thử nghiệm**:
+  - Cho phép Quản trị viên (`Admin`) sau khi cài đặt và chạy thử nghiệm hệ thống có thể dọn dẹp sạch toàn bộ dữ liệu mẫu / thử nghiệm (`audits`, `audit_area_scores`, `findings`, `photos` kho R2, `historical_monthly_scores`, `activity_log`) để đưa hệ thống vào vận hành chính thức.
+  - Cung cấp API `GET /api/settings/demo-stats` hiển thị thống kê dữ liệu thử nghiệm hiện có trong hệ thống và `POST /api/settings/clear-demo-data`.
+- **Hộp thoại xác nhận an toàn hai lớp (`Modal`)**:
+  - Liệt kê chi tiết những dữ liệu sẽ bị xóa; **bảo toàn 100% tài khoản người dùng, 24 tiêu chí 5S chuẩn, Logo & Tên công ty và Mục tiêu KPI**.
+  - Tùy chọn xóa cả 16 khu vực sản xuất mẫu (nếu đã nạp lúc cài đặt) để Admin tự khai báo danh sách khu vực thực tế của công ty.
+  - Yêu cầu nhập từ khóa xác thực (`XOA DEMO` / `CLEAR`) để mở khóa nút xóa, ngăn ngừa bấm nhầm.
+
+---
 
 ### 📊 Dashboard & Báo cáo Hiệu quả Khắc phục (Remediation Effectiveness)
 - **Theo dõi toàn diện 3 chỉ số khắc phục cốt lõi**:

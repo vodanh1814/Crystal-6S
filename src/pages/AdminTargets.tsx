@@ -24,7 +24,7 @@ import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL } from '../
 import type { YearlyTarget } from '../api/types';
 
 export const AdminTargets: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { isAdmin, companyName, companyLogo, updateBranding } = useAuth();
 
   // ── 1. System Version & Admin-Only Git Auto-Update State ──
@@ -205,6 +205,63 @@ export const AdminTargets: React.FC = () => {
       setError(err.message || 'Failed to save target');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ── 4. Demo Data Stats & Cleanup State ──
+  const [demoStats, setDemoStats] = useState<{
+    audits_count: number;
+    findings_count: number;
+    photos_count: number;
+    historical_scores_count: number;
+    areas_count: number;
+    has_demo_data: boolean;
+  } | null>(null);
+  const [clearModalOpen, setClearModalOpen] = useState(false);
+  const [clearAreasChecked, setClearAreasChecked] = useState(false);
+  const [confirmKeyword, setConfirmKeyword] = useState('');
+  const [clearingDemo, setClearingDemo] = useState(false);
+  const [clearSuccess, setClearSuccess] = useState<string | null>(null);
+  const [clearError, setClearError] = useState<string | null>(null);
+
+  const fetchDemoStats = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await api.get<any>('/settings/demo-stats');
+      setDemoStats(res);
+    } catch (err: any) {
+      console.warn('Failed to load demo stats:', err);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    fetchDemoStats();
+  }, [fetchDemoStats]);
+
+  const handleClearDemoData = async () => {
+    if (!isAdmin) return;
+    setClearingDemo(true);
+    setClearError(null);
+    setClearSuccess(null);
+    try {
+      const res = await api.post<{
+        ok: boolean;
+        message: string;
+        cleared_areas: boolean;
+        photos_deleted: number;
+      }>('/settings/clear-demo-data', {
+        clear_areas: clearAreasChecked,
+      });
+      setClearSuccess(res.message || t('clear_demo_success'));
+      setClearModalOpen(false);
+      setConfirmKeyword('');
+      setClearAreasChecked(false);
+      await fetchDemoStats();
+      setTimeout(() => setClearSuccess(null), 6000);
+    } catch (err: any) {
+      setClearError(err.message || 'Failed to clear demo data');
+    } finally {
+      setClearingDemo(false);
     }
   };
 
@@ -587,6 +644,103 @@ export const AdminTargets: React.FC = () => {
         </div>
       </div>
 
+      {/* SECTION 4: DEMO DATA CLEANUP & RESET (ADMIN ONLY) */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                  {t('demo_data_title')}
+                </h2>
+                {demoStats && (
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      demoStats.has_demo_data
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    }`}
+                  >
+                    {demoStats.has_demo_data
+                      ? t('has_demo_data_badge')
+                      : t('no_demo_data_badge')}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {t('demo_data_desc')}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmKeyword('');
+              setClearAreasChecked(false);
+              setClearError(null);
+              setClearModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm shadow-rose-600/20 transition cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>{t('clear_demo_btn')}</span>
+          </button>
+        </div>
+
+        {clearSuccess && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{clearSuccess}</span>
+          </div>
+        )}
+
+        {clearError && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+            {clearError}
+          </div>
+        )}
+
+        {/* Current Data Overview Badges */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {t('audits')}
+            </div>
+            <div className="mt-1 text-xl font-black font-mono text-slate-800">
+              {demoStats?.audits_count ?? '-'}
+            </div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {t('findings')}
+            </div>
+            <div className="mt-1 text-xl font-black font-mono text-slate-800">
+              {demoStats?.findings_count ?? '-'}
+            </div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Kho ảnh R2
+            </div>
+            <div className="mt-1 text-xl font-black font-mono text-slate-800">
+              {demoStats?.photos_count ?? '-'}
+            </div>
+          </div>
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {t('areas')}
+            </div>
+            <div className="mt-1 text-xl font-black font-mono text-slate-800">
+              {demoStats?.areas_count ?? '-'}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Modal: Set Target */}
       <Modal
         isOpen={modalOpen}
@@ -653,6 +807,86 @@ export const AdminTargets: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal: Confirm Clear Demo Data */}
+      <Modal
+        isOpen={clearModalOpen}
+        onClose={() => setClearModalOpen(false)}
+        title={t('clear_demo_modal_title')}
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-rose-800">
+              <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{t('clear_demo_warning')}</span>
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-rose-700 pl-1 text-[11px]">
+              <li>Xóa tất cả các đợt kiểm tra 5S ({demoStats?.audits_count || 0} đợt audit)</li>
+              <li>Xóa tất cả lỗi 5S phát sinh ({demoStats?.findings_count || 0} lỗi)</li>
+              <li>Xóa toàn bộ ảnh Before/After ({demoStats?.photos_count || 0} ảnh trong kho R2)</li>
+              <li>Xóa điểm trung bình lịch sử nhập thử từ Excel</li>
+            </ul>
+          </div>
+
+          <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 text-xs text-slate-700 space-y-2">
+            <label className="flex items-start gap-2.5 cursor-pointer font-bold select-none">
+              <input
+                type="checkbox"
+                checked={clearAreasChecked}
+                onChange={(e) => setClearAreasChecked(e.target.checked)}
+                className="mt-0.5 rounded text-rose-600 focus:ring-rose-500 w-4 h-4 cursor-pointer"
+              />
+              <div>
+                <span>{t('clear_areas_checkbox')}</span>
+                <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+                  Chọn mục này nếu bạn muốn xóa sạch cả {demoStats?.areas_count || 16} khu vực mẫu ban đầu để tự khai báo danh sách khu vực thực tế của công ty.
+                </p>
+              </div>
+            </label>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">
+              {t('clear_demo_confirm_prompt', { text: lang === 'en' ? 'CLEAR' : 'XOA DEMO' })}
+            </label>
+            <input
+              type="text"
+              value={confirmKeyword}
+              onChange={(e) => setConfirmKeyword(e.target.value)}
+              placeholder={lang === 'en' ? 'CLEAR' : 'XOA DEMO'}
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+            />
+          </div>
+
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setClearModalOpen(false)}
+              disabled={clearingDemo}
+              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer disabled:opacity-50"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearDemoData}
+              disabled={
+                clearingDemo ||
+                confirmKeyword.trim().toUpperCase() !== (lang === 'en' ? 'CLEAR' : 'XOA DEMO')
+              }
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm shadow-rose-600/25 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {clearingDemo ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              <span>{clearingDemo ? t('clearing_demo') : t('clear_demo_btn')}</span>
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -283,3 +283,115 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
     );
   }
 });
+
+// GET /api/settings/demo-stats - Get current counts of demo/test data (Admin only)
+settingsRouter.get('/demo-stats', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const auditsCount = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM audits')
+    .first<{ cnt: number }>();
+  const findingsCount = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM findings')
+    .first<{ cnt: number }>();
+  const photosCount = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM photos')
+    .first<{ cnt: number }>();
+  const historicalScoresCount = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM historical_monthly_scores')
+    .first<{ cnt: number }>();
+  const areasCount = await c.env.DB
+    .prepare('SELECT COUNT(*) as cnt FROM areas')
+    .first<{ cnt: number }>();
+
+  const audits = auditsCount?.cnt || 0;
+  const findings = findingsCount?.cnt || 0;
+  const photos = photosCount?.cnt || 0;
+  const historical = historicalScoresCount?.cnt || 0;
+  const areas = areasCount?.cnt || 0;
+
+  return c.json({
+    audits_count: audits,
+    findings_count: findings,
+    photos_count: photos,
+    historical_scores_count: historical,
+    areas_count: areas,
+    has_demo_data: audits > 0 || findings > 0 || photos > 0 || historical > 0,
+  });
+});
+
+// POST /api/settings/clear-demo-data - Clear all test/demo audits and optional sample areas (Admin only)
+settingsRouter.post('/clear-demo-data', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Admin access required' }, 403);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const clearAreas = Boolean(body.clear_areas);
+
+  // 1. Delete all photos from R2 bucket
+  let photosDeleted = 0;
+  try {
+    const photoRows = await c.env.DB
+      .prepare('SELECT r2_key FROM photos')
+      .all<{ r2_key: string }>();
+    const keys = (photoRows.results || []).map((p) => p.r2_key).filter(Boolean);
+    if (keys.length > 0) {
+      photosDeleted = keys.length;
+      try {
+        await c.env.PHOTOS.delete(keys);
+      } catch (r2Err) {
+        console.warn('R2 delete warning:', r2Err);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed querying photos for R2 deletion:', err);
+  }
+
+  // 2. Delete test data in D1
+  const statements = [
+    c.env.DB.prepare('DELETE FROM photos'),
+    c.env.DB.prepare('DELETE FROM findings'),
+    c.env.DB.prepare('DELETE FROM audit_area_scores'),
+    c.env.DB.prepare('DELETE FROM audits'),
+    c.env.DB.prepare('DELETE FROM historical_monthly_scores'),
+    c.env.DB.prepare("DELETE FROM activity_log WHERE entity IN ('audit', 'finding', 'photo')"),
+  ];
+
+  if (clearAreas) {
+    statements.push(
+      c.env.DB.prepare('DELETE FROM user_areas'),
+      c.env.DB.prepare('DELETE FROM area_item_na'),
+      c.env.DB.prepare('DELETE FROM areas')
+    );
+  }
+
+  await c.env.DB.batch(statements);
+
+  // 3. Clear rate limit table if present
+  try {
+    await c.env.DB.prepare('DELETE FROM login_attempts').run();
+  } catch {}
+
+  await logActivity(
+    c.env.DB,
+    user.id,
+    'clear_demo_data',
+    'system',
+    null,
+    `clear_areas=${clearAreas}, photos_deleted=${photosDeleted}`
+  );
+
+  return c.json({
+    ok: true,
+    message: clearAreas
+      ? 'Đã xóa toàn bộ dữ liệu audit và khu vực mẫu thành công'
+      : 'Đã xóa toàn bộ dữ liệu audit và lỗi thử nghiệm thành công',
+    cleared_areas: clearAreas,
+    photos_deleted: photosDeleted,
+  });
+});

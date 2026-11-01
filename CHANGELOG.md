@@ -4,6 +4,19 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.3.2] - 2026-11-01
+
+### Added (Tính năng mới)
+- **Tích hợp nút Xóa dữ liệu Demo & Dọn dẹp Khởi tạo (Admin Only)**:
+  - Bổ sung chức năng cho phép Quản trị viên (`Admin`) sau khi cài đặt và chạy thử nghiệm hệ thống có thể dọn dẹp sạch toàn bộ dữ liệu mẫu / thử nghiệm (`audits`, `audit_area_scores`, `findings`, `photos` kho R2, `historical_monthly_scores`, `activity_log`).
+  - Cung cấp API `GET /api/settings/demo-stats` hiển thị thống kê dữ liệu thử nghiệm hiện có trong hệ thống và `POST /api/settings/clear-demo-data`.
+  - Hộp thoại xác nhận an toàn hai lớp (`Modal`) với tùy chọn:
+    1. Xóa toàn bộ dữ liệu audit / lỗi / ảnh thử nghiệm và bảo toàn 100% tài khoản người dùng, 24 tiêu chí 5S, nhận diện thương hiệu công ty và mục tiêu KPI.
+    2. Tùy chọn xóa cả 16 khu vực sản xuất mẫu (nếu đã nạp lúc cài đặt) để Admin tự khai báo khu vực thực tế của nhà máy.
+    3. Yêu cầu nhập từ khóa xác thực (`XOA DEMO` / `CLEAR`) để tránh bấm nhầm.
+
+---
+
 ## [2.3.1] - 2026-11-01
 
 ### Fixed & Improved (Tối ưu hiển thị Khung Cảnh báo & Hiệu quả Khắc phục trên TV Andon)
