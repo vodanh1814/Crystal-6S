@@ -3,9 +3,25 @@ import type { Env, Variables, AppSetting } from '../types';
 import { authMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { logActivity } from '../lib/activity';
+import { encryptSecret, decryptSecret } from '../lib/crypto';
 import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from '../../src/version';
 
 export const settingsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+async function resolveGithubToken(env: Env): Promise<string> {
+  if (env.GITHUB_TOKEN && env.GITHUB_TOKEN.trim()) {
+    return env.GITHUB_TOKEN.trim();
+  }
+  try {
+    const row = await env.DB
+      .prepare("SELECT value FROM app_settings WHERE key = 'github_token'")
+      .first<{ value: string }>();
+    if (row?.value) {
+      return (await decryptSecret(row.value.trim(), env.JWT_SECRET)).trim();
+    }
+  } catch {}
+  return '';
+}
 
 // Helper to fetch settings map
 export async function getAppSettings(
@@ -82,12 +98,13 @@ settingsRouter.put('/', authMiddleware, async (c) => {
 
   if (body.github_token !== undefined) {
     const ghToken = String(body.github_token || '').trim();
+    const encryptedToken = ghToken ? await encryptSecret(ghToken, c.env.JWT_SECRET) : '';
     await c.env.DB
       .prepare(`
         INSERT INTO app_settings (key, value, updated_at) VALUES ('github_token', ?, datetime('now'))
         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
       `)
-      .bind(ghToken)
+      .bind(encryptedToken)
       .run();
   }
 
@@ -111,14 +128,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
     return c.json({ error: 'Forbidden: Only Admin can check or apply system updates' }, 403);
   }
 
-  // Optional GitHub token from app_settings for private repository access on Cloudflare
-  let ghToken = '';
-  try {
-    const row = await c.env.DB
-      .prepare("SELECT value FROM app_settings WHERE key = 'github_token'")
-      .first<{ value: string }>();
-    if (row?.value) ghToken = row.value.trim();
-  } catch {}
+  const ghToken = await resolveGithubToken(c.env);
 
   const headers: Record<string, string> = {
     'User-Agent': 'Crystal-5S-Audit-Updater',
@@ -140,6 +150,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         current_version: APP_VERSION,
         latest_version: APP_VERSION,
         has_update: false,
+        has_github_token: Boolean(ghToken),
         repo: GITHUB_REPO,
         repo_url: GITHUB_REPO_URL,
         checked_at: new Date().toISOString(),
@@ -175,6 +186,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
       current_version: APP_VERSION,
       latest_version: latestVersion,
       has_update: hasUpdate,
+      has_github_token: Boolean(ghToken),
       changelog: changelog.slice(0, 3000),
       repo: GITHUB_REPO,
       repo_url: GITHUB_REPO_URL,
@@ -186,11 +198,88 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
       current_version: APP_VERSION,
       latest_version: APP_VERSION,
       has_update: false,
+      has_github_token: Boolean(ghToken),
       repo: GITHUB_REPO,
       repo_url: GITHUB_REPO_URL,
       checked_at: new Date().toISOString(),
       mode: 'cloud_worker',
       error: err.message || 'Failed to check GitHub for updates',
     });
+  }
+});
+
+// POST /api/settings/cloud-update-apply - Trigger Cloudflare CI/CD deployment via GitHub Actions (Admin only!)
+settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!isAdmin(user)) {
+    return c.json({ error: 'Forbidden: Only Admin can apply system updates' }, 403);
+  }
+
+  const ghToken = await resolveGithubToken(c.env);
+  if (!ghToken) {
+    return c.json(
+      {
+        error:
+          'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong biến môi trường Worker hoặc mục Quản trị để kích hoạt GitHub Actions Deploy tự động.',
+      },
+      400
+    );
+  }
+
+  const headers: Record<string, string> = {
+    'User-Agent': 'Crystal-5S-Audit-Updater',
+    Accept: 'application/vnd.github.v3+json',
+    Authorization: `Bearer ${ghToken}`,
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    const dispatchRes = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/deploy.yml/dispatches`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ref: 'main' }),
+      }
+    );
+
+    if (!dispatchRes.ok && dispatchRes.status !== 204) {
+      const errBody = await dispatchRes.text().catch(() => '');
+      return c.json(
+        {
+          error: `Không thể kích hoạt GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 200)}`,
+        },
+        400
+      );
+    }
+
+    await logActivity(
+      c.env.DB,
+      user.id,
+      'trigger_cloud_update',
+      'settings',
+      null,
+      `from=${APP_VERSION}`
+    );
+
+    return c.json({
+      ok: true,
+      mode: 'cloud_worker',
+      previous_version: APP_VERSION,
+      new_version: 'latest (CI/CD deploying)',
+      log: [
+        `▶ Đã xác thực quyền Admin (${user.username}).`,
+        `▶ Đã gửi lệnh kích hoạt GitHub Actions Workflow (deploy.yml) trên nhánh main của ${GITHUB_REPO}.`,
+        `✔ Tiến trình CI/CD trên GitHub đang tự động chạy kiểm tra (typecheck + test), áp dụng D1 migrations (--remote) và triển khai phiên bản mới lên Cloudflare Workers.`,
+        `ℹ Vui lòng đợi khoảng 1-2 phút để Cloudflare cập nhật phiên bản mới trên toàn mạng lưới.`,
+      ].join('\n'),
+    });
+  } catch (err: any) {
+    return c.json(
+      {
+        error: 'Failed to trigger cloud auto-update: ' + (err.message || ''),
+      },
+      500
+    );
   }
 });

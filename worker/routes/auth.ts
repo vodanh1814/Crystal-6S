@@ -64,12 +64,25 @@ authRouter.post('/setup', async (c) => {
 
   // Optional factory initial config (seed areas & default KPI target)
   if (body.seed_sample_areas === false) {
-    await c.env.DB.prepare('DELETE FROM areas WHERE id NOT IN (SELECT DISTINCT area_id FROM audit_areas)').run();
+    await c.env.DB
+      .prepare(
+        `DELETE FROM areas
+         WHERE id NOT IN (SELECT DISTINCT area_id FROM audit_area_scores)
+           AND id NOT IN (SELECT DISTINCT area_id FROM findings)`
+      )
+      .run();
   }
   if (body.default_target !== undefined) {
     const targetVal = Math.min(100, Math.max(50, Number(body.default_target) || 90));
-    await c.env.DB.prepare('UPDATE areas SET target_score = ?').bind(targetVal).run();
-    await c.env.DB.prepare('UPDATE area_targets SET target_score = ?').bind(targetVal).run();
+    const currentYear = new Date().getUTCFullYear();
+    await c.env.DB.prepare('UPDATE yearly_targets SET target = ?').bind(targetVal).run();
+    await c.env.DB
+      .prepare(
+        `INSERT INTO yearly_targets (year, target) VALUES (?, ?)
+         ON CONFLICT(year) DO UPDATE SET target = excluded.target`
+      )
+      .bind(currentYear, targetVal)
+      .run();
   }
 
   const userLang = body.lang === 'en' ? 'en' : 'vi';
@@ -99,6 +112,22 @@ authRouter.post('/setup', async (c) => {
   return c.json({ user: safeUser }, 201);
 });
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+async function ensureLoginAttemptsTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS login_attempts (
+        key TEXT PRIMARY KEY,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        first_attempt_at TEXT NOT NULL DEFAULT (datetime('now')),
+        locked_until TEXT
+      )`
+    )
+    .run();
+}
+
 // POST /api/auth/login
 authRouter.post('/login', async (c) => {
   const body = await c.req.json().catch(() => ({}));
@@ -109,19 +138,90 @@ authRouter.post('/login', async (c) => {
     return c.json({ error: 'Username and password are required' }, 400);
   }
 
+  const clientIp =
+    c.req.header('cf-connecting-ip') ||
+    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'local';
+  const rateLimitKey = `${clientIp}:${username}`;
+  const nowMs = Date.now();
+
+  try {
+    await ensureLoginAttemptsTable(c.env.DB);
+    const attemptRow = await c.env.DB
+      .prepare('SELECT attempts, first_attempt_at, locked_until FROM login_attempts WHERE key = ?')
+      .bind(rateLimitKey)
+      .first<{ attempts: number; first_attempt_at: string; locked_until: string | null }>();
+
+    if (attemptRow?.locked_until) {
+      const lockUntilMs = Date.parse(attemptRow.locked_until);
+      if (!isNaN(lockUntilMs) && lockUntilMs > nowMs) {
+        const remainingMinutes = Math.max(1, Math.ceil((lockUntilMs - nowMs) / 60000));
+        return c.json(
+          {
+            error: `Tài khoản đang tạm khóa do nhập sai mật khẩu quá ${MAX_LOGIN_ATTEMPTS} lần. Vui lòng thử lại sau ${remainingMinutes} phút.`,
+          },
+          429
+        );
+      }
+    }
+  } catch (err) {
+    console.error('Rate-limit check warning:', err);
+  }
+
+  const recordFailedAttempt = async () => {
+    try {
+      const existing = await c.env.DB
+        .prepare('SELECT attempts, first_attempt_at FROM login_attempts WHERE key = ?')
+        .bind(rateLimitKey)
+        .first<{ attempts: number; first_attempt_at: string }>();
+
+      const firstMs = existing?.first_attempt_at ? Date.parse(existing.first_attempt_at) : nowMs;
+      const withinWindow = !isNaN(firstMs) && nowMs - firstMs < LOCKOUT_DURATION_MS;
+      const nextAttempts = withinWindow ? (existing?.attempts || 0) + 1 : 1;
+      const nextFirstAt = withinWindow && existing?.first_attempt_at
+        ? existing.first_attempt_at
+        : new Date(nowMs).toISOString();
+      const lockedUntil =
+        nextAttempts >= MAX_LOGIN_ATTEMPTS
+          ? new Date(nowMs + LOCKOUT_DURATION_MS).toISOString()
+          : null;
+
+      await c.env.DB
+        .prepare(
+          `INSERT INTO login_attempts (key, attempts, first_attempt_at, locked_until)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(key) DO UPDATE SET
+             attempts = excluded.attempts,
+             first_attempt_at = excluded.first_attempt_at,
+             locked_until = excluded.locked_until`
+        )
+        .bind(rateLimitKey, nextAttempts, nextFirstAt, lockedUntil)
+        .run();
+    } catch (err) {
+      console.error('Failed to record login attempt:', err);
+    }
+  };
+
   const user = await c.env.DB
     .prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE')
     .bind(username)
     .first<User>();
 
   if (!user || user.active !== 1) {
+    await recordFailedAttempt();
     return c.json({ error: 'Invalid username or password' }, 401);
   }
 
   const valid = await verifyPassword(password, user.password_hash);
   if (!valid) {
+    await recordFailedAttempt();
     return c.json({ error: 'Invalid username or password' }, 401);
   }
+
+  // Clear failed attempts on successful login
+  try {
+    await c.env.DB.prepare('DELETE FROM login_attempts WHERE key = ?').bind(rateLimitKey).run();
+  } catch {}
 
   const token = await createSessionToken(user, c.env.JWT_SECRET);
   setSessionCookie(c, token);

@@ -59,6 +59,8 @@ export const Dashboard: React.FC = () => {
     target,
     current_week,
     kpi,
+    remediation,
+    is_authenticated,
     current_week_status,
     top_areas,
     bottom_areas,
@@ -293,7 +295,7 @@ export const Dashboard: React.FC = () => {
               return (
                 <Link
                   key={area.area_id}
-                  to={`/findings?area_id=${area.area_id}`}
+                  to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
                   className={`rounded-md border ${boxCls} px-2.5 py-1.5 flex flex-col justify-between min-h-0 hover:border-slate-400 transition cursor-pointer group`}
                 >
                   <div className="flex items-center justify-between">
@@ -350,18 +352,54 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT 4 COLS: 7-DAY ALARM & REPEAT FINDINGS BOARD (col-span-12 lg:col-span-4) */}
+        {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD (col-span-12 lg:col-span-4) */}
         <div className="col-span-12 lg:col-span-4 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col min-h-0">
-          <div className="shrink-0 flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span className="font-bold text-xs text-rose-400 uppercase truncate">
               {t('alarm_board_title')}
             </span>
-            <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold shrink-0">
-              {t('area_mng_action')}
-            </span>
+            <Link
+              to="/reports"
+              className="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-bold shrink-0 transition"
+            >
+              {t('remediation_report')} →
+            </Link>
           </div>
 
-          <div className="mt-2 flex-1 min-h-0 grid grid-rows-4 gap-1.5 overflow-y-auto lg:overflow-hidden">
+          {/* Compact Remediation Effectiveness Strip (On-Time Rate, Avg Remediation Time, Repeat Rate) */}
+          <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1.5">
+            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
+              <span className="text-[9px] text-slate-400 font-semibold truncate">
+                {t('on_time_closure_rate')}
+              </span>
+              <span className="text-xs font-black font-mono text-emerald-400">
+                {remediation?.on_time_rate_pct !== null && remediation?.on_time_rate_pct !== undefined
+                  ? `${remediation.on_time_rate_pct}%`
+                  : '-'}
+              </span>
+            </div>
+            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
+              <span className="text-[9px] text-slate-400 font-semibold truncate">
+                {t('avg_remediation_time')}
+              </span>
+              <span className="text-xs font-black font-mono text-sky-400">
+                {remediation?.avg_remediation_days !== null &&
+                remediation?.avg_remediation_days !== undefined
+                  ? `${remediation.avg_remediation_days} ${t('days_unit')}`
+                  : '-'}
+              </span>
+            </div>
+            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
+              <span className="text-[9px] text-slate-400 font-semibold truncate">
+                {t('recurrence_rate')}
+              </span>
+              <span className="text-xs font-black font-mono text-purple-400">
+                {remediation?.repeat_rate_pct !== undefined ? `${remediation.repeat_rate_pct}%` : '0%'}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-1.5 flex-1 min-h-0 grid grid-rows-4 gap-1.5 overflow-y-auto lg:overflow-hidden">
             {urgent_alarms && urgent_alarms.length > 0 ? (
               urgent_alarms.slice(0, 4).map((f: any) => {
                 const isOverdue = f.is_overdue;
@@ -379,7 +417,7 @@ export const Dashboard: React.FC = () => {
                 return (
                   <Link
                     key={f.id}
-                    to={`/findings/${f.id}`}
+                    to={is_authenticated ? `/findings/${f.id}` : '/login'}
                     className={`rounded-md border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between hover:border-slate-400 transition cursor-pointer min-h-0 group`}
                   >
                     <div className="flex items-center justify-between text-xs">

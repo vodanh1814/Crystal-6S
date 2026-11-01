@@ -6,3 +6,4 @@ dist
 cookies*.txt
 .exe_build
 .tmp*
+.backups

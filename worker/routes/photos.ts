@@ -6,8 +6,8 @@ import { logActivity } from '../lib/activity';
 
 export const photosRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// GET /api/photos/:id - Serve photo from R2 (public read for TV & photo gallery)
-photosRouter.get('/:id', async (c) => {
+// GET /api/photos/:id - Serve photo from R2 (authenticated internal users only)
+photosRouter.get('/:id', authMiddleware, async (c) => {
   const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid photo ID' }, 400);
@@ -30,7 +30,7 @@ photosRouter.get('/:id', async (c) => {
   const contentType = object.httpMetadata?.contentType || 'image/jpeg';
   const headers = new Headers();
   headers.set('Content-Type', contentType);
-  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  headers.set('Cache-Control', 'private, max-age=86400, immutable');
 
   return new Response(object.body, { headers });
 });

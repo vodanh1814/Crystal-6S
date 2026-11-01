@@ -100,3 +100,55 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 
   return constantTimeCompare(new Uint8Array(derivedBits), expectedHash);
 }
+
+async function deriveAesGcmKey(masterSecret: string): Promise<CryptoKey> {
+  const enc = new TextEncoder();
+  const digest = await crypto.subtle.digest('SHA-256', enc.encode(masterSecret || 'crystal-5s-default-key'));
+  return await crypto.subtle.importKey('raw', digest, { name: 'AES-GCM' }, false, [
+    'encrypt',
+    'decrypt',
+  ]);
+}
+
+/**
+ * Encrypts sensitive strings (e.g. GitHub token) using AES-GCM-256 before storing in D1.
+ * Format: enc:v1:<b64iv>:<b64ciphertext>
+ */
+export async function encryptSecret(plaintext: string, masterSecret: string): Promise<string> {
+  if (!plaintext) return '';
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveAesGcmKey(masterSecret);
+  const enc = new TextEncoder();
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(plaintext)
+  );
+  return `enc:v1:${bufferToBase64(iv)}:${bufferToBase64(encrypted)}`;
+}
+
+/**
+ * Decrypts a secret encrypted with encryptSecret.
+ */
+export async function decryptSecret(storedValue: string, masterSecret: string): Promise<string> {
+  if (!storedValue) return '';
+  if (!storedValue.startsWith('enc:v1:')) {
+    // Legacy plaintext fallback
+    return storedValue;
+  }
+  const parts = storedValue.split(':');
+  if (parts.length !== 4) return '';
+  try {
+    const iv = base64ToBuffer(parts[2]);
+    const cipherBytes = base64ToBuffer(parts[3]);
+    const key = await deriveAesGcmKey(masterSecret);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv as unknown as ArrayBuffer },
+      key,
+      cipherBytes as unknown as ArrayBuffer
+    );
+    return new TextDecoder('utf-8').decode(decrypted);
+  } catch {
+    return '';
+  }
+}

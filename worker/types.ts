@@ -141,6 +141,7 @@ export interface Env {
   DB: D1Database;
   PHOTOS: R2Bucket;
   JWT_SECRET: string;
+  GITHUB_TOKEN?: string;
 }
 
 export interface Variables {

@@ -49,11 +49,12 @@ app.notFound((c) => {
   return c.text('Not Found', 404);
 });
 
-// JSON Global error handler
+// JSON Global error handler (never leak stack traces or internal cause to client)
 app.onError((err: any, c) => {
   console.error('Unhandled API Error:', err);
   const status = typeof err.status === 'number' && err.status >= 400 && err.status < 600 ? err.status : 500;
-  return c.json({ error: err.message || 'Internal Server Error', stack: err.stack, cause: String(err.cause || '') }, status);
+  const safeMessage = status < 500 && err.message ? String(err.message) : 'Internal Server Error';
+  return c.json({ error: safeMessage }, status);
 });
 
 export default app;

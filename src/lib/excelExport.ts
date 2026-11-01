@@ -76,3 +76,64 @@ export async function exportMonthlyReportToExcel(
 
   XLSX.writeFile(wb, `Crystal_5S_Monthly_${year}.xlsx`);
 }
+
+export async function exportRemediationReportToExcel(
+  year: number,
+  month: string | null,
+  summary: any,
+  byArea: any[]
+): Promise<void> {
+  const XLSX = await import('xlsx');
+
+  const rows: any[] = [];
+  const periodLabel = month || String(year);
+
+  rows.push([
+    'Area Code',
+    'Area Name',
+    'Total Findings',
+    'Resolved Findings',
+    'On-Time Findings',
+    'On-Time Rate (%)',
+    'Overdue Open',
+    'Avg Remediation Days (MTTR)',
+    'Repeated Findings',
+    'Repeat Rate (%)',
+  ]);
+
+  for (const item of byArea) {
+    rows.push([
+      item.area_code,
+      item.area_name,
+      item.total_findings,
+      item.resolved_findings,
+      item.on_time_findings,
+      item.on_time_rate_pct !== null ? `${item.on_time_rate_pct}%` : '-',
+      item.overdue_findings,
+      item.avg_remediation_days !== null ? `${item.avg_remediation_days}` : '-',
+      item.repeat_findings,
+      `${item.repeat_rate_pct}%`,
+    ]);
+  }
+
+  if (summary) {
+    rows.push([
+      'PLANT TOTAL',
+      `All Active Areas (${periodLabel})`,
+      summary.total_findings,
+      summary.resolved_findings,
+      summary.on_time_findings,
+      summary.on_time_rate_pct !== null ? `${summary.on_time_rate_pct}%` : '-',
+      summary.overdue_findings,
+      summary.avg_remediation_days !== null ? `${summary.avg_remediation_days}` : '-',
+      summary.repeat_findings,
+      `${summary.repeat_rate_pct}%`,
+    ]);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `Remediation-${periodLabel}`);
+
+  XLSX.writeFile(wb, `Crystal_5S_Remediation_${periodLabel}.xlsx`);
+}

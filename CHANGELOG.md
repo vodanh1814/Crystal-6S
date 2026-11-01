@@ -4,6 +4,33 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.3.0] - 2026-11-01
+
+### Added (Tính năng mới)
+- **Dashboard & Báo cáo Hiệu quả Khắc phục (`Remediation Effectiveness`)**:
+  - Bổ sung theo dõi 3 chỉ số cốt lõi trên cả màn hình **TV Andon Dashboard (`/`)** lẫn tab báo cáo chuyên sâu **"Hiệu quả khắc phục"** tại trang **Báo cáo (`/reports`)**:
+    1. **Tỷ lệ đóng lỗi đúng hạn (`On-Time Closure Rate %`)**.
+    2. **Thời gian khắc phục trung bình (`Avg Remediation Time / MTTR` — ngày)**.
+    3. **Tỷ lệ lỗi tái diễn (`Recurrence / Repeat Rate %`)** và **Tỷ lệ hoàn tất xử lý (`Resolution Rate %`)**.
+  - Bổ sung bảng phân tích chi tiết Hiệu quả khắc phục theo từng khu vực (`Area Code`) và hỗ trợ xuất file Excel (`Crystal_5S_Remediation_*.xlsx`).
+- **Hỗ trợ Auto-Update cho môi trường Cloudflare (`POST /api/settings/cloud-update-apply` & GitHub Actions)**:
+  - Bổ sung workflow CI/CD `.github/workflows/deploy.yml` và API kích hoạt triển khai tự động trên Cloudflare cho Admin.
+
+### Changed & Fixed (An toàn Cập nhật, Đồng bộ DB & Bảo mật)
+- **Đồng bộ 100% cấu trúc Database trong Setup (`worker/routes/auth.ts` & `scripts/auto_setup.mjs`)**:
+  - Thay thế các truy vấn cũ (`audit_areas`, `area_targets`, `areas.target_score`) bằng đúng bảng chuẩn trong schema (`audit_area_scores`, `findings`, `yearly_targets`), đảm bảo cấu hình KPI và khởi tạo Admin ban đầu luôn thành công 100%.
+- **Quy trình Auto-Update 5 bước an toàn (`vite.config.ts`)**:
+  - Loại bỏ `git reset --hard`; bổ sung **Preflight Check** bảo vệ tuyệt đối các thay đổi mã nguồn cục bộ chưa commit (`409 Conflict`).
+  - Tự động **Backup** cấu hình và toàn bộ Database SQLite D1 cục bộ (`.wrangler/state/v3/d1`) vào `.backups/` trước khi nâng cấp.
+  - **Xác minh nghiêm ngặt bảng `d1_migrations`** và kiểm tra kiểu dữ liệu (`tsc -b`); tự động **Rollback** về commit cũ và khôi phục Database D1 nếu bất kỳ bước nào thất bại.
+- **Tăng cường Bảo mật & Phân tách dữ liệu nội bộ**:
+  - Ẩn hoàn toàn `stack` và `cause` trong phản hồi lỗi máy chủ (`worker/index.ts`).
+  - Bổ sung giới hạn thử đăng nhập (**Brute-force Rate Limiting**: khóa tạm thời 15 phút sau 5 lần nhập sai mật khẩu liên tiếp) với migration `0007_security_and_rate_limit.sql`.
+  - Mã hóa **AES-GCM-256** (`worker/lib/crypto.ts`) đối với `github_token` lưu trong `app_settings`.
+  - Yêu cầu xác thực đăng nhập đối với API tải ảnh thực tế tại xưởng (`GET /api/photos/:id`) và ẩn mô tả lỗi nội bộ / tên cá nhân khi xem Dashboard ở chế độ TV công khai chưa đăng nhập.
+
+---
+
 ## [2.2.2] - 2026-11-01
 
 ### Changed (Cải thiện hiển thị tên tháng)

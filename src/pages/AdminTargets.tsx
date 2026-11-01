@@ -72,21 +72,41 @@ export const AdminTargets: React.FC = () => {
     setApplyingUpdate(true);
     setUpdateError(null);
     setUpdateSuccess(null);
-    setUpdateLog('▶ Đang kết nối GitHub & tải bản cập nhật mới nhất...');
+    const isCloud = updateInfo?.mode === 'cloud_worker';
+    setUpdateLog(
+      isCloud
+        ? '▶ Đang gửi lệnh kích hoạt CI/CD Auto-Update lên GitHub Actions & Cloudflare...'
+        : '▶ Đang chạy quy trình cập nhật an toàn 5 bước (Preflight -> Backup -> Fast-Forward -> Migration Verify)...'
+    );
 
     try {
-      const res = await api.post<{
-        ok: boolean;
-        previous_version: string;
-        new_version: string;
-        log: string;
-      }>('/settings/local-update-apply', {});
+      const endpoint = isCloud ? '/settings/cloud-update-apply' : '/settings/local-update-apply';
+      const res = await api
+        .post<{
+          ok: boolean;
+          previous_version: string;
+          new_version: string;
+          log: string;
+        }>(endpoint, {})
+        .catch(async (primaryErr) => {
+          if (!isCloud && primaryErr?.status === 404) {
+            return await api.post<{
+              ok: boolean;
+              previous_version: string;
+              new_version: string;
+              log: string;
+            }>('/settings/cloud-update-apply', {});
+          }
+          throw primaryErr;
+        });
 
       setUpdateLog(res.log || '✔ Đã cập nhật thành công!');
       setUpdateSuccess(t('update_success_msg', { v: res.new_version || APP_VERSION }));
-      setTimeout(() => {
-        window.location.reload();
-      }, 2500);
+      if (!isCloud) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2500);
+      }
     } catch (err: any) {
       setUpdateError(err.message || 'Auto-update failed');
     } finally {

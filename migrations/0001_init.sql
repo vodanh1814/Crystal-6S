@@ -161,3 +161,10 @@ CREATE TABLE IF NOT EXISTS app_settings (
 INSERT OR IGNORE INTO app_settings (key, value) VALUES
   ('company_name', 'CRYSTAL'),
   ('company_logo', '');
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  key TEXT PRIMARY KEY,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  first_attempt_at TEXT NOT NULL DEFAULT (datetime('now')),
+  locked_until TEXT
+);

@@ -13,7 +13,11 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { Modal } from '../components/Modal';
-import { exportWeeklyReportToExcel, exportMonthlyReportToExcel } from '../lib/excelExport';
+import {
+  exportWeeklyReportToExcel,
+  exportMonthlyReportToExcel,
+  exportRemediationReportToExcel,
+} from '../lib/excelExport';
 import {
   getVietnamCurrentMonth,
   getVietnamCurrentYear,
@@ -25,7 +29,7 @@ import type { Area } from '../api/types';
 export const Reports: React.FC = () => {
   const { t } = useI18n();
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<'weekly' | 'monthly'>('weekly');
+  const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>('weekly');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -34,10 +38,12 @@ export const Reports: React.FC = () => {
   const currentYear = getVietnamCurrentYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [remediationMonthFilter, setRemediationMonthFilter] = useState<string>(''); // '' = all year, or 'YYYY-MM'
 
   // Data
   const [weeklyData, setWeeklyData] = useState<any>(null);
   const [monthlyData, setMonthlyData] = useState<any>(null);
+  const [remediationData, setRemediationData] = useState<any>(null);
 
   // Historical Import Modal State
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -52,16 +58,22 @@ export const Reports: React.FC = () => {
       if (tab === 'weekly') {
         const res = await api.get<any>(`/reports/weekly?month=${selectedMonth}`);
         setWeeklyData(res);
-      } else {
+      } else if (tab === 'monthly') {
         const res = await api.get<any>(`/reports/monthly?year=${selectedYear}`);
         setMonthlyData(res);
+      } else if (tab === 'remediation') {
+        const q = remediationMonthFilter
+          ? `/reports/remediation?year=${selectedYear}&month=${remediationMonthFilter}`
+          : `/reports/remediation?year=${selectedYear}`;
+        const res = await api.get<any>(q);
+        setRemediationData(res);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [tab, selectedMonth, selectedYear]);
+  }, [tab, selectedMonth, selectedYear, remediationMonthFilter]);
 
   useEffect(() => {
     fetchReportData();
@@ -217,6 +229,13 @@ export const Reports: React.FC = () => {
           monthlyData.months,
           monthlyData.matrix
         );
+      } else if (tab === 'remediation' && remediationData) {
+        await exportRemediationReportToExcel(
+          remediationData.year,
+          remediationData.month,
+          remediationData.summary,
+          remediationData.by_area || []
+        );
       }
     } catch (err: any) {
       alert(err.message || 'Export failed');
@@ -256,7 +275,11 @@ export const Reports: React.FC = () => {
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('reports')}</h1>
           <p className="text-sm text-slate-500 font-medium">
-            {tab === 'weekly' ? t('weekly_report') : t('monthly_report')}
+            {tab === 'weekly'
+              ? t('weekly_report')
+              : tab === 'monthly'
+              ? t('monthly_report')
+              : t('remediation_report')}
           </p>
         </div>
 
@@ -279,6 +302,16 @@ export const Reports: React.FC = () => {
             >
               {t('monthly_report')}
             </button>
+            <button
+              onClick={() => setTab('remediation')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                tab === 'remediation'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {t('remediation_report')}
+            </button>
           </div>
 
           {/* Month/Year Picker */}
@@ -290,17 +323,44 @@ export const Reports: React.FC = () => {
               className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
             />
           ) : (
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-              className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
-            >
-              {[2024, 2025, 2026, 2027, 2028].map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+            <div className="inline-flex items-center gap-2">
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  const yr = parseInt(e.target.value, 10);
+                  setSelectedYear(yr);
+                  if (remediationMonthFilter) {
+                    setRemediationMonthFilter(`${yr}-${remediationMonthFilter.slice(5, 7)}`);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
+              >
+                {[2024, 2025, 2026, 2027, 2028].map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+
+              {tab === 'remediation' && (
+                <select
+                  value={remediationMonthFilter}
+                  onChange={(e) => setRemediationMonthFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">
+                    {t('all_year_option')} ({selectedYear})
+                  </option>
+                  {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map(
+                    (m, idx) => (
+                      <option key={m} value={`${selectedYear}-${m}`}>
+                        {MONTH_SHORT_NAMES[idx]} {selectedYear}
+                      </option>
+                    )
+                  )}
+                </select>
+              )}
+            </div>
           )}
 
           {/* Import Historical Scores (Admin only on Monthly view) */}
@@ -436,6 +496,182 @@ export const Reports: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : tab === 'remediation' && remediationData ? (
+          <div className="p-5 space-y-6">
+            {/* 4 Summary KPI Cards for Remediation Effectiveness */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col justify-between">
+                <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                  {t('on_time_closure_rate')}
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-2xl font-black font-mono text-emerald-700">
+                    {remediationData.summary?.on_time_rate_pct !== null &&
+                    remediationData.summary?.on_time_rate_pct !== undefined
+                      ? `${remediationData.summary.on_time_rate_pct}%`
+                      : '-'}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-700">
+                    {remediationData.summary?.on_time_findings || 0} /{' '}
+                    {(remediationData.summary?.resolved_findings || 0) +
+                      (remediationData.summary?.overdue_findings || 0)}{' '}
+                    đúng hạn
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-200 flex flex-col justify-between">
+                <div className="text-xs font-bold text-sky-800 uppercase tracking-wider">
+                  {t('avg_remediation_time')}
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-2xl font-black font-mono text-sky-700">
+                    {remediationData.summary?.avg_remediation_days !== null &&
+                    remediationData.summary?.avg_remediation_days !== undefined
+                      ? `${remediationData.summary.avg_remediation_days} ${t('days_unit')}`
+                      : '-'}
+                  </span>
+                  <span className="text-xs font-semibold text-sky-700">
+                    Hạn chuẩn: ≤ 7 {t('days_unit')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex flex-col justify-between">
+                <div className="text-xs font-bold text-purple-800 uppercase tracking-wider">
+                  {t('recurrence_rate')}
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-2xl font-black font-mono text-purple-700">
+                    {remediationData.summary?.repeat_rate_pct ?? 0}%
+                  </span>
+                  <span className="text-xs font-semibold text-purple-700">
+                    {remediationData.summary?.repeat_findings || 0} /{' '}
+                    {remediationData.summary?.total_findings || 0} lỗi lặp
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  {t('resolution_rate')}
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-2xl font-black font-mono text-slate-900">
+                    {remediationData.summary?.resolution_rate_pct !== null &&
+                    remediationData.summary?.resolution_rate_pct !== undefined
+                      ? `${remediationData.summary.resolution_rate_pct}%`
+                      : '-'}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-600">
+                    {remediationData.summary?.resolved_findings || 0} /{' '}
+                    {remediationData.summary?.total_findings || 0} đã xử lý
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Per-Area Remediation Effectiveness Table */}
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-4">{t('area_column')}</th>
+                    <th className="py-3 px-3 text-center">{t('total_findings_col')}</th>
+                    <th className="py-3 px-3 text-center">{t('resolved_col')}</th>
+                    <th className="py-3 px-3 text-center">{t('on_time_col')}</th>
+                    <th className="py-3 px-3 text-center">{t('overdue_col')}</th>
+                    <th className="py-3 px-3 text-center">{t('mttr_col')}</th>
+                    <th className="py-3 px-3 text-center">{t('repeat_rate_col')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(remediationData.by_area || []).map((row: any) => {
+                    const onTimePct = row.on_time_rate_pct;
+                    const mttr = row.avg_remediation_days;
+                    const repeatPct = row.repeat_rate_pct || 0;
+
+                    return (
+                      <tr key={row.area_id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                          {row.area_code}
+                          <span className="text-xs font-normal text-slate-400 ml-1.5 hidden sm:inline">
+                            {row.area_name}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-center font-mono font-bold text-slate-800">
+                          {row.total_findings}
+                        </td>
+                        <td className="py-3 px-3 text-center font-mono text-emerald-700 font-bold">
+                          {row.resolved_findings}
+                        </td>
+                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                          {onTimePct !== null && onTimePct !== undefined ? (
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-bold font-mono ${
+                                onTimePct >= 90
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : onTimePct >= 75
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-rose-100 text-rose-800'
+                              }`}
+                            >
+                              {onTimePct}% ({row.on_time_findings})
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center font-mono">
+                          {row.overdue_findings > 0 ? (
+                            <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-xs font-bold">
+                              {row.overdue_findings}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">0</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center font-mono whitespace-nowrap">
+                          {mttr !== null && mttr !== undefined ? (
+                            <span
+                              className={`text-xs font-bold ${
+                                mttr <= 4
+                                  ? 'text-emerald-700'
+                                  : mttr <= 7
+                                  ? 'text-amber-700'
+                                  : 'text-rose-700'
+                              }`}
+                            >
+                              {mttr} {t('days_unit')}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center font-mono whitespace-nowrap">
+                          {row.total_findings > 0 ? (
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                repeatPct === 0
+                                  ? 'bg-emerald-50 text-emerald-700'
+                                  : repeatPct <= 15
+                                  ? 'bg-amber-50 text-amber-800'
+                                  : 'bg-purple-100 text-purple-800'
+                              }`}
+                            >
+                              {repeatPct}% ({row.repeat_findings})
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : null}
       </div>

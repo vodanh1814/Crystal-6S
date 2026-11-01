@@ -178,11 +178,12 @@ function applyAllInitialSettingsToD1(dbName, isRemote, config) {
   const safeName = (companyName || 'CRYSTAL').replace(/'/g, "''");
   const safeLogo = (companyLogo || '').replace(/'/g, "''");
   const targetNum = Math.min(100, Math.max(50, Number(defaultTarget) || 90));
+  const currentYear = new Date().getUTCFullYear();
 
   const statements = [
     `INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('company_name', '${safeName}', CURRENT_TIMESTAMP), ('company_logo', '${safeLogo}', CURRENT_TIMESTAMP);`,
-    `UPDATE areas SET target_score = ${targetNum};`,
-    `UPDATE area_targets SET target_score = ${targetNum};`,
+    `UPDATE yearly_targets SET target = ${targetNum};`,
+    `INSERT INTO yearly_targets (year, target) VALUES (${currentYear}, ${targetNum}) ON CONFLICT(year) DO UPDATE SET target = excluded.target;`,
   ];
 
   if (adminUser && adminPass && adminPass.length >= 6) {
@@ -207,7 +208,8 @@ function applyAllInitialSettingsToD1(dbName, isRemote, config) {
     run(`npx wrangler d1 execute ${dbName} ${flag} --file=.tmp_init_config.sql`, { silent: true });
     ok(`Đã nạp cấu hình Công ty "${companyName}", KPI (${targetNum}%) và tài khoản Admin (${adminUser || 'admin'}) vào D1.`);
   } catch (err) {
-    warn(`Lưu ý khi nạp cấu hình bổ sung vào D1: ${err.message}`);
+    console.error(`❌ Lỗi khi nạp cấu hình khởi tạo vào D1 (${dbName}): ${err.message}`);
+    throw err;
   } finally {
     if (fs.existsSync(tmpSqlPath)) {
       try {

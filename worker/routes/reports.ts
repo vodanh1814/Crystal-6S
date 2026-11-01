@@ -1,11 +1,131 @@
 import { Hono } from 'hono';
 import type { Env, Variables, Area } from '../types';
-import { authMiddleware } from '../lib/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { getISOWeek, getVietnamToday, addDays, daysRemaining } from '../lib/week';
 import { calculateMonthlyScore, isScorePassing } from '../lib/scoring';
 
 export const reportsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+interface RawRemediationRow {
+  id: number;
+  area_id: number;
+  repeat_level: number;
+  status: 'open' | 'fixed' | 'closed' | 'carried';
+  due_date: string;
+  fixed_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+  audit_date: string;
+}
+
+function computeRemediationAnalytics(
+  rows: RawRemediationRow[],
+  areas: Area[],
+  today: string
+) {
+  const summarizeRows = (list: RawRemediationRow[]) => {
+    const total = list.length;
+    let resolved = 0;
+    let closed = 0;
+    let open = 0;
+    let overdue = 0;
+    let onTime = 0;
+    let lateResolved = 0;
+    let repeat = 0;
+    const durationDaysList: number[] = [];
+
+    for (const r of list) {
+      if (r.repeat_level > 1) {
+        repeat++;
+      }
+
+      const isResolved = r.status === 'fixed' || r.status === 'closed';
+      if (r.status === 'closed') closed++;
+      if (r.status === 'open') {
+        open++;
+        if (r.due_date < today) {
+          overdue++;
+        }
+      }
+
+      if (isResolved) {
+        resolved++;
+        const resolvedTimestamp = r.fixed_at || r.closed_at || '';
+        const resolvedDateStr = resolvedTimestamp ? resolvedTimestamp.slice(0, 10) : r.due_date;
+        if (resolvedDateStr <= r.due_date) {
+          onTime++;
+        } else {
+          lateResolved++;
+        }
+
+        const startDateStr = (r.audit_date || r.created_at || '').slice(0, 10);
+        if (startDateStr && resolvedDateStr) {
+          const startMs = Date.parse(`${startDateStr}T00:00:00Z`);
+          const endMs = Date.parse(`${resolvedDateStr}T00:00:00Z`);
+          if (!isNaN(startMs) && !isNaN(endMs)) {
+            const diffDays = Math.max(0, (endMs - startMs) / (1000 * 60 * 60 * 24));
+            durationDaysList.push(diffDays);
+          }
+        }
+      }
+    }
+
+    const evaluatedForOnTime = resolved + overdue;
+    const onTimeRatePct =
+      evaluatedForOnTime > 0 ? Number(((onTime / evaluatedForOnTime) * 100).toFixed(1)) : null;
+    const resolutionRatePct =
+      total > 0 ? Number(((resolved / total) * 100).toFixed(1)) : null;
+    const repeatRatePct =
+      total > 0 ? Number(((repeat / total) * 100).toFixed(1)) : 0;
+    const avgRemediationDays =
+      durationDaysList.length > 0
+        ? Number(
+            (
+              durationDaysList.reduce((sum, d) => sum + d, 0) / durationDaysList.length
+            ).toFixed(1)
+          )
+        : null;
+
+    return {
+      total_findings: total,
+      resolved_findings: resolved,
+      closed_findings: closed,
+      open_findings: open,
+      overdue_findings: overdue,
+      on_time_findings: onTime,
+      late_resolved_findings: lateResolved,
+      on_time_rate_pct: onTimeRatePct,
+      resolution_rate_pct: resolutionRatePct,
+      avg_remediation_days: avgRemediationDays,
+      repeat_findings: repeat,
+      repeat_rate_pct: repeatRatePct,
+    };
+  };
+
+  const summary = summarizeRows(rows);
+
+  const rowsByArea = new Map<number, RawRemediationRow[]>();
+  for (const r of rows) {
+    if (!rowsByArea.has(r.area_id)) {
+      rowsByArea.set(r.area_id, []);
+    }
+    rowsByArea.get(r.area_id)!.push(r);
+  }
+
+  const byArea = areas.map((area) => {
+    const areaRows = rowsByArea.get(area.id) || [];
+    const stats = summarizeRows(areaRows);
+    return {
+      area_id: area.id,
+      area_code: area.code,
+      area_name: area.name,
+      ...stats,
+    };
+  });
+
+  return { summary, by_area: byArea };
+}
 
 // Public read access for TV / shop-floor display on /dashboard, /weekly, /monthly
 // (no authMiddleware required to view summary reports)
@@ -305,8 +425,54 @@ reportsRouter.put('/historical-monthly', authMiddleware, async (c) => {
   return c.json({ ok: true, saved: savedCount, deleted: deletedCount });
 });
 
+// GET /api/reports/remediation?year=2026&month=2026-11
+reportsRouter.get('/remediation', async (c) => {
+  const today = getVietnamToday();
+  const currentWeekInfo = getISOWeek(today);
+  const yearParam = parseInt(c.req.query('year') || '', 10);
+  const year = !isNaN(yearParam) ? yearParam : currentWeekInfo.isoYear;
+  const monthParam = (c.req.query('month') || '').trim(); // optional YYYY-MM
+
+  const areasRes = await c.env.DB
+    .prepare('SELECT id, code, name, sort_order FROM areas WHERE active = 1 ORDER BY sort_order ASC, code ASC')
+    .all<Area>();
+  const areas = areasRes.results || [];
+
+  let sql = `
+    SELECT f.id, f.area_id, f.repeat_level, f.status, f.due_date,
+           f.fixed_at, f.closed_at, f.created_at, a.audit_date
+    FROM findings f
+    JOIN audits a ON a.id = f.audit_id
+    WHERE a.status = 'submitted'
+  `;
+  const params: (string | number)[] = [];
+
+  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+    sql += ' AND a.month = ?';
+    params.push(monthParam);
+  } else {
+    sql += ' AND a.iso_year = ?';
+    params.push(year);
+  }
+
+  const findingsRes = await c.env.DB
+    .prepare(sql)
+    .bind(...params)
+    .all<RawRemediationRow>();
+
+  const analytics = computeRemediationAnalytics(findingsRes.results || [], areas, today);
+
+  return c.json({
+    year,
+    month: monthParam || null,
+    today,
+    ...analytics,
+  });
+});
+
 // GET /api/reports/dashboard
-reportsRouter.get('/dashboard', async (c) => {
+reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
+  const isAuthenticated = Boolean(c.get('user'));
   const today = getVietnamToday();
   const currentWeekInfo = getISOWeek(today);
   const currentMonth = currentWeekInfo.month;
@@ -623,15 +789,60 @@ reportsRouter.get('/dashboard', async (c) => {
 
   const urgentAlarms = (urgentAlarmsRes.results || []).map((f: any) => {
     const diff = daysRemaining(f.due_date, today);
+    const isOverdue = f.status === 'open' && diff < 0;
+
+    if (!isAuthenticated) {
+      // Redact sensitive internal descriptions and individual staff names on Public TV view
+      return {
+        id: f.id,
+        area_id: f.area_id,
+        area_code: f.area_code,
+        area_name: f.area_name,
+        item_code: f.item_code,
+        content_vi: f.content_vi,
+        content_en: f.content_en,
+        repeat_level: f.repeat_level,
+        applied_penalty: f.applied_penalty,
+        due_date: f.due_date,
+        status: f.status,
+        description: '',
+        fix_note: '',
+        fixer_name: null,
+        manager_name: f.area_code ? `${f.area_code} MNG` : 'Area MNG',
+        auditor_name: '5S Auditor',
+        days_remaining: diff,
+        is_overdue: isOverdue,
+      };
+    }
+
     return {
       ...f,
       days_remaining: diff,
-      is_overdue: f.status === 'open' && diff < 0,
+      is_overdue: isOverdue,
     };
   });
 
+  // 10. Remediation Effectiveness Summary (On-Time Closure Rate, Avg Remediation Time, Repeat Rate)
+  const remediationRowsRes = await c.env.DB
+    .prepare(`
+      SELECT f.id, f.area_id, f.repeat_level, f.status, f.due_date,
+             f.fixed_at, f.closed_at, f.created_at, a.audit_date
+      FROM findings f
+      JOIN audits a ON a.id = f.audit_id
+      WHERE a.status = 'submitted' AND a.iso_year = ?
+    `)
+    .bind(currentYear)
+    .all<RawRemediationRow>();
+
+  const remediationAnalytics = computeRemediationAnalytics(
+    remediationRowsRes.results || [],
+    areas,
+    today
+  );
+
   return c.json({
     today,
+    is_authenticated: isAuthenticated,
     current_week: {
       iso_year: currentWeekInfo.isoYear,
       iso_week: currentWeekInfo.isoWeek,
@@ -650,6 +861,7 @@ reportsRouter.get('/dashboard', async (c) => {
       pending_audits_count: pendingAuditsCount,
       total_areas_count: areas.length,
     },
+    remediation: remediationAnalytics.summary,
     current_week_status: currentWeekStatus,
     monthly_ranking: ranking,
     top_areas: topAreas,
