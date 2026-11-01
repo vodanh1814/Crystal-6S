@@ -4,6 +4,22 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.4.1] - 2026-11-01
+
+### Fixed (Sửa lỗi & Ổn định hóa Triển khai)
+- **Tự động xử lý kích hoạt Subdomain `workers.dev` cho tài khoản Cloudflare mới**:
+  - Mở kênh tương tác nhập bàn phím trực tiếp (`stdin`) khi thực thi lệnh deploy trong `scripts/auto_setup.mjs`, cho phép người dùng nhập trực tiếp tên Subdomain trên cửa sổ dòng lệnh nếu Wrangler yêu cầu.
+  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers/onboarding`), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
+  - Hỗ trợ fallback thông minh 15 giây khi chạy trong môi trường GUI (`!process.stdin.isTTY`) để người dùng thao tác trên trình duyệt mà không bị treo tiến trình.
+  - Xử lý đóng `readline` stream (`rl.close()`) và thoát tiến trình sạch sẽ (`process.exit`) tại cả luồng khởi tạo lẫn di chuyển tài khoản Cloudflare.
+  - Bổ sung `"workers_dev": true` tường minh vào `wrangler.jsonc`.
+- **Khắc phục triệt để lỗi `statement too long: SQLITE_TOOBIG` trên Cloudflare D1**:
+  - Tách riêng câu lệnh SQL khởi tạo `company_logo` và `company_name` trong `scripts/auto_setup.mjs`.
+  - Giới hạn dung lượng file ảnh logo nạp trực tiếp qua CLI tối đa 35 KB, áp dụng chốt chặn an toàn `safeLogo.length <= 45000` ký tự (loại trừ hoàn toàn nguy cơ vượt quá giới hạn 100.000 ký tự SQLite statement của Cloudflare D1).
+  - Bổ sung chốt chặn kiểm tra độ dài câu lệnh SQL (`<= 80000` ký tự) trong hàm xuất sao lưu dữ liệu `generateDatabaseBackupSql()` của Worker để đảm bảo an toàn tuyệt đối khi import lại.
+
+---
+
 ## [2.4.0] - 2026-11-01
 
 ### Added (Tính năng mới)
@@ -23,6 +39,10 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
   - **File Cứu hộ Offline (`CLOUDFLARE_LIVE_URL.txt`)**: Tự động lưu thông tin URL mới nhất, ngày giờ, tên Worker và tên DB D1 vào file văn bản tại máy tính ngay khi triển khai.
 
 ### Fixed (Sửa lỗi)
+- **Tự động xử lý kích hoạt Subdomain `workers.dev` cho tài khoản Cloudflare mới**:
+  - Mở kênh tương tác nhập bàn phím trực tiếp (`stdin`) khi thực thi lệnh deploy trong `scripts/auto_setup.mjs`, cho phép người dùng nhập trực tiếp tên Subdomain trên cửa sổ dòng lệnh nếu Wrangler yêu cầu.
+  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers/onboarding`), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
+  - Bổ sung `"workers_dev": true` tường minh vào `wrangler.jsonc`.
 - **Khắc phục lỗi `statement too long: SQLITE_TOOBIG` khi triển khai Cloudflare D1**:
   - Tách riêng câu lệnh SQL khởi tạo `company_logo` và `company_name` trong `scripts/auto_setup.mjs`.
   - Giới hạn dung lượng file ảnh logo nạp trực tiếp qua CLI tối đa 35 KB, áp dụng chốt chặn an toàn `safeLogo.length <= 45000` ký tự (loại trừ hoàn toàn nguy cơ vượt quá giới hạn 100.000 ký tự SQLite statement của Cloudflare D1).

@@ -455,22 +455,127 @@ async function setupCloudflareMode() {
   });
 
   step('7/7. Đang đóng gói và xuất bản ứng dụng lên Internet (npm run deploy)...');
-  const deployOut = run('npm run deploy', { silent: true });
-  console.log(deployOut);
+  const deploySuccess = await deployWorkerApp(workerName, dbName);
+  rl.close();
+  process.exit(deploySuccess ? 0 : 1);
+}
 
-  const urlMatch = deployOut.match(/https:\/\/[a-zA-Z0-9.-]+\.workers\.dev/);
-  console.log('\n======================================================================');
-  console.log('   🎉 HOÀN TẤT CÀI ĐẶT & TRIỂN KHAI LÊN CLOUDFLARE (DEPLOY COMPLETE)!');
-  console.log('======================================================================');
-  if (urlMatch) {
-    const liveUrl = urlMatch[0];
-    console.log(`\n👉 LIVE URL: ${liveUrl}`);
-    saveLiveUrlToFile(liveUrl, workerName, dbName);
+/**
+ * Deploys the application with full interactive TTY support and auto-recovery
+ * for new Cloudflare accounts that need a workers.dev subdomain registered.
+ */
+async function deployWorkerApp(workerName, dbName) {
+  let attempt = 0;
+  const maxAttempts = 3;
+
+  while (attempt < maxAttempts) {
+    attempt++;
+    let deployOut = '';
+    let deployFailed = false;
+
     try {
-      execSync(`start ${liveUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
-    } catch {}
+      deployOut = await new Promise((resolve, reject) => {
+        let combined = '';
+        // Use inherit for stdin so user can answer Wrangler prompts if asked,
+        // while piping stdout/stderr so we can display in real-time AND capture URL.
+        const child = spawn('npm', ['run', 'deploy'], {
+          cwd: ROOT,
+          stdio: ['inherit', 'pipe', 'pipe'],
+          shell: true,
+        });
+
+        child.stdout.on('data', (chunk) => {
+          process.stdout.write(chunk);
+          combined += chunk.toString();
+        });
+
+        child.stderr.on('data', (chunk) => {
+          process.stderr.write(chunk);
+          combined += chunk.toString();
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve(combined);
+          } else {
+            const err = new Error(`Deploy process exited with code ${code}`);
+            err.output = combined;
+            reject(err);
+          }
+        });
+
+        child.on('error', (err) => {
+          err.output = combined;
+          reject(err);
+        });
+      });
+    } catch (err) {
+      deployFailed = true;
+      deployOut = err.output || err.message || '';
+    }
+
+    if (!deployFailed) {
+      const urlMatch = deployOut.match(/https:\/\/[a-zA-Z0-9.-]+\.workers\.dev/);
+      console.log('\n======================================================================');
+      console.log('   🎉 HOÀN TẤT CÀI ĐẶT & TRIỂN KHAI LÊN CLOUDFLARE (DEPLOY COMPLETE)!');
+      console.log('======================================================================');
+      if (urlMatch) {
+        const liveUrl = urlMatch[0];
+        console.log(`\n👉 LIVE URL: ${liveUrl}`);
+        saveLiveUrlToFile(liveUrl, workerName, dbName);
+        try {
+          execSync(`start ${liveUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
+        } catch {}
+      }
+      return true;
+    }
+
+    // Check if error is due to missing workers.dev subdomain on new Cloudflare account
+    const isSubdomainIssue =
+      deployOut.includes('workers.dev subdomain') ||
+      deployOut.includes('workers/onboarding') ||
+      deployOut.includes('registration declined') ||
+      deployOut.includes('routes workers dev');
+
+    if (isSubdomainIssue && attempt < maxAttempts) {
+      const onboardingMatch = deployOut.match(
+        /https:\/\/dash\.cloudflare\.com\/[a-zA-Z0-9_-]+\/workers\/onboarding/
+      );
+      const onboardingUrl = onboardingMatch
+        ? onboardingMatch[0]
+        : 'https://dash.cloudflare.com';
+
+      console.log('\n======================================================================');
+      warn('CHÚ Ý: Tài khoản Cloudflare của bạn là tài khoản mới và chưa tạo Subdomain workers.dev!');
+      console.log('   👉 Đây là bước bắt buộc 1 lần duy nhất cho mọi tài khoản Cloudflare mới.');
+      console.log(`   🌐 Đang mở trang thiết lập Subdomain Cloudflare trên trình duyệt:`);
+      console.log(`      ${onboardingUrl}`);
+      console.log('======================================================================');
+      console.log('Hướng dẫn:');
+      console.log(' 1. Trên trang Cloudflare vừa mở, nhập tên Subdomain mong muốn (ví dụ: tên công ty).');
+      console.log(' 2. Bấm nút "Set up" / "Confirm" trên Cloudflare.');
+      console.log(' 3. Quay lại màn hình này và nhấn Enter để tiếp tục xuất bản...\n');
+
+      try {
+        execSync(`start ${onboardingUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
+      } catch {}
+
+      if (!process.stdin.isTTY) {
+        warn('Môi trường không có bàn phím tương tác (GUI). Đang tạm dừng 15 giây để bạn hoàn tất đặt Subdomain trên trình duyệt...');
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+      } else {
+        await ask('👉 Nhấn Enter sau khi bạn đã hoàn tất đặt Subdomain trên Cloudflare để xuất bản tiếp...');
+      }
+      step(`Thử lại quá trình xuất bản (Lần ${attempt + 1}/${maxAttempts})...`);
+      continue;
+    }
+
+    // If it's another error or max attempts reached
+    console.error('\n❌ Không thể xuất bản ứng dụng lên Cloudflare:');
+    console.error(deployOut);
+    return false;
   }
-  process.exit(0);
+  return false;
 }
 
 function saveLiveUrlToFile(url, workerName, dbName) {
@@ -509,7 +614,8 @@ async function migrateCloudflareAccountMode() {
   const confirm = cliConfirm !== null ? cliConfirm : await ask('Bạn có muốn bắt đầu di chuyển ngay? [1] Có / [2] Hủy: ');
   if (confirm !== '1' && confirm !== 'yes') {
     console.log('Đã hủy thao tác di chuyển.');
-    return;
+    rl.close();
+    process.exit(0);
   }
 
   step('1/6. Xuất bản sao lưu dữ liệu toàn diện (Exporting Backup)...');
@@ -601,21 +707,9 @@ async function migrateCloudflareAccountMode() {
   } catch {}
 
   step('6/6. Đóng gói & Triển khai Worker lên tài khoản Cloudflare mới (npm run deploy)...');
-  const deployOut = run('npm run deploy', { silent: true });
-  console.log(deployOut);
-
-  const urlMatch = deployOut.match(/https:\/\/[a-zA-Z0-9.-]+\.workers\.dev/);
-  console.log('\n======================================================================');
-  console.log('   🎉 DI CHUYỂN TÀI KHOẢN CLOUDFLARE THÀNH CÔNG RỰC RỠ!');
-  console.log('======================================================================');
-  if (urlMatch) {
-    const liveUrl = urlMatch[0];
-    console.log(`\n👉 ĐƯỜNG DẪN MỚI TRÊN CLOUDFLARE: ${liveUrl}`);
-    saveLiveUrlToFile(liveUrl, cfg.workerName, cfg.dbName);
-    try {
-      execSync(`start ${liveUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
-    } catch {}
-  }
+  const deploySuccess = await deployWorkerApp(cfg.workerName, cfg.dbName);
+  rl.close();
+  process.exit(deploySuccess ? 0 : 1);
 }
 
 async function main() {
