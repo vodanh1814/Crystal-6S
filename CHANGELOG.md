@@ -4,6 +4,15 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.3.1] - 2026-11-01
+
+### Fixed & Improved (Tối ưu hiển thị Khung Cảnh báo & Hiệu quả Khắc phục trên TV Andon)
+- **Tối ưu hiển thị thẻ Cảnh báo 7 ngày & Lỗi lặp trên Dashboard (`src/pages/Dashboard.tsx`)**:
+  - Chuyển 3 chỉ số Hiệu quả khắc phục (`Đúng hạn / On-Time`, `TG sửa TB / Avg Time`, `Tái diễn / Repeat`) thành dải nhãn 1 dòng gọn gàng.
+  - Bổ sung bộ nhãn tiêu chí 5S rút gọn song ngữ (`S1.1` → `S5.3`, giữ nội dung đầy đủ khi di chuột xem tooltip) và sửa lỗi tràn khung ngang/dọc (`min-w-0 overflow-hidden`) giúp chữ và viền phải hiển thị sắc nét, không bị cắt chữ.
+
+---
+
 ## [2.3.0] - 2026-11-01
 
 ### Added (Tính năng mới)

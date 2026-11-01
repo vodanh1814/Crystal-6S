@@ -24,6 +24,42 @@ import { api } from '../api/client';
 import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 
+const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
+  'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
+  'S1.2': { vi: 'Vật dụng nguy hiểm / bị cấm', en: 'Dangerous or prohibited items' },
+  'S1.3': { vi: 'Vật dụng hỏng / biểu mẫu hết hạn', en: 'Broken items or expired forms' },
+  'S2.1': { vi: 'Vị trí lưu trữ & vạch kẻ layout', en: 'Storage locations & floor markings' },
+  'S2.2': { vi: 'Nhãn / mã nhận diện khu vực lưu trữ', en: 'Storage location labels & codes' },
+  'S2.3': { vi: 'Sắp xếp vật tư & bảng biểu ngay ngắn', en: 'Materials & signs placed neatly' },
+  'S2.4': { vi: 'Tag quản lý vật dụng sắc nhọn (kéo)', en: 'Control tags on sharp tools' },
+  'S2.5': { vi: 'Che phủ xe vải / không để sợi xuống sàn', en: 'Fabric trolley cover / off-floor yarn' },
+  'S2.6': { vi: 'Hàng hóa lưu trữ quá thời gian quy định', en: 'Shop-floor storage time exceeded' },
+  'S2.7': { vi: 'Chiều cao xe vải / pallet vượt quy định', en: 'Trolley / pallet height exceeded' },
+  'S3.1': { vi: 'Vệ sinh sàn, tường, lối đi & khu lưu trữ', en: 'Floor, walls & aisles cleanliness' },
+  'S3.2': { vi: 'Vệ sinh máy móc, tủ điện & dây dẫn', en: 'Machine, panel & cable cleanliness' },
+  'S3.3': { vi: 'Dụng cụ vệ sinh sạch & để đúng nơi', en: 'Cleaning tools washed & stored' },
+  'S3.4': { vi: 'Bảng phân công & checklist vệ sinh ngày', en: 'Daily cleaning checklist sign-off' },
+  'S3.5': { vi: 'Xử lý nguồn gây bẩn / rò rỉ dầu bụi', en: 'Contamination & oil leak control' },
+  'S3.6': { vi: 'Vệ sinh kệ, pallet, xe đẩy, xe vải', en: 'Racks, pallets & carts cleanliness' },
+  'S3.7': { vi: 'Lối đi xung quanh xưởng thông thoáng', en: 'Walkways around factory clear' },
+  'S3.9': { vi: 'Khu vực chờ thanh lý gọn & có bảng tên', en: 'Disposal waiting area neat & labeled' },
+  'S4.1': { vi: 'Tiêu chuẩn 5S & bảng phân công khu vực', en: '5S standards & area assignment board' },
+  'S4.2': { vi: 'Thực hiện kiểm tra 5S định kỳ', en: 'Periodic 5S inspection compliance' },
+  'S4.3': { vi: 'Khắc phục lỗi tuần trước đúng hạn', en: 'Prior week findings fixed on time' },
+  'S5.1': { vi: 'Tuân thủ quy định & kỷ luật 5S', en: '5S discipline & attire compliance' },
+  'S5.2': { vi: 'Lỗi đánh giá từ BOD / Khách hàng', en: 'BOD / Customer audit findings' },
+  'S5.3': { vi: 'Lỗi đánh giá từ bộ phận IE', en: 'IE department audit findings' },
+};
+
+function getShortCriterionText(itemCode: string, fullText: string, lang: 'vi' | 'en'): string {
+  const mapped = SHORT_CRITERIA_LABELS[itemCode];
+  if (mapped) {
+    return lang === 'en' ? mapped.en : mapped.vi;
+  }
+  const withoutParens = String(fullText || '').replace(/\s*\([^)]*\)/g, '').trim();
+  return withoutParens.length > 55 ? withoutParens.slice(0, 52) + '...' : withoutParens;
+}
+
 export const Dashboard: React.FC = () => {
   const { lang, t } = useI18n();
   const [loading, setLoading] = useState(true);
@@ -353,8 +389,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD (col-span-12 lg:col-span-4) */}
-        <div className="col-span-12 lg:col-span-4 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col min-h-0">
-          <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
+        <div className="col-span-12 lg:col-span-4 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col min-h-0 min-w-0 overflow-hidden">
+          <div className="shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b border-slate-800 min-w-0">
             <span className="font-bold text-xs text-rose-400 uppercase truncate">
               {t('alarm_board_title')}
             </span>
@@ -366,42 +402,42 @@ export const Dashboard: React.FC = () => {
             </Link>
           </div>
 
-          {/* Compact Remediation Effectiveness Strip (On-Time Rate, Avg Remediation Time, Repeat Rate) */}
-          <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1.5">
-            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
-              <span className="text-[9px] text-slate-400 font-semibold truncate">
-                {t('on_time_closure_rate')}
+          {/* Single-line Compact Remediation Effectiveness Strip */}
+          <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1.5 min-w-0">
+            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
+              <span className="text-[10px] text-slate-400 font-semibold truncate">
+                {lang === 'en' ? 'On-Time' : 'Đúng hạn'}
               </span>
-              <span className="text-xs font-black font-mono text-emerald-400">
+              <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
                 {remediation?.on_time_rate_pct !== null && remediation?.on_time_rate_pct !== undefined
                   ? `${remediation.on_time_rate_pct}%`
                   : '-'}
               </span>
             </div>
-            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
-              <span className="text-[9px] text-slate-400 font-semibold truncate">
-                {t('avg_remediation_time')}
+            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
+              <span className="text-[10px] text-slate-400 font-semibold truncate">
+                {lang === 'en' ? 'Avg Time' : 'TG sửa TB'}
               </span>
-              <span className="text-xs font-black font-mono text-sky-400">
+              <span className="text-xs font-black font-mono text-sky-400 shrink-0">
                 {remediation?.avg_remediation_days !== null &&
                 remediation?.avg_remediation_days !== undefined
-                  ? `${remediation.avg_remediation_days} ${t('days_unit')}`
+                  ? `${remediation.avg_remediation_days}${lang === 'en' ? 'd' : ' ngày'}`
                   : '-'}
               </span>
             </div>
-            <div className="rounded bg-slate-950/80 border border-slate-800 px-2 py-1 flex flex-col">
-              <span className="text-[9px] text-slate-400 font-semibold truncate">
-                {t('recurrence_rate')}
+            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
+              <span className="text-[10px] text-slate-400 font-semibold truncate">
+                {lang === 'en' ? 'Repeat' : 'Tái diễn'}
               </span>
-              <span className="text-xs font-black font-mono text-purple-400">
+              <span className="text-xs font-black font-mono text-purple-400 shrink-0">
                 {remediation?.repeat_rate_pct !== undefined ? `${remediation.repeat_rate_pct}%` : '0%'}
               </span>
             </div>
           </div>
 
-          <div className="mt-1.5 flex-1 min-h-0 grid grid-rows-4 gap-1.5 overflow-y-auto lg:overflow-hidden">
+          <div className="mt-1.5 flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto min-w-0">
             {urgent_alarms && urgent_alarms.length > 0 ? (
-              urgent_alarms.slice(0, 4).map((f: any) => {
+              urgent_alarms.slice(0, 3).map((f: any) => {
                 const isOverdue = f.is_overdue;
                 const isFixed = f.status === 'fixed';
                 const isRepeat = f.repeat_level > 1;
@@ -414,33 +450,36 @@ export const Dashboard: React.FC = () => {
                   ? 'border-blue-500/40 bg-blue-950/20'
                   : 'border-amber-500/40 bg-amber-950/20';
 
+                const fullCriterion = lang === 'en' ? f.content_en || f.content_vi : f.content_vi;
+                const shortCriterion = getShortCriterionText(f.item_code, fullCriterion, lang);
+
                 return (
                   <Link
                     key={f.id}
                     to={is_authenticated ? `/findings/${f.id}` : '/login'}
-                    className={`rounded-md border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between hover:border-slate-400 transition cursor-pointer min-h-0 group`}
+                    title={fullCriterion}
+                    className={`flex-1 min-h-[60px] max-h-[82px] w-full min-w-0 overflow-hidden rounded-md border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between hover:border-slate-400 transition cursor-pointer group`}
                   >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px]">
+                    <div className="flex items-center justify-between gap-2 text-xs min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 truncate">
+                        <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px] shrink-0">
                           {f.area_code}
                         </span>
-                        <span className="font-mono font-bold text-white text-[11px]">
+                        <span className="font-mono font-bold text-white text-[11px] shrink-0">
                           {f.item_code}
                         </span>
-                        {isRepeat && (
-                          <span className="px-1.5 rounded bg-purple-500/25 text-purple-300 font-semibold text-[10px]">
+                        {isRepeat ? (
+                          <span className="px-1.5 rounded bg-purple-500/25 text-purple-300 font-semibold text-[10px] shrink-0">
                             {t('repeat_level_pts', { w: f.repeat_level, pts: f.applied_penalty })}
                           </span>
-                        )}
-                        {!isRepeat && (
-                          <span className="text-amber-300 font-mono text-[10px]">
+                        ) : (
+                          <span className="text-amber-300 font-mono text-[10px] shrink-0">
                             -{f.applied_penalty}đ
                           </span>
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-bold ${
+                        className={`text-[10px] font-bold shrink-0 ${
                           isOverdue
                             ? 'text-rose-400'
                             : isFixed
@@ -459,12 +498,12 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="text-xs text-slate-200 truncate">
-                      {lang === 'en' ? f.content_en || f.content_vi : f.content_vi}
+                    <div className="text-xs font-medium text-slate-100 truncate leading-snug min-w-0">
+                      {shortCriterion}
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-white/5 pt-0.5">
-                      <span className="truncate">
+                    <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400 border-t border-white/5 pt-0.5 min-w-0">
+                      <span className="truncate min-w-0">
                         {isFixed ? 'Auditor:' : 'MNG:'}{' '}
                         <strong className="text-slate-200">
                           {isFixed
