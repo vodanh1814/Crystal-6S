@@ -538,31 +538,46 @@ async function deployWorkerApp(workerName, dbName) {
       deployOut.includes('routes workers dev');
 
     if (isSubdomainIssue && attempt < maxAttempts) {
-      const onboardingMatch = deployOut.match(
-        /https:\/\/dash\.cloudflare\.com\/[a-zA-Z0-9_-]+\/workers\/onboarding/
-      );
-      const onboardingUrl = onboardingMatch
-        ? onboardingMatch[0]
-        : 'https://dash.cloudflare.com';
+      // Extract account ID if available from deploy output
+      const accountMatch =
+        deployOut.match(/dash\.cloudflare\.com\/([a-f0-9]{32})/i) ||
+        deployOut.match(/dash\.cloudflare\.com\/([a-zA-Z0-9_-]+)/i) ||
+        deployOut.match(/account id[:\s]+([a-f0-9]{32})/i);
+      const accountId = accountMatch ? accountMatch[1] : '';
+
+      // Cloudflare has deprecated the old /workers/onboarding URL in the new dashboard layout.
+      // The current official Dashboard page is /workers-and-pages (with "Your subdomain" widget on the right sidebar)
+      // and direct URL /workers/subdomain.
+      const workingUrl = accountId
+        ? `https://dash.cloudflare.com/${accountId}/workers-and-pages`
+        : 'https://dash.cloudflare.com/?to=/:account/workers-and-pages';
+      const directSubdomainUrl = accountId
+        ? `https://dash.cloudflare.com/${accountId}/workers/subdomain`
+        : '';
 
       console.log('\n======================================================================');
-      warn('CHÚ Ý: Tài khoản Cloudflare của bạn là tài khoản mới và chưa tạo Subdomain workers.dev!');
+      warn('CHÚ Ý: Tài khoản Cloudflare của bạn là tài khoản mới và chưa kích hoạt Subdomain workers.dev!');
       console.log('   👉 Đây là bước bắt buộc 1 lần duy nhất cho mọi tài khoản Cloudflare mới.');
-      console.log(`   🌐 Đang mở trang thiết lập Subdomain Cloudflare trên trình duyệt:`);
-      console.log(`      ${onboardingUrl}`);
+      console.log('   🌐 Đang mở trang Workers & Pages trên trình duyệt:');
+      console.log(`      ${workingUrl}`);
+      if (directSubdomainUrl) {
+        console.log(`      (Hoặc link trực tiếp: ${directSubdomainUrl})`);
+      }
       console.log('======================================================================');
-      console.log('Hướng dẫn:');
-      console.log(' 1. Trên trang Cloudflare vừa mở, nhập tên Subdomain mong muốn (ví dụ: tên công ty).');
-      console.log(' 2. Bấm nút "Set up" / "Confirm" trên Cloudflare.');
-      console.log(' 3. Quay lại màn hình này và nhấn Enter để tiếp tục xuất bản...\n');
+      console.log('HƯỚNG DẪN KÍCH HOẠT NHANH (3 BƯỚC TRÊN DASHBOARD):');
+      console.log(' 1. Trên trang Cloudflare Dashboard vừa mở, nhìn sang cột BÊN PHẢI.');
+      console.log(' 2. Tại mục "Your subdomain", bấm nút "Set up" (hoặc "Change").');
+      console.log(' 3. Nhập tên Subdomain mong muốn (ví dụ: tên công ty, viết thường không dấu, vd: "cetvn")');
+      console.log('    rồi bấm nút "Set up" / "Save".');
+      console.log(' 4. Sau khi hoàn tất lưu trên Cloudflare, quay lại màn hình này và nhấn Enter để tiếp tục xuất bản!\n');
 
       try {
-        execSync(`start ${onboardingUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
+        execSync(`start ${workingUrl}`, { stdio: 'ignore', shell: 'cmd.exe' });
       } catch {}
 
       if (!process.stdin.isTTY) {
-        warn('Môi trường không có bàn phím tương tác (GUI). Đang tạm dừng 15 giây để bạn hoàn tất đặt Subdomain trên trình duyệt...');
-        await new Promise((resolve) => setTimeout(resolve, 15000));
+        warn('Môi trường không có bàn phím tương tác (GUI). Đang tạm dừng 20 giây để bạn hoàn tất đặt Subdomain trên trình duyệt...');
+        await new Promise((resolve) => setTimeout(resolve, 20000));
       } else {
         await ask('👉 Nhấn Enter sau khi bạn đã hoàn tất đặt Subdomain trên Cloudflare để xuất bản tiếp...');
       }

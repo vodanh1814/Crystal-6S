@@ -1,18 +1,28 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.4.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.4.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.4.1`
+## 1. Điểm nổi bật của phiên bản `v2.4.2`
+
+### 🌐 Tối ưu hóa Điều hướng Kích hoạt Subdomain Cloudflare Mới
+- **Khắc phục triệt để lỗi trang tạo Domain không vào được (do Cloudflare khai tử route `/workers/onboarding`)**:
+  - Tự động bóc tách Account ID và chuyển hướng chính xác đến trang quản lý chính thức của Cloudflare: `https://dash.cloudflare.com/<accountId>/workers-and-pages` (mục **"Your subdomain"** ở cột bên phải) hoặc link cấu hình trực tiếp `https://dash.cloudflare.com/<accountId>/workers/subdomain`.
+  - Hướng dẫn tiếng Việt 4 bước trực quan, định vị rõ từng nút bấm trên giao diện Cloudflare giúp quản trị viên kích hoạt tên miền phụ chỉ trong 1 phút.
+  - Tăng thời gian chờ cho môi trường GUI độc lập ([Crystal_5S_Setup.exe](file:///d:/Crystal-6S/Crystal_5S_Setup.exe)) lên 20 giây đảm bảo thao tác trên trình duyệt mượt mà và không gián đoạn tiến trình.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.4.1`
 
 ### 🛡️ Tự động hóa & Khôi phục Thiết lập Subdomain `workers.dev` cho Tài khoản Cloudflare Mới
 - **Kênh Tương tác Tức thời (`Interactive stdin`)**:
   - Hỗ trợ nhập liệu bàn phím trực tiếp khi chạy `npm run deploy` trong trình cài đặt [scripts/auto_setup.mjs](file:///d:/Crystal-6S/scripts/auto_setup.mjs), cho phép người dùng trả lời và đặt tên Subdomain ngay trong cửa sổ dòng lệnh nếu Wrangler yêu cầu.
 - **Cơ chế Tự Phục Hồi Thông Minh (Auto-Recovery)**:
-  - Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động trích xuất và mở link thiết lập trong trình duyệt: `https://dash.cloudflare.com/<accountId>/workers/onboarding`.
+  - Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động trích xuất và mở link thiết lập trong trình duyệt: `https://dash.cloudflare.com/<accountId>/workers-and-pages` (mục **Your subdomain**).
   - Hướng dẫn tiếng Việt 3 bước rõ ràng và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
   - Hỗ trợ fallback thông minh khi chạy trong môi trường GUI độc lập ([Crystal_5S_Setup.exe](file:///d:/Crystal-6S/Crystal_5S_Setup.exe)), ngăn ngừa hoàn toàn tình trạng treo tiến trình.
 - **Khắc phục Triệt để Lỗi `SQLITE_TOOBIG` trên Cloudflare D1**:

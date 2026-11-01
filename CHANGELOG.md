@@ -4,12 +4,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.4.2] - 2026-11-01
+
+### Fixed (Sửa lỗi & Tối ưu hóa Trải nghiệm Thiết lập Cloudflare)
+- **Khắc phục lỗi trang tạo Subdomain Cloudflare không vào được (do Cloudflare khai tử route `/workers/onboarding`)**:
+  - Chuyển hoàn toàn cơ chế tự động trích xuất và mở trang thiết lập Subdomain từ đường dẫn cũ sang trang chính thức của giao diện Cloudflare mới: `https://dash.cloudflare.com/<accountId>/workers-and-pages` (kèm đường dẫn cấu hình trực tiếp `https://dash.cloudflare.com/<accountId>/workers/subdomain` và universal link `https://dash.cloudflare.com/?to=/:account/workers-and-pages`).
+  - Hiển thị hướng dẫn trực quan 4 bước chi tiết: Định vị chính xác mục **"Your subdomain"** ở cột bên phải giao diện Cloudflare Dashboard để người dùng bấm **"Set up"** (hoặc **"Change"**) và đặt tên subdomain mong muốn (ví dụ: `cetvn`).
+  - Tăng thời gian chờ tự động trong môi trường GUI độc lập (`!process.stdin.isTTY`) lên 20 giây giúp người dùng thao tác lưu trên trình duyệt dễ dàng trước khi bộ cài tiếp tục tiến trình xuất bản.
+  - Tái đóng gói toàn bộ mã nguồn vào ứng dụng độc lập [Crystal_5S_Setup.exe](file:///d:/Crystal-6S/Crystal_5S_Setup.exe).
+
+---
+
 ## [2.4.1] - 2026-11-01
 
 ### Fixed (Sửa lỗi & Ổn định hóa Triển khai)
 - **Tự động xử lý kích hoạt Subdomain `workers.dev` cho tài khoản Cloudflare mới**:
   - Mở kênh tương tác nhập bàn phím trực tiếp (`stdin`) khi thực thi lệnh deploy trong `scripts/auto_setup.mjs`, cho phép người dùng nhập trực tiếp tên Subdomain trên cửa sổ dòng lệnh nếu Wrangler yêu cầu.
-  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers/onboarding`), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
+  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers-and-pages` - mục **Your subdomain**), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
   - Hỗ trợ fallback thông minh 15 giây khi chạy trong môi trường GUI (`!process.stdin.isTTY`) để người dùng thao tác trên trình duyệt mà không bị treo tiến trình.
   - Xử lý đóng `readline` stream (`rl.close()`) và thoát tiến trình sạch sẽ (`process.exit`) tại cả luồng khởi tạo lẫn di chuyển tài khoản Cloudflare.
   - Bổ sung `"workers_dev": true` tường minh vào `wrangler.jsonc`.
@@ -41,7 +52,7 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 ### Fixed (Sửa lỗi)
 - **Tự động xử lý kích hoạt Subdomain `workers.dev` cho tài khoản Cloudflare mới**:
   - Mở kênh tương tác nhập bàn phím trực tiếp (`stdin`) khi thực thi lệnh deploy trong `scripts/auto_setup.mjs`, cho phép người dùng nhập trực tiếp tên Subdomain trên cửa sổ dòng lệnh nếu Wrangler yêu cầu.
-  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers/onboarding`), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
+  - Bổ sung cơ chế tự phục hồi thông minh (Auto-Recovery): Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động mở trang thiết lập Subdomain trong trình duyệt (`https://dash.cloudflare.com/<accountId>/workers-and-pages` - mục **Your subdomain**), hướng dẫn bằng tiếng Việt và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
   - Bổ sung `"workers_dev": true` tường minh vào `wrangler.jsonc`.
 - **Khắc phục lỗi `statement too long: SQLITE_TOOBIG` khi triển khai Cloudflare D1**:
   - Tách riêng câu lệnh SQL khởi tạo `company_logo` và `company_name` trong `scripts/auto_setup.mjs`.
