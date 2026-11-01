@@ -389,9 +389,30 @@ export async function generateDatabaseBackupSql(db: D1Database): Promise<{
         lines.push(`DELETE FROM ${table};`);
 
         for (const row of rows) {
+          // Cloudflare D1 /import API has a hard limit of 100,000 characters per SQL statement (SQLITE_TOOBIG).
+          // Guard against oversized BLOBs or large base64 logos during backup/restore.
+          if (table === 'app_settings' && (row as any).key === 'company_logo') {
+            const val = String((row as any).value || '');
+            if (val.length > 45000) {
+              lines.push(
+                `-- Note: company_logo omitted from SQL dump because size (${val.length} chars) exceeds SQLite statement limit.`
+              );
+              continue;
+            }
+          }
+
           const cols = Object.keys(row);
           const vals = cols.map((col) => escapeSqlValue((row as any)[col]));
-          lines.push(`INSERT OR REPLACE INTO ${table} (${cols.join(', ')}) VALUES (${vals.join(', ')});`);
+          const sql = `INSERT OR REPLACE INTO ${table} (${cols.join(', ')}) VALUES (${vals.join(', ')});`;
+
+          if (sql.length > 80000) {
+            lines.push(
+              `-- Note: Row in ${table} omitted because statement length (${sql.length} chars) exceeds SQLite statement limit.`
+            );
+            continue;
+          }
+
+          lines.push(sql);
         }
         lines.push('');
       }

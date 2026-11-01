@@ -128,6 +128,17 @@ function readLogoAsDataUrl(filePath) {
     warn(`Không tìm thấy file ảnh logo tại: ${resolved}. Sẽ dùng logo mặc định.`);
     return '';
   }
+
+  const stat = fs.statSync(resolved);
+  // Cloudflare D1 has a hard SQLite statement limit of 100,000 characters.
+  // Base64 expands by 33%, so an image > 35 KB exceeds 47,000 chars and risks SQLITE_TOOBIG.
+  if (stat.size > 35 * 1024) {
+    warn(`File ảnh logo (${(stat.size / 1024).toFixed(1)} KB) lớn hơn giới hạn nạp trực tiếp ban đầu của Cloudflare D1 (35 KB).`);
+    console.log('   ℹ Hệ thống sẽ giữ logo mặc định trong lệnh cài đặt ban đầu.');
+    console.log('   ℹ Bạn có thể tải Logo công ty lên trực tiếp tại trang Quản trị (Admin > Nhận diện thương hiệu), hệ thống Web sẽ tự động nén sắc nét.');
+    return '';
+  }
+
   const ext = path.extname(resolved).toLowerCase();
   let mime = 'image/png';
   if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
@@ -181,10 +192,24 @@ function applyAllInitialSettingsToD1(dbName, isRemote, config) {
   const currentYear = new Date().getUTCFullYear();
 
   const statements = [
-    `INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('company_name', '${safeName}', CURRENT_TIMESTAMP), ('company_logo', '${safeLogo}', CURRENT_TIMESTAMP);`,
-    `UPDATE yearly_targets SET target = ${targetNum};`,
-    `INSERT INTO yearly_targets (year, target) VALUES (${currentYear}, ${targetNum}) ON CONFLICT(year) DO UPDATE SET target = excluded.target;`,
+    `INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('company_name', '${safeName}', CURRENT_TIMESTAMP);`,
   ];
+
+  // Separate statement for company_logo with strict size limit (< 45,000 chars)
+  // to prevent Cloudflare D1 SQLITE_TOOBIG error
+  if (safeLogo && safeLogo.length <= 45000) {
+    statements.push(
+      `INSERT OR REPLACE INTO app_settings (key, value, updated_at) VALUES ('company_logo', '${safeLogo}', CURRENT_TIMESTAMP);`
+    );
+  } else if (safeLogo) {
+    warn(`Chuỗi ảnh logo quá dài (${safeLogo.length} ký tự). Đã bỏ qua trong SQL ban đầu để tránh lỗi SQLITE_TOOBIG.`);
+    console.log('   ℹ Vui lòng cập nhật logo trên Web Admin (hệ thống sẽ tự động nén sắc nét).');
+  }
+
+  statements.push(
+    `UPDATE yearly_targets SET target = ${targetNum};`,
+    `INSERT INTO yearly_targets (year, target) VALUES (${currentYear}, ${targetNum}) ON CONFLICT(year) DO UPDATE SET target = excluded.target;`
+  );
 
   if (adminUser && adminPass && adminPass.length >= 6) {
     const safeUser = adminUser.trim().toLowerCase().replace(/'/g, "''");

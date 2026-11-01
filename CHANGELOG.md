@@ -22,6 +22,12 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
   - Bổ sung nút **"Sao chép link"** (kèm hiệu ứng phản hồi) và mở tab mới để Admin kịp thời lưu lại link mới trước khi bấm xác nhận chuyển.
   - **File Cứu hộ Offline (`CLOUDFLARE_LIVE_URL.txt`)**: Tự động lưu thông tin URL mới nhất, ngày giờ, tên Worker và tên DB D1 vào file văn bản tại máy tính ngay khi triển khai.
 
+### Fixed (Sửa lỗi)
+- **Khắc phục lỗi `statement too long: SQLITE_TOOBIG` khi triển khai Cloudflare D1**:
+  - Tách riêng câu lệnh SQL khởi tạo `company_logo` và `company_name` trong `scripts/auto_setup.mjs`.
+  - Giới hạn dung lượng file ảnh logo nạp trực tiếp qua CLI tối đa 35 KB, áp dụng chốt chặn an toàn `safeLogo.length <= 45000` ký tự (loại trừ hoàn toàn nguy cơ vượt quá giới hạn 100.000 ký tự SQLite statement của Cloudflare D1).
+  - Bổ sung chốt chặn kiểm tra độ dài câu lệnh SQL (`<= 80000` ký tự) trong hàm xuất sao lưu dữ liệu `generateDatabaseBackupSql()` của Worker để đảm bảo an toàn tuyệt đối khi import lại.
+
 ### Security & Hardening (Bảo mật & Tối ưu hóa)
 - Mã hóa **AES-GCM-256** đối với Cloudflare API Token lưu trong bảng `app_settings`.
 - Phân quyền nghiêm ngặt: Toàn bộ API Cloudflare Status, Test, Config và Export Backup đều yêu cầu quyền Quản trị viên (`isAdmin`).
