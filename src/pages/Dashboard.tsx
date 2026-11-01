@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { api } from '../api/client';
 import { useI18n } from '../i18n/context';
+import { getMonthShortName, formatMonthYear } from '../lib/date';
 
 export const Dashboard: React.FC = () => {
   const { lang, t } = useI18n();
@@ -140,7 +141,7 @@ export const Dashboard: React.FC = () => {
         <div className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-semibold truncate">
-              {t('monthly_avg_kpi', { month: current_week.month })}
+              {t('monthly_avg_kpi', { month: formatMonthYear(current_week.month) })}
             </span>
             <span className="font-mono text-[10px] text-slate-400">
               {t('target_standard', { target })}
@@ -246,7 +247,7 @@ export const Dashboard: React.FC = () => {
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
                 week: `W${current_week.iso_week}`,
-                month: current_week.month,
+                month: formatMonthYear(current_week.month),
               })}
             </span>
             <div className="flex items-center gap-3 text-xs shrink-0">
@@ -319,7 +320,7 @@ export const Dashboard: React.FC = () => {
                       {scoreTxt}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
-                      {t('month_abbr', { n: parseInt(current_week.month.slice(5, 7), 10) })}:{' '}
+                      {getMonthShortName(current_week.month)}:{' '}
                       <strong className="text-slate-200">
                         {area.month_avg !== null ? `${area.month_avg}%` : '-'}
                       </strong>
@@ -503,7 +504,7 @@ export const Dashboard: React.FC = () => {
         <div className="col-span-12 lg:col-span-4 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col justify-between min-h-0">
           <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span className="font-bold text-xs text-white uppercase truncate">
-              {t('breakdown_title', { month: current_week.month })}
+              {t('breakdown_title', { month: formatMonthYear(current_week.month) })}
             </span>
             <span className="text-[10px] text-slate-400 shrink-0">
               {t('total_findings_count', { n: totalFindingsInMonth })}
@@ -556,7 +557,7 @@ export const Dashboard: React.FC = () => {
         <div className="col-span-12 lg:col-span-3 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col justify-between min-h-0">
           <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span className="font-bold text-xs text-white uppercase truncate">
-              {t('leaderboard_title', { month: current_week.month })}
+              {t('leaderboard_title', { month: formatMonthYear(current_week.month) })}
             </span>
             <span className="text-[10px] text-slate-400 shrink-0">{t('top_bottom_label')}</span>
           </div>

@@ -14,7 +14,12 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { Modal } from '../components/Modal';
 import { exportWeeklyReportToExcel, exportMonthlyReportToExcel } from '../lib/excelExport';
-import { getVietnamCurrentMonth, getVietnamCurrentYear } from '../lib/date';
+import {
+  getVietnamCurrentMonth,
+  getVietnamCurrentYear,
+  getMonthShortName,
+  MONTH_SHORT_NAMES,
+} from '../lib/date';
 import type { Area } from '../api/types';
 
 export const Reports: React.FC = () => {
@@ -390,7 +395,7 @@ export const Reports: React.FC = () => {
                   <th className="py-3 px-4">{t('area_column')}</th>
                   {monthlyData.months.map((m: string) => (
                     <th key={m} className="py-3 px-2 text-center whitespace-nowrap">
-                      {t('month_abbr', { n: parseInt(m, 10) })}
+                      {getMonthShortName(m)}
                     </th>
                   ))}
                   <th className="py-3 px-4 text-center bg-slate-100/60 font-black">{t('year_avg_column')}</th>
@@ -495,7 +500,7 @@ export const Reports: React.FC = () => {
               <thead className="bg-slate-100 sticky top-0 z-10 border-b border-slate-200 text-slate-700 font-bold">
                 <tr>
                   <th className="py-2.5 px-3 bg-slate-100 whitespace-nowrap">Khu vực</th>
-                  {['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'].map(
+                  {MONTH_SHORT_NAMES.map(
                     (m, idx) => (
                       <th key={idx} className="py-2.5 px-2 text-center whitespace-nowrap min-w-[58px]">
                         {m}

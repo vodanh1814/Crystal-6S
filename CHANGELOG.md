@@ -4,6 +4,14 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.2.2] - 2026-11-01
+
+### Changed (Cải thiện hiển thị tên tháng)
+- **Đổi ký hiệu tháng `M1..M12` / `T1..T12` sang tên tháng chuẩn quốc tế (`Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec`)**:
+  - Cập nhật tiêu đề cột bảng Báo cáo theo tháng (`/reports`), cửa sổ Nhập điểm lịch sử từ Excel, file xuất Excel báo cáo năm (`Crystal_5S_Monthly_*.xlsx`), thẻ điểm trung bình tháng trên bảng điều hành TV Andon (`/`) và nhãn tháng trên danh sách / chi tiết kỳ Audit (`Oct 2026`, `Nov 2026`,...).
+
+---
+
 ## [2.2.1] - 2026-10-31
 
 ### Changed (Thay đổi nghiệp vụ phân quyền)

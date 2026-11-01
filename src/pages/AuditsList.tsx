@@ -7,7 +7,7 @@ import { useI18n } from '../i18n/context';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { StatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
-import { getVietnamToday } from '../lib/date';
+import { getVietnamToday, formatMonthYear } from '../lib/date';
 import type { Audit, Area } from '../api/types';
 
 export const AuditsList: React.FC = () => {
@@ -168,7 +168,7 @@ export const AuditsList: React.FC = () => {
                       {audit.iso_year}-W{audit.iso_week < 10 ? `0${audit.iso_week}` : audit.iso_week}
                     </span>
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                      {audit.month}
+                      {formatMonthYear(audit.month)}
                     </span>
                   </div>
                   <StatusBadge status={audit.status} type="audit" />

@@ -28,6 +28,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import { compressImage } from '../lib/imageCompression';
+import { formatMonthYear } from '../lib/date';
 import type { Audit, Finding, ChecklistItem, AuditAreaScore } from '../api/types';
 
 export const AuditDetail: React.FC = () => {
@@ -365,7 +366,7 @@ export const AuditDetail: React.FC = () => {
                 {audit.iso_year}-W{audit.iso_week < 10 ? `0${audit.iso_week}` : audit.iso_week}
               </h1>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
-                {audit.month}
+                {formatMonthYear(audit.month)}
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">

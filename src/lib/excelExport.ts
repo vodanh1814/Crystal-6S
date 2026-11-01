@@ -3,6 +3,8 @@
  * Imports xlsx only when the user clicks export.
  */
 
+import { getMonthShortName } from './date';
+
 export async function exportWeeklyReportToExcel(
   month: string,
   target: number,
@@ -50,7 +52,7 @@ export async function exportMonthlyReportToExcel(
   const rows: any[] = [];
 
   // Header row
-  const header = ['Area Code', 'Area Name', ...months.map((m) => `M${m}`), 'Year Avg (%)', 'Result'];
+  const header = ['Area Code', 'Area Name', ...months.map((m) => getMonthShortName(m)), 'Year Avg (%)', 'Result'];
   rows.push(header);
 
   // Data rows
