@@ -1,0 +1,88 @@
+# Changelog (English)
+
+All notable changes to the **Crystal 5S Audit** system are documented in this file in compliance with [Semantic Versioning](https://semver.org/).
+
+**Language: [🇬🇧 English](./CHANGELOG.en.md) · [🇻🇳 Tiếng Việt](./CHANGELOG.md)**  
+**Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))
+
+---
+
+## [2.5.5] - 2026-11-02
+
+### Added & Improved (Interactive Month Filter, Protected Author Copyright & English Docs)
+- **Interactive Month Filter on Factory Dashboard**:
+  - Added on-demand month historical analysis via query parameter `?month=YYYY-MM`.
+  - Automatically queries available months across submitted audits and Excel historical imports.
+  - Dynamically updates the 16-Area Matrix, Top/Bottom leaderboards, monthly average KPI, pass/fail counts, and S1–S5 defect breakdown.
+  - Features an instant "Back to Current Month" reset button and status indicators.
+- **Protected Author Copyright & About App Modal**:
+  - Created a dedicated **About App Modal** displaying software architecture, author attribution to **Simon**, and official GitHub links.
+  - Integrated a protected, read-only **Copyright Card** in the Admin Settings (`/admin/targets`): allows factories to customize company branding while permanently preserving the author's intellectual property.
+  - Direct GitHub contact link: [https://github.com/vodanh1814](https://github.com/vodanh1814).
+  - Subtle copyright footer on login screen and sidebar.
+- **Comprehensive English Documentation**:
+  - Published full English documentation ([`README.en.md`](./README.en.md)) and English Changelog ([`CHANGELOG.en.md`](./CHANGELOG.en.md)).
+  - Bilingual switcher links on all documentation files.
+
+---
+
+## [2.5.4] - 2026-11-02
+
+### Added & Improved (Git Auto-Update for Public/Private Repos & Privacy Protection)
+- **Seamless Support for Both Public & Private GitHub Repositories**:
+  - Automatic zero-token update detection and download when repository is Public (via raw GitHub fallback), bypassing unauthenticated API rate limits.
+  - Added an in-app GitHub Personal Access Token (PAT) management interface in Admin Settings with **AES-GCM-256** encryption for private repository deployments.
+  - Informative warning notices and error banners for repository connectivity.
+- **Self-Healing Git in Standalone Windows Installer (Auto-Git-Repair)**:
+  - Automatically initializes Git and links the official remote origin if an extracted standalone instance lacks `.git`.
+  - Excludes post-build and binary files (`Crystal_5S_Setup.exe`, `package-lock.json`) from dirty checks to prevent update lockouts.
+  - Safe fast-forward fallback to `git reset --hard origin/main` in case of local branch divergences.
+  - Resilient internal D1 database migration handling.
+- **Privacy & Infrastructure Sanitization**:
+  - Permanently untracked internal infrastructure files (`CLOUDFLARE_LIVE_URL.txt`) and added them to `.gitignore`.
+  - Unified database naming conventions across all scripts and configurations.
+
+---
+
+## [2.5.3] - 2026-11-02
+
+### Changed & Improved (Mobile & Tablet Layout Optimization)
+- **Cross-Platform Responsive Layout (Mobile, Tablet & TV Wall)**:
+  - Eliminated rigid flex ratios (`flex-[58]`, `flex-[42]`) on mobile screens, allowing natural vertical touch scrolling.
+  - Removed double nested scroll containers for silky-smooth touch gestures on iPhone Safari & Android Chrome.
+  - Optimized 16-Area Matrix cards into a legible 2-column mobile grid with clear 3-tier hierarchy (Area Name $\rightarrow$ Score $\rightarrow$ Pending/Fixed).
+  - Fixed Recharts 12-week trend chart height collapse on mobile screens (`h-56` to `h-64`).
+- **Header Bar Optimization for Narrow Screens**:
+  - Automatically hides the TV full-screen button on mobile devices to preserve horizontal space for factory titles.
+  - Standardized touch target dimensions ($\ge 32 \times 32$ px) for alarm bell and language switcher.
+
+---
+
+## [2.5.2] - 2026-11-02
+
+### Changed & Improved (Clear Area Names on Factory Displays)
+- **Replaced Abbreviated Codes with Full Operational Department Names (`area_name`)**:
+  - Factory matrix cards and leaderboards now display full names (`Knitting`, `Dyeing`, `Setting`, `Warehouse`, `Batching`, `Greige QC`, `Final QC`, `Lab test`...) for instant recognition on shop-floor Smart TVs.
+  - Hover tooltips combine department name and code: `${area.area_name} (${area.area_code})`.
+  - Applied CSS overflow protection (`truncate`, `min-w-0`) to prevent layout wrapping on all resolutions.
+
+---
+
+## [2.5.1] - 2026-11-02
+
+### Added (Historical Score Connectivity & Smart Dashboard Fallback)
+- **Connected 150 Monthly Historical Scores to Public Dashboard**:
+  - Integrated 2026 historical monthly scores into the public Andon TV dashboard.
+  - Weekly audits take top priority; historical scores serve as automatic fallbacks when monthly evaluations are pending.
+- **Smart Fallback for Early Month Periods**:
+  - When entering a new month without completed audits, the dashboard automatically falls back to the most recent historical month (e.g. October 96.33%).
+
+---
+
+## [2.5.0] - 2026-11-02
+
+### Added (Intelligent Excel Historical Import & Administration)
+- **1-Click Excel Template Generation & Upload**:
+  - Standardized `.xlsx` 12-month matrix templates generated dynamically based on active factory areas.
+  - Flexible matrix parsing (months as rows or columns) with fuzzy name matching and percentage conversion.
+  - Automated version synchronization across SPA frontend, backend worker, and Windows installer `Crystal_5S_Setup.exe`.

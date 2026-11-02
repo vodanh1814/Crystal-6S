@@ -1,7 +1,24 @@
 {
   "name": "crystal-5s-audit",
   "private": true,
-  "version": "2.5.4",
+  "version": "2.5.5",
+  "description": "Crystal 5S Audit — Smart Factory Andon & 5S Continuous Improvement System designed by Simon",
+  "author": "Simon (https://github.com/vodanh1814)",
+  "homepage": "https://5s-audit.cetvn.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vodanh1814/Crystal-6S.git"
+  },
+  "keywords": [
+    "5s-audit",
+    "smart-factory",
+    "andon",
+    "lean-manufacturing",
+    "cloudflare-workers",
+    "cloudflare-d1",
+    "react",
+    "typescript"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

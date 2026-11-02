@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   AlertTriangle,
   Clock,
@@ -9,6 +9,8 @@ import {
   ArrowRight,
   Loader2,
   ExternalLink,
+  Calendar,
+  RotateCcw,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -62,19 +64,34 @@ function getShortCriterionText(itemCode: string, fullText: string, lang: 'vi' | 
 
 export const Dashboard: React.FC = () => {
   const { lang, t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedMonth = searchParams.get('month') || '';
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const res = await api.get<any>('/reports/dashboard');
+      const endpoint = selectedMonth
+        ? `/reports/dashboard?month=${encodeURIComponent(selectedMonth)}`
+        : '/reports/dashboard';
+      const res = await api.get<any>(endpoint);
       setData(res);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedMonth]);
+
+  const handleMonthChange = (newMonth: string) => {
+    setLoading(true);
+    if (newMonth) {
+      setSearchParams({ month: newMonth });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   useEffect(() => {
     fetchDashboard();
@@ -132,6 +149,57 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="flex-1 min-h-0 p-2 sm:p-2.5 flex flex-col gap-3 lg:gap-2.5 lg:overflow-hidden select-none">
+      {/* TOOLBAR: Month Selector & Status */}
+      <div className="shrink-0 flex items-center justify-between gap-2 px-1 text-xs">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+            <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">
+              {t('dashboard_month_filter')}:
+            </span>
+            <select
+              value={selectedMonth || ''}
+              onChange={(e) => handleMonthChange(e.target.value)}
+              className="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="" className="bg-slate-900 text-slate-200">
+                {t('current_month_option')} ({formatMonthYear(current_week.month)})
+              </option>
+              {(month_info?.available_months || [])
+                .filter((m: string) => m !== current_week.month)
+                .map((m: string) => (
+                  <option key={m} value={m} className="bg-slate-900 text-slate-200">
+                    {formatMonthYear(m)} ({getMonthShortName(m)})
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {selectedMonth && (
+            <button
+              onClick={() => handleMonthChange('')}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold transition cursor-pointer"
+              title={t('back_to_current_month')}
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>{t('back_to_current_month')}</span>
+            </button>
+          )}
+
+          {month_info?.is_custom_selection && (
+            <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+              {t('all_data_for_month', { month: formatMonthYear(month_info.display_month) })}
+            </span>
+          )}
+        </div>
+
+        {/* Target Indicator */}
+        <div className="text-[11px] text-slate-400 font-mono hidden sm:flex items-center gap-1 shrink-0">
+          <span>{t('target')}:</span>
+          <span className="font-bold text-emerald-400 font-mono">{target}%</span>
+        </div>
+      </div>
+
       {/* ROW 1: 6 COMPACT KPI STRIP CARDS (shrink-0, height ~64px-70px) */}
       <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
         {/* KPI 1: Weekly Average Score */}
@@ -377,6 +445,12 @@ export const Dashboard: React.FC = () => {
                           {t('tag_fail')}
                         </span>
                       )
+                    ) : isPass ? (
+                      <span className="text-xs font-bold text-emerald-400 shrink-0">{t('tag_pass')}</span>
+                    ) : isFail ? (
+                      <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold shrink-0">
+                        {t('tag_fail')}
+                      </span>
                     ) : (
                       <span className="text-[10px] text-amber-300/90 font-medium shrink-0">
                         {t('tag_pending')}

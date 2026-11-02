@@ -2,6 +2,27 @@
 
 Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều được ghi nhận tại tài liệu này theo chuẩn [Semantic Versioning](https://semver.org/).
 
+**Ngôn ngữ: [🇻🇳 Tiếng Việt](./CHANGELOG.md) · [🇬🇧 English](./CHANGELOG.en.md)**  
+**Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))
+
+---
+
+## [2.5.5] - 2026-11-02
+
+### Added & Improved (Lọc Đánh giá Theo Tháng, Khóa Bản quyền Tác giả Simon & Tài liệu Tiếng Anh)
+- **Lọc & Xem Kết quả Đánh giá Theo Tháng trên TV Dashboard**:
+  - Tích hợp thanh công cụ chọn tháng trực quan trên đầu màn hình Dashboard (`?month=YYYY-MM`).
+  - Hỗ trợ quét và chọn tất cả các tháng đã có số liệu thực tế hoặc lịch sử Excel (`historical_monthly_scores`).
+  - Tự động đồng bộ và tính toán lại toàn bộ: Điểm trung bình tháng, Xếp hạng Top/Bottom, Ma trận 16 khu vực, Phân bổ vi phạm nhóm S1–S5 và đường xu hướng 12 tuần kết nối mượt mà tới tháng được chọn.
+  - Tích hợp nút bấm *"Quay về hiện tại"* 1-click cùng thông báo trạng thái rõ ràng.
+- **Khóa Bản quyền Tác giả Simon & Modal About App**:
+  - Tạo cửa sổ **About App Modal** hiển thị thông tin hệ thống, tác giả **Simon** và nút liên hệ trực tiếp trên GitHub ([https://github.com/vodanh1814](https://github.com/vodanh1814)).
+  - Bổ sung khối **Bản quyền tác giả được bảo vệ** cố định (Read-Only Card) trong mục Quản trị (`/admin/targets`), ngăn ngừa việc can thiệp hoặc xóa bản quyền tác giả Simon khi doanh nghiệp tùy chỉnh Logo và Tên công ty.
+  - Hiển thị dòng bản quyền tinh tế tại trang Đăng nhập và chân thanh bên Sidebar (`© 2026 Simon. All rights reserved.`).
+- **Bổ sung Toàn diện Tài liệu Tiếng Anh (English Docs)**:
+  - Xuất bản tài liệu hướng dẫn tiếng Anh chuẩn mực ([`README.en.md`](./README.en.md)) và nhật ký phiên bản tiếng Anh ([`CHANGELOG.en.md`](./CHANGELOG.en.md)).
+  - Bổ sung liên kết chuyển đổi song ngữ ở đầu tất cả các file tài liệu.
+
 ---
 
 ## [2.5.4] - 2026-11-02

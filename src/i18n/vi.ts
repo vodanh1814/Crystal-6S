@@ -396,4 +396,24 @@ export const vi = {
   cf_new_url_notice: 'Lưu ý quan trọng: Tên miền Worker của tài khoản mới sẽ là địa chỉ này. Hãy sao chép để chia sẻ cho các Giám sát viên và cài đặt lại trên màn hình TV Andon.',
   cf_migration_handoff_title: 'Bàn giao Chuyển vùng Tài khoản Cloudflare',
   cf_migration_handoff_desc: 'Cấu hình tài khoản Cloudflare mới đã được lưu thành công. Hệ thống sẽ kết nối với hạ tầng mới.',
+
+  // About & Copyright
+  about_app: 'Về ứng dụng',
+  about_app_title: 'Giới thiệu Crystal 5S Audit',
+  about_app_desc: 'Hệ thống Quản lý, Giám sát Andon & Đánh giá 5S Nhà máy',
+  author: 'Tác giả',
+  copyright: 'Bản quyền',
+  protected_copyright: 'Bản quyền tác giả được bảo vệ',
+  contact_author_github: 'Liên hệ Tác giả qua GitHub',
+  view_github_repo: 'Xem Mã nguồn trên GitHub',
+  about_app_note: 'Hệ thống được thiết kế và phát triển độc quyền bởi tác giả Simon. Mọi quyền sở hữu trí tuệ và kiến trúc hệ thống được bảo lưu.',
+  system_architecture: 'Kiến trúc Hạ tầng',
+  architecture_desc: 'Cloudflare Edge Workers + D1 Database + R2 Storage + React SPA',
+
+  // Dashboard Month Filter
+  dashboard_month_filter: 'Kỳ đánh giá',
+  current_month_option: 'Hiện tại (Tự động)',
+  viewing_month_badge: 'Đang xem: {month}',
+  back_to_current_month: 'Về tháng hiện tại',
+  all_data_for_month: 'Toàn bộ số liệu hiển thị theo {month}',
 };

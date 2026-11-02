@@ -469,10 +469,14 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   const currentMonth = currentWeekInfo.month;
   const currentYear = currentWeekInfo.isoYear;
 
-  // 1. Target for current year
+  const requestedMonthRaw = c.req.query('month')?.trim() || '';
+  const isCustomRequested = Boolean(requestedMonthRaw && /^\d{4}-\d{2}$/.test(requestedMonthRaw));
+  const effectiveYear = isCustomRequested ? parseInt(requestedMonthRaw.slice(0, 4), 10) : currentYear;
+
+  // 1. Target for effective year
   const targetRow = await c.env.DB
     .prepare('SELECT target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
-    .bind(currentYear)
+    .bind(effectiveYear)
     .first<{ target: number }>();
   const target = targetRow ? targetRow.target : 95;
 
@@ -481,6 +485,36 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     .prepare('SELECT id, code, name, sort_order FROM areas WHERE active = 1 ORDER BY sort_order ASC, code ASC')
     .all<Area>();
   const areas = areasRes.results || [];
+
+  // Query all available months across audits & historical scores for month picker
+  const availableMonthsSet = new Set<string>();
+  availableMonthsSet.add(currentMonth);
+
+  try {
+    const auditMonthsRes = await c.env.DB
+      .prepare("SELECT DISTINCT month FROM audits WHERE status = 'submitted' AND month IS NOT NULL")
+      .all<{ month: string }>();
+    for (const r of auditMonthsRes.results || []) {
+      if (r.month && /^\d{4}-\d{2}$/.test(r.month)) {
+        availableMonthsSet.add(r.month);
+      }
+    }
+
+    const histMonthsRes = await c.env.DB
+      .prepare('SELECT DISTINCT year, month FROM historical_monthly_scores WHERE score IS NOT NULL')
+      .all<{ year: number; month: string }>();
+    for (const r of histMonthsRes.results || []) {
+      const y = r.year;
+      const m = String(r.month).padStart(2, '0');
+      if (y && m) {
+        availableMonthsSet.add(`${y}-${m}`);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to query available months:', err);
+  }
+
+  const availableMonths = Array.from(availableMonthsSet).sort((a, b) => b.localeCompare(a));
 
   // 3. Current week audits
   const currentWeekAreaScores = await c.env.DB
@@ -499,96 +533,102 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     currentWeekAuditMap.set(a.area_id, a);
   }
 
-  // 4. Query all historical monthly scores for current year
+  // 4. Query all historical monthly scores for effective year and current year
   const historicalRes = await c.env.DB
-    .prepare('SELECT year, month, area_id, score FROM historical_monthly_scores WHERE year = ?')
-    .bind(currentYear)
+    .prepare('SELECT year, month, area_id, score FROM historical_monthly_scores WHERE year = ? OR year = ?')
+    .bind(effectiveYear, currentYear)
     .all<{ year: number; month: string; area_id: number; score: number }>();
 
-  // Map: monthStr ('01'..'12') -> Map<area_id, score>
-  const historicalByMonth = new Map<string, Map<number, number>>();
-  const historicalScoresListByMonth = new Map<string, number[]>();
+  // Map: year_month ('2026_01'..'2026_12') -> Map<area_id, score>
+  const historicalByYearMonth = new Map<string, Map<number, number>>();
+  const historicalScoresListByYearMonth = new Map<string, number[]>();
   for (const h of historicalRes.results || []) {
     const mStr = String(h.month).padStart(2, '0');
-    if (!historicalByMonth.has(mStr)) {
-      historicalByMonth.set(mStr, new Map());
-      historicalScoresListByMonth.set(mStr, []);
+    const ymKey = `${h.year}_${mStr}`;
+    if (!historicalByYearMonth.has(ymKey)) {
+      historicalByYearMonth.set(ymKey, new Map());
+      historicalScoresListByYearMonth.set(ymKey, []);
     }
-    historicalByMonth.get(mStr)!.set(h.area_id, h.score);
-    historicalScoresListByMonth.get(mStr)!.push(h.score);
+    historicalByYearMonth.get(ymKey)!.set(h.area_id, h.score);
+    historicalScoresListByYearMonth.get(ymKey)!.push(h.score);
   }
 
-  // Precompute average historical score for each month (e.g. Month 10 -> 96.33%)
-  const historicalAvgByMonth = new Map<string, number>();
-  for (const [mStr, scores] of historicalScoresListByMonth.entries()) {
+  // Precompute average historical score for each year_month
+  const historicalAvgByYearMonth = new Map<string, number>();
+  for (const [ymKey, scores] of historicalScoresListByYearMonth.entries()) {
     const avg = calculateMonthlyScore(scores);
     if (avg !== null) {
-      historicalAvgByMonth.set(mStr, avg);
+      historicalAvgByYearMonth.set(ymKey, avg);
     }
   }
 
-  // 5. Query all submitted audits in current year for area-month scoring
+  // 5. Query all submitted audits in effective year and current year
   const yearAuditsRes = await c.env.DB
     .prepare(`
       SELECT a.month, a.iso_year, a.iso_week, aas.area_id, aas.score
       FROM audit_area_scores aas
       JOIN audits a ON a.id = aas.audit_id
       JOIN areas ar ON ar.id = aas.area_id AND ar.active = 1
-      WHERE a.iso_year = ? AND a.status = 'submitted' AND aas.score IS NOT NULL
+      WHERE (a.iso_year = ? OR a.iso_year = ?) AND a.status = 'submitted' AND aas.score IS NOT NULL
     `)
-    .bind(currentYear)
+    .bind(effectiveYear, currentYear)
     .all<{ month: string; iso_year: number; iso_week: number; area_id: number; score: number }>();
 
-  // Map: monthStr ('01'..'12') -> Map<area_id, number[]>
-  const auditedByMonth = new Map<string, Map<number, number[]>>();
+  // Map: ymStr ('2026-01'..'2026-12') -> Map<area_id, number[]>
+  const auditedByYearMonth = new Map<string, Map<number, number[]>>();
   for (const a of yearAuditsRes.results || []) {
-    const mStr = a.month.slice(5, 7);
-    if (!auditedByMonth.has(mStr)) {
-      auditedByMonth.set(mStr, new Map());
+    const ym = a.month;
+    if (!auditedByYearMonth.has(ym)) {
+      auditedByYearMonth.set(ym, new Map());
     }
-    const areaMap = auditedByMonth.get(mStr)!;
+    const areaMap = auditedByYearMonth.get(ym)!;
     if (!areaMap.has(a.area_id)) {
       areaMap.set(a.area_id, []);
     }
     areaMap.get(a.area_id)!.push(a.score);
   }
 
-  // 6. Smart Fallback for Effective Month (Solution 1 + Solution 2)
-  const currentMonthNum = parseInt(currentMonth.slice(5, 7), 10);
-  const currentMonthNumStr = String(currentMonthNum).padStart(2, '0');
-
-  const hasCurrentMonthAudits = (auditedByMonth.get(currentMonthNumStr)?.size || 0) > 0;
-  const hasCurrentMonthHistorical = (historicalByMonth.get(currentMonthNumStr)?.size || 0) > 0;
-  const hasCurrentMonthData = hasCurrentMonthAudits || hasCurrentMonthHistorical;
-
+  // 6. Effective Month Selection & Smart Fallback
   let displayMonth = currentMonth;
   let isFallbackMonth = false;
 
-  if (hasCurrentMonthData) {
-    displayMonth = currentMonth;
+  if (isCustomRequested) {
+    displayMonth = requestedMonthRaw;
     isFallbackMonth = false;
   } else {
-    // Search backward from currentMonthNum - 1 down to 1 for latest month with data
-    let foundMonthStr: string | null = null;
-    for (let m = currentMonthNum - 1; m >= 1; m--) {
-      const mStr = String(m).padStart(2, '0');
-      if (
-        (auditedByMonth.get(mStr)?.size || 0) > 0 ||
-        (historicalByMonth.get(mStr)?.size || 0) > 0
-      ) {
-        foundMonthStr = mStr;
-        break;
+    const currentMonthAuditsCount = auditedByYearMonth.get(currentMonth)?.size || 0;
+    const currentMonthHistCount =
+      historicalByYearMonth.get(`${currentYear}_${currentMonth.slice(5, 7)}`)?.size || 0;
+    const hasCurrentMonthData = currentMonthAuditsCount > 0 || currentMonthHistCount > 0;
+
+    if (hasCurrentMonthData) {
+      displayMonth = currentMonth;
+      isFallbackMonth = false;
+    } else {
+      // Search backward from current month down to 1 for latest month with data
+      const currentMonthNum = parseInt(currentMonth.slice(5, 7), 10);
+      let foundMonthStr: string | null = null;
+      for (let m = currentMonthNum - 1; m >= 1; m--) {
+        const mStr = String(m).padStart(2, '0');
+        const ym = `${currentYear}-${mStr}`;
+        if (
+          (auditedByYearMonth.get(ym)?.size || 0) > 0 ||
+          (historicalByYearMonth.get(`${currentYear}_${mStr}`)?.size || 0) > 0
+        ) {
+          foundMonthStr = mStr;
+          break;
+        }
       }
-    }
-    if (foundMonthStr) {
-      displayMonth = `${currentYear}-${foundMonthStr}`;
-      isFallbackMonth = true;
+      if (foundMonthStr) {
+        displayMonth = `${currentYear}-${foundMonthStr}`;
+        isFallbackMonth = true;
+      }
     }
   }
 
-  const displayMonthNumStr = displayMonth.slice(5, 7);
-  const auditedForDisplayMonth = auditedByMonth.get(displayMonthNumStr);
-  const historicalForDisplayMonth = historicalByMonth.get(displayMonthNumStr);
+  const [dispY, dispM] = displayMonth.split('-');
+  const auditedForDisplayMonth = auditedByYearMonth.get(displayMonth);
+  const historicalForDisplayMonth = historicalByYearMonth.get(`${dispY}_${dispM}`);
 
   // Compute each area's score for displayMonth (audited takes precedence over historical)
   const areaMonthScoresMap = new Map<
@@ -707,16 +747,25 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   const bottomAreas = [...rankedValid].reverse().slice(0, 3);
 
   // 7. 12-week trend of average score (connected with historical monthly data)
-  const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string }[] = [];
+  const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string; ymKey: string }[] = [];
   let curDate = today;
+  if (displayMonth !== currentMonth) {
+    const [dy, dm] = displayMonth.split('-').map(Number);
+    // Last day of displayMonth
+    const lastDayOfMonth = new Date(Date.UTC(dy, dm, 0)).toISOString().slice(0, 10);
+    curDate = lastDayOfMonth;
+  }
+
   for (let i = 0; i < 12; i++) {
     const wInfo = getISOWeek(curDate);
     const label = `W${wInfo.isoWeek < 10 ? '0' + wInfo.isoWeek : wInfo.isoWeek}`;
+    const mStr = wInfo.month.slice(5, 7);
     trendWeeks.unshift({
       label,
       isoYear: wInfo.isoYear,
       isoWeek: wInfo.isoWeek,
-      monthStr: wInfo.month.slice(5, 7),
+      monthStr: mStr,
+      ymKey: `${wInfo.isoYear}_${mStr}`,
     });
     curDate = addDays(wInfo.weekStart, -7);
   }
@@ -758,7 +807,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     }
 
     // If no weekly audits, fallback to month historical average if available
-    const histAvg = historicalAvgByMonth.get(tw.monthStr);
+    const histAvg = historicalAvgByYearMonth.get(tw.ymKey);
     if (histAvg !== undefined) {
       return {
         week: tw.label,
@@ -789,7 +838,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       GROUP BY ci.s_group
       ORDER BY ci.s_group ASC
     `)
-    .bind(currentMonth)
+    .bind(displayMonth)
     .all<{ s_group: number; count: number; total_penalty: number }>();
 
   const sGroupMap = new Map<number, { count: number; total_penalty: number }>();
@@ -1004,11 +1053,14 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     month_info: {
       current_month: currentMonth,
       display_month: displayMonth,
+      selected_month: isCustomRequested ? requestedMonthRaw : null,
       is_fallback: isFallbackMonth,
-      has_audits: hasCurrentMonthAudits,
+      is_custom_selection: isCustomRequested,
+      has_audits: (auditedForDisplayMonth?.size || 0) > 0,
+      available_months: availableMonths,
       source: isFallbackMonth
         ? (historicalForDisplayMonth && historicalForDisplayMonth.size > 0 ? 'historical' : 'audited')
-        : (hasCurrentMonthAudits ? 'audited' : (hasCurrentMonthHistorical ? 'historical' : 'none')),
+        : ((auditedForDisplayMonth?.size || 0) > 0 ? 'audited' : (historicalForDisplayMonth && historicalForDisplayMonth.size > 0 ? 'historical' : 'none')),
     },
     target,
     kpi: {

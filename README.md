@@ -1,12 +1,36 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.5.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
+**Phiên bản hiện tại: `v2.5.5`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
+**Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.4`
+## 1. Điểm nổi bật của phiên bản `v2.5.5`
+
+### 📅 Lọc & Chọn Kết quả Đánh giá Theo Tháng trên Dashboard
+- **Xem Dữ liệu Quá khứ & Lịch sử Linh hoạt**:
+  - Bổ sung thanh công cụ chọn tháng trực quan ngay trên đầu màn hình TV Dashboard (`?month=YYYY-MM`).
+  - Tự động quét toàn bộ các tháng có dữ liệu từ cả kỳ đánh giá tuần thực tế và bảng nhập điểm lịch sử Excel (`historical_monthly_scores`).
+  - Tự động tính toán lại toàn diện: Điểm trung bình tháng, Xếp hạng Top/Bottom, Ma trận 16 khu vực và Phân bổ lỗi 5S theo đúng tháng được chọn.
+  - Tích hợp nút bấm *"Quay về hiện tại"* 1-click cùng huy hiệu trạng thái rõ ràng.
+
+### 🔒 Khóa Bản quyền Tác giả Simon & Cửa sổ About App
+- **Bảo vệ Bản quyền Kiến trúc & Thông tin Tác giả**:
+  - Thêm cửa sổ **About App Modal** hiển thị thông tin hệ thống, tác giả **Simon** và nút liên hệ trực tiếp trên GitHub ([https://github.com/vodanh1814](https://github.com/vodanh1814)).
+  - Bổ sung khối **Bản quyền tác giả được bảo vệ** cố định (Read-Only Card) trong mục Quản trị (`/admin/targets`), ngăn ngừa việc ghi đè hoặc can thiệp thông tin bản quyền khi doanh nghiệp tùy chỉnh Logo và Tên công ty.
+  - Hiển thị dòng bản quyền tinh tế tại trang Đăng nhập và chân thanh bên Sidebar.
+
+### 🌐 Bổ sung Toàn diện Tài liệu Tiếng Anh (English Docs)
+- Xuất bản tài liệu hướng dẫn tiếng Anh chuẩn mực ([`README.en.md`](./README.en.md)) và nhật ký phiên bản tiếng Anh ([`CHANGELOG.en.md`](./CHANGELOG.en.md)).
+- Tích hợp các nút chuyển đổi ngôn ngữ song ngữ ở đầu các tài liệu.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.5.4`
 
 ### 🔄 Nâng cấp Toàn diện Cơ chế Git Auto-Update & Bảo vệ Dữ liệu Riêng tư
 - **Hỗ trợ Tự động Cập nhật Mượt mà cho cả Kho GitHub Public & Private**:
@@ -309,3 +333,12 @@ Mỗi khi cập nhật tính năng hoặc sửa lỗi mới:
 3. Cập nhật tài liệu [`README.md`](./README.md) phản ánh các cải tiến mới.
 4. Chạy `npm test && npm run build && npm run build:exe` để đóng gói lại [`Crystal_5S_Setup.exe`](./Crystal_5S_Setup.exe).
 5. Commit, gắn thẻ phiên bản (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`) và đẩy lên GitHub (`git push origin main --tags`).
+
+---
+
+## 5. Bản quyền & Sở hữu Trí tuệ (License & Copyright)
+
+**Bản quyền © 2026 Simon. All rights reserved.**  
+Thiết kế, xây dựng và phát triển kiến trúc bởi tác giả **Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814)).
+
+Mọi quyền sở hữu trí tuệ, cấu trúc cơ sở dữ liệu và mã nguồn ứng dụng đều được bảo lưu. Doanh nghiệp và nhà máy được toàn quyền tùy biến Tên công ty và Logo đại diện để phục vụ vận hành sản xuất nội bộ.

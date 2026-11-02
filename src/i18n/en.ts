@@ -398,4 +398,24 @@ export const en: typeof vi = {
   cf_new_url_notice: 'Important Notice: The worker URL on your new account will be this address. Please copy it to share with auditors and set up on TV Andon displays.',
   cf_migration_handoff_title: 'Cloudflare Account Migration Handoff',
   cf_migration_handoff_desc: 'New Cloudflare configuration saved successfully. The system will connect with the new infrastructure.',
+
+  // About & Copyright
+  about_app: 'About App',
+  about_app_title: 'About Crystal 5S Audit',
+  about_app_desc: 'Smart Factory Andon & 5S Continuous Improvement System',
+  author: 'Author',
+  copyright: 'Copyright',
+  protected_copyright: 'Protected Author Copyright',
+  contact_author_github: 'Contact Author on GitHub',
+  view_github_repo: 'View GitHub Repository',
+  about_app_note: 'Designed and developed exclusively by author Simon. All intellectual property rights and system architecture are strictly reserved.',
+  system_architecture: 'System Architecture',
+  architecture_desc: 'Cloudflare Edge Workers + D1 Database + R2 Storage + React SPA',
+
+  // Dashboard Month Filter
+  dashboard_month_filter: 'Audit Period',
+  current_month_option: 'Current (Automatic)',
+  viewing_month_badge: 'Viewing: {month}',
+  back_to_current_month: 'Back to Current',
+  all_data_for_month: 'All dashboard data filtered for {month}',
 };

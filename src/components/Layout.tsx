@@ -21,11 +21,13 @@ import {
   Minimize2,
   Tv,
   ArrowUpCircle,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { api } from '../api/client';
-import { APP_VERSION } from '../version';
+import { APP_VERSION, APP_COPYRIGHT } from '../version';
+import { AboutModal } from './AboutModal';
 
 type SidebarState = 'expanded' | 'collapsed' | 'hidden';
 
@@ -48,6 +50,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [clockTime, setClockTime] = useState('');
   const [logoBroken, setLogoBroken] = useState(false);
   const [availableUpdateVer, setAvailableUpdateVer] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   useEffect(() => {
     setLogoBroken(false);
@@ -336,6 +339,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 {sidebarState === 'expanded' && <span className="truncate">{t('login')}</span>}
               </Link>
             )}
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition cursor-pointer"
+              title={t('about_app')}
+            >
+              <Info className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+              {sidebarState === 'expanded' && <span className="truncate">{t('about_app')}</span>}
+            </button>
+
+            {sidebarState === 'expanded' && (
+              <div className="pt-0.5 text-center text-[10px] text-slate-500 font-mono select-none">
+                {APP_COPYRIGHT}
+              </div>
+            )}
           </div>
         </aside>
       )}
@@ -436,6 +453,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {lang.toUpperCase()}
             </button>
 
+            {/* About App / Copyright Button */}
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
+              title={t('about_app')}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
             {/* Profile / Login icon in top-right header */}
             <Link
               to={user ? '/profile' : '/login'}
@@ -519,6 +545,16 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <span>{t('login')}</span>
                 </Link>
               )}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setAboutOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition cursor-pointer"
+              >
+                <Info className="w-4 h-4 text-emerald-400" />
+                <span>{t('about_app')}</span>
+              </button>
             </div>
           </div>
         )}
@@ -538,6 +574,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </main>
         )}
       </div>
+
+      {/* About App Modal */}
+      <AboutModal
+        isOpen={aboutOpen}
+        onClose={() => setAboutOpen(false)}
+        companyName={companyName}
+      />
     </div>
   );
 };
