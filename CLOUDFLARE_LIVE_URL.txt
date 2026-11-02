@@ -1,0 +1,12 @@
+======================================================================
+   CRYSTAL 5S AUDIT — THÔNG TIN TRANG WEB TRÊN CLOUDFLARE
+======================================================================
+ĐƯỜNG DẪN TRUY CẬP (LIVE URL): https://5s-audit.cetvn.workers.dev
+Phiên bản: v2.5.0
+Cập nhật lúc: 10:16:40 02/11/2026 (2026-11-02T03:16:40.000Z)
+Tên Worker: 5s-audit
+Database D1: cetvn-5s-db (25dfadb1-c781-44b0-aeb8-e8f769fb584d)
+Kho ảnh R2: cetvn-5s-photos
+======================================================================
+Lưu ý: Bạn có thể lưu lại đường dẫn trên để chia sẻ cho các Giám sát viên
+(Auditors), Quản lý khu vực (Area MNG) và cài đặt trên Màn hình TV Andon.

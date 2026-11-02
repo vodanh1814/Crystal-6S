@@ -17,15 +17,15 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "crystal5s-db",
-      "database_id": "placeholder-d1-id",
+      "database_name": "cetvn-5s-db",
+      "database_id": "25dfadb1-c781-44b0-aeb8-e8f769fb584d",
       "migrations_dir": "migrations"
     }
   ],
   "r2_buckets": [
     {
       "binding": "PHOTOS",
-      "bucket_name": "crystal5s-photos"
+      "bucket_name": "cetvn-5s-photos"
     }
   ]
 }
