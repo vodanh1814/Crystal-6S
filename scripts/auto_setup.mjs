@@ -313,7 +313,7 @@ async function setupCloudflareMode() {
     companyInput = cliComp;
   } else {
     console.log('── Cấu hình Tên Công ty / Nhà máy (Để tách riêng Database & Kho ảnh) ──');
-    const defaultComp = currentCfg.dbName.replace(/-5s-db$/, '') || 'cetvn';
+    const defaultComp = currentCfg.dbName.replace(/-5s-db$/, '') || 'factory';
     companyInput = await ask(
       `Nhập mã tên Công ty/Nhà máy (Enter = "${defaultComp}"): `
     );
@@ -570,7 +570,7 @@ async function deployWorkerApp(workerName, dbName) {
       console.log('HƯỚNG DẪN KÍCH HOẠT NHANH (3 BƯỚC TRÊN DASHBOARD):');
       console.log(' 1. Trên trang Cloudflare Dashboard vừa mở, nhìn sang cột BÊN PHẢI.');
       console.log(' 2. Tại mục "Your subdomain", bấm nút "Set up" (hoặc "Change").');
-      console.log(' 3. Nhập tên Subdomain mong muốn (ví dụ: tên công ty, viết thường không dấu, vd: "cetvn")');
+      console.log(' 3. Nhập tên Subdomain mong muốn (ví dụ: tên công ty, viết thường không dấu, vd: "mycompany")');
       console.log('    rồi bấm nút "Set up" / "Save".');
       console.log(' 4. Sau khi hoàn tất lưu trên Cloudflare, quay lại màn hình này và nhấn Enter để tiếp tục xuất bản!\n');
 

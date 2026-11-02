@@ -67,8 +67,12 @@ export async function getAppSettings(
 // GET /api/settings - Public read for branding & app version across UI & TV screens
 settingsRouter.get('/', async (c) => {
   const settings = await getAppSettings(c.env.DB);
+  const ghToken = await resolveGithubToken(c.env);
   return c.json({
-    settings,
+    settings: {
+      ...settings,
+      has_github_token: Boolean(ghToken),
+    },
     version: APP_VERSION,
     release_date: APP_RELEASE_DATE,
     repo: GITHUB_REPO,
@@ -151,13 +155,48 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
   }
 
   try {
-    // Try fetching package.json from GitHub API
-    const pkgRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/package.json?ref=main`,
-      { headers }
-    );
+    let latestVersion = APP_VERSION;
+    let changelog = '';
+    let fetched = false;
 
-    if (!pkgRes.ok) {
+    // 1. Try GitHub API
+    try {
+      const pkgRes = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/contents/package.json?ref=main`,
+        { headers }
+      );
+      if (pkgRes.ok) {
+        const pkgData: any = await pkgRes.json();
+        const decodedPkg = JSON.parse(atob(String(pkgData.content || '').replace(/\s/g, '')));
+        latestVersion = String(decodedPkg.version || APP_VERSION).trim();
+        fetched = true;
+      }
+    } catch {}
+
+    // 2. Fallback to raw.githubusercontent.com (works for Public repos or with Authorization token)
+    if (!fetched) {
+      try {
+        const rawHeaders: Record<string, string> = {
+          'User-Agent': 'Crystal-5S-Audit-Updater',
+        };
+        if (ghToken) {
+          rawHeaders['Authorization'] = `token ${ghToken}`;
+        }
+        const rawRes = await fetch(
+          `https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json`,
+          { headers: rawHeaders }
+        );
+        if (rawRes.ok) {
+          const rawPkg = (await rawRes.json()) as any;
+          if (rawPkg?.version) {
+            latestVersion = String(rawPkg.version).trim();
+            fetched = true;
+          }
+        }
+      } catch {}
+    }
+
+    if (!fetched) {
       return c.json({
         current_version: APP_VERSION,
         latest_version: APP_VERSION,
@@ -167,20 +206,15 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         repo_url: GITHUB_REPO_URL,
         checked_at: new Date().toISOString(),
         mode: 'cloud_worker',
-        notice:
-          pkgRes.status === 404
-            ? 'Private GitHub repository requires local Git/GH CLI or a GitHub Token in Admin Settings.'
-            : `GitHub API returned status ${pkgRes.status}`,
+        notice: ghToken
+          ? 'Không thể truy cập GitHub repository với Token hiện tại. Vui lòng kiểm tra lại quyền hạn của Token.'
+          : 'Kho GitHub đang ở chế độ Private hoặc chưa được cấu hình Token. Nếu chuyển repo sang Public, hệ thống sẽ tự động cập nhật mà không cần Token.',
       });
     }
 
-    const pkgData: any = await pkgRes.json();
-    const decodedPkg = JSON.parse(atob(String(pkgData.content || '').replace(/\s/g, '')));
-    const latestVersion = String(decodedPkg.version || APP_VERSION).trim();
     const hasUpdate = compareSemver(latestVersion, APP_VERSION) > 0;
 
-    // Also try fetching CHANGELOG.md
-    let changelog = '';
+    // Fetch CHANGELOG.md (GitHub API first, then raw fallback)
     try {
       const chgRes = await fetch(
         `https://api.github.com/repos/${GITHUB_REPO}/contents/CHANGELOG.md?ref=main`,
@@ -191,6 +225,18 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         const binStr = atob(String(chgData.content || '').replace(/\s/g, ''));
         const bytes = Uint8Array.from(binStr, (ch) => ch.charCodeAt(0));
         changelog = new TextDecoder('utf-8').decode(bytes);
+      } else {
+        const rawChg = await fetch(
+          `https://raw.githubusercontent.com/${GITHUB_REPO}/main/CHANGELOG.md`,
+          {
+            headers: ghToken
+              ? { Authorization: `token ${ghToken}`, 'User-Agent': 'Crystal-5S-Audit-Updater' }
+              : { 'User-Agent': 'Crystal-5S-Audit-Updater' },
+          }
+        );
+        if (rawChg.ok) {
+          changelog = await rawChg.text();
+        }
       }
     } catch {}
 
@@ -577,7 +623,7 @@ settingsRouter.get('/cloudflare-status', authMiddleware, async (c) => {
       r2_estimated_capacity_photos: Math.max(0, Math.floor((r2BytesLimit - r2BytesUsed) / (200 * 1024))),
     },
     details: {
-      d1_database_name: 'crystal5s-db',
+      d1_database_name: 'cetvn-5s-db',
       d1_database_id_masked: cfCfg.databaseId ? maskString(cfCfg.databaseId, 6, 4) : 'd1-auto-binding',
       r2_bucket_name: cfCfg.bucketName,
       worker_name: cfCfg.workerName,

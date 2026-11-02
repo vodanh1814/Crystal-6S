@@ -118,6 +118,7 @@ export const AdminTargets: React.FC = () => {
     current_commit?: string;
     latest_commit?: string;
     has_update: boolean;
+    has_github_token?: boolean;
     changelog?: string;
     mode?: string;
     checked_at?: string;
@@ -128,6 +129,11 @@ export const AdminTargets: React.FC = () => {
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showTokenConfig, setShowTokenConfig] = useState(false);
+  const [ghTokenInput, setGhTokenInput] = useState('');
+  const [savingGhToken, setSavingGhToken] = useState(false);
+  const [ghTokenSuccess, setGhTokenSuccess] = useState<string | null>(null);
+  const [ghTokenError, setGhTokenError] = useState<string | null>(null);
 
   const checkGitUpdate = useCallback(async () => {
     if (!isAdmin) return;
@@ -144,6 +150,28 @@ export const AdminTargets: React.FC = () => {
       setCheckingUpdate(false);
     }
   }, [isAdmin]);
+
+  const handleSaveGhToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingGhToken(true);
+    setGhTokenSuccess(null);
+    setGhTokenError(null);
+    try {
+      await api.put('/settings', { github_token: ghTokenInput.trim() });
+      setGhTokenSuccess(
+        ghTokenInput.trim()
+          ? 'Đã lưu và mã hóa GitHub Token thành công!'
+          : 'Đã xóa cấu hình GitHub Token (chuyển sang chế độ Public).'
+      );
+      setGhTokenInput('');
+      await checkGitUpdate();
+      setTimeout(() => setGhTokenSuccess(null), 3500);
+    } catch (err: any) {
+      setGhTokenError(err.message || 'Lỗi khi lưu GitHub Token');
+    } finally {
+      setSavingGhToken(false);
+    }
+  };
 
   useEffect(() => {
     checkGitUpdate();
@@ -519,7 +547,16 @@ export const AdminTargets: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowTokenConfig(!showTokenConfig)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+            >
+              <Key className="w-3.5 h-3.5 text-slate-500" />
+              <span>{showTokenConfig ? 'Ẩn cấu hình Token' : 'Cấu hình Token'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowChangelog(!showChangelog)}
@@ -540,6 +577,94 @@ export const AdminTargets: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {showTokenConfig && (
+          <form
+            onSubmit={handleSaveGhToken}
+            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4 text-slate-700" />
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  Cấu hình GitHub Personal Access Token (PAT)
+                </span>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                  updateInfo?.has_github_token
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {updateInfo?.has_github_token ? 'Đã cấu hình Token' : 'Chưa cấu hình (Chế độ Public)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-600">
+              Chỉ cần thiết khi GitHub repository ở chế độ <strong>Private</strong>. Khi repository là <strong>Public</strong>, hệ thống tự động kiểm tra và đồng bộ mà không cần Token.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="password"
+                value={ghTokenInput}
+                onChange={(e) => setGhTokenInput(e.target.value)}
+                placeholder={
+                  updateInfo?.has_github_token
+                    ? '•••••••••••••••• (Nhập token mới hoặc để trống để gỡ)'
+                    : 'ghp_... hoặc github_pat_...'
+                }
+                className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="submit"
+                  disabled={savingGhToken}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {savingGhToken ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  <span>{savingGhToken ? 'Đang lưu...' : 'Lưu Token'}</span>
+                </button>
+                {updateInfo?.has_github_token && (
+                  <button
+                    type="button"
+                    disabled={savingGhToken}
+                    onClick={async () => {
+                      setSavingGhToken(true);
+                      try {
+                        await api.put('/settings', { github_token: '' });
+                        setGhTokenSuccess('Đã gỡ bỏ GitHub Token thành công.');
+                        await checkGitUpdate();
+                        setTimeout(() => setGhTokenSuccess(null), 3000);
+                      } catch (err: any) {
+                        setGhTokenError(err.message || 'Lỗi khi gỡ Token');
+                      } finally {
+                        setSavingGhToken(false);
+                      }
+                    }}
+                    className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    Gỡ Token
+                  </button>
+                )}
+              </div>
+            </div>
+            {ghTokenSuccess && (
+              <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>{ghTokenSuccess}</span>
+              </div>
+            )}
+            {ghTokenError && (
+              <div className="p-2.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
+                {ghTokenError}
+              </div>
+            )}
+          </form>
+        )}
 
         {/* Version Comparison Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -651,6 +776,25 @@ export const AdminTargets: React.FC = () => {
                 <span>Đồng bộ lại từ Git (Force Sync)</span>
               </button>
             )}
+          </div>
+        )}
+
+        {updateInfo?.notice && (
+          <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-semibold">{updateInfo.notice}</span>
+              <div className="text-[11px] text-amber-700">
+                Nếu kho lưu trữ đã chuyển sang <strong>Public</strong>, hệ thống sẽ tự động cập nhật trực tiếp. Nếu là <strong>Private</strong>, hãy bấm nút <strong>Cấu hình Token</strong> ở trên để nhập GitHub PAT.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {updateInfo?.error && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{updateInfo.error}</span>
           </div>
         )}
 

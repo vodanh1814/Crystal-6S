@@ -9,3 +9,4 @@ cookies*.txt
 .backups
 migration_temp_backup.sql
 crystal5s_backup_*.sql
+CLOUDFLARE_LIVE_URL.txt

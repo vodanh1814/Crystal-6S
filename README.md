@@ -1,12 +1,30 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.5.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.5.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.3`
+## 1. Điểm nổi bật của phiên bản `v2.5.4`
+
+### 🔄 Nâng cấp Toàn diện Cơ chế Git Auto-Update & Bảo vệ Dữ liệu Riêng tư
+- **Hỗ trợ Tự động Cập nhật Mượt mà cho cả Kho GitHub Public & Private**:
+  - Tự động nhận diện và nạp dữ liệu cập nhật không cần Token khi repo ở chế độ **Public** (qua raw GitHub fallback), chống nghẽn giới hạn API rate limit.
+  - Tích hợp giao diện quản trị **Cấu hình GitHub Personal Access Token (PAT)** trong trang Quản trị: Hỗ trợ lưu token an toàn được mã hóa chuẩn **AES-GCM-256** vào cơ sở dữ liệu (`app_settings`), hỗ trợ gỡ bỏ token khi chuyển sang chế độ Public.
+  - Bổ sung thông báo trạng thái vàng (`notice`) và cảnh báo lỗi đỏ (`error`) trực quan giúp Quản trị viên nắm bắt tức thời tình trạng kết nối tới GitHub repository.
+- **Cơ chế Tự Sửa lỗi Git (Auto-Git-Repair) cho Bản Cài đặt Windows EXE**:
+  - Tự động phát hiện trường hợp thư mục giải nén từ bộ cài đặt `.exe` chưa có thư mục `.git`, tự động khởi tạo `git init -b main` và gán remote repository chính thức.
+  - Tự động loại trừ các file binary và phát sinh sau build (`Crystal_5S_Setup.exe`, `package-lock.json`) khỏi bộ kiểm tra `dirty check`, loại bỏ triệt để lỗi chặn cập nhật do thay đổi cục bộ.
+  - Tích hợp cơ chế fallback an toàn: nếu lệnh fast-forward gặp phân nhánh, hệ thống tự động hoàn nguyên về bản phát hành chính thức (`git reset --hard origin/main`).
+- **Bảo mật & Loại bỏ Thông tin Cá nhân / Hạ tầng Nội bộ trên Git**:
+  - Gỡ bỏ vĩnh viễn file theo dõi URL hạ tầng `CLOUDFLARE_LIVE_URL.txt` khỏi Git và đưa vào `.gitignore`.
+  - Khử bỏ toàn bộ các đường dẫn tuyệt đối của máy dev trong tài liệu hướng dẫn và mã nguồn.
+  - Đồng nhất tên cơ sở dữ liệu `cetvn-5s-db` xuyên suốt `package.json`, `wrangler.jsonc`, `vite.config.ts` và backend.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.5.3`
 
 ### 📱 Tối ưu hóa Toàn diện Bố cục Di động & Cuộn Chạm Mượt mà (Mobile & Tablet)
 - **Tối ưu hóa Bố cục Responsive Tương thích Mọi Kích thước Màn hình**:
@@ -57,7 +75,7 @@
   - Tự động sinh file Excel ma trận 12 tháng theo hàng và các khu vực thực tế đang hoạt động theo cột.
   - Tự động điền dữ liệu điểm đã có để quản trị viên tải về đối chiếu hoặc cập nhật bổ sung.
 - **Tải lên File Excel (.xlsx / .xls) 1-Click**:
-  - Hỗ trợ hoàn hảo định dạng bảng thực tế của nhà máy CETVN (điển hình như file `5S.xlsx`).
+  - Hỗ trợ hoàn hảo định dạng bảng thực tế của các nhà máy sản xuất (điển hình như file `5S.xlsx`).
   - Tự động nhận diện hướng ma trận (Tháng theo dòng / Khu vực theo cột hoặc ngược lại).
   - Thuật toán Fuzzy & Synonym Matching linh hoạt cho toàn bộ khu vực dệt may (`Knitting`, `Warehouse`, `Greige_PP`, `QC-Final`, `QC-Greige`, `Dyeing`, `Setting`, `VAP`, `MTN`, `Utility`, `TSC`, `FM/CFD`, `Lab dip`...).
   - Tự động chuyển đổi tỷ lệ thập phân ($0.9 \rightarrow 90.0, 1 \rightarrow 100.0$) và chuỗi phần trăm.
@@ -71,8 +89,8 @@
 
 ### ⚡ Chuẩn hóa & Rút gọn Tên miền Cloudflare Worker thành `5s-audit`
 - **Loại bỏ tiền tố công ty bị lặp**: Tên Worker được cố định là `5s-audit`, loại bỏ tiền tố thừa khi subdomain Cloudflare đã mang tên nhà máy.
-  - URL trước đây: `https://cetvn-5s-audit.5scetvn.workers.dev`
-  - URL mới: 👉 **`https://5s-audit.5scetvn.workers.dev`** *(ngắn gọn, trực quan, chuyên nghiệp)*.
+  - URL trước đây: `https://<company>-5s-audit.<subdomain>.workers.dev`
+  - URL mới: 👉 **`https://5s-audit.<subdomain>.workers.dev`** *(ngắn gọn, trực quan, chuyên nghiệp)*.
 - **Phân lập Dữ liệu Độc lập**: D1 Database (`<slug>-5s-db`) và R2 Storage (`<slug>-5s-photos`) vẫn được phân lập riêng biệt cho từng doanh nghiệp.
 - **Quy trình Phát triển & Triển khai 6 Bước**: Chuẩn hóa quy tắc làm việc theo [GEMINI.md](./GEMINI.md) đảm bảo mọi thay đổi đều qua kiểm thử độc lập 0 lỗi và có sự phê duyệt trước khi xuất bản.
 
@@ -84,7 +102,7 @@
 - **Khắc phục triệt để lỗi trang tạo Domain không vào được (do Cloudflare khai tử route `/workers/onboarding`)**:
   - Tự động bóc tách Account ID và chuyển hướng chính xác đến trang quản lý chính thức của Cloudflare: `https://dash.cloudflare.com/<accountId>/workers-and-pages` (mục **"Your subdomain"** ở cột bên phải) hoặc link cấu hình trực tiếp `https://dash.cloudflare.com/<accountId>/workers/subdomain`.
   - Hướng dẫn tiếng Việt 4 bước trực quan, định vị rõ từng nút bấm trên giao diện Cloudflare giúp quản trị viên kích hoạt tên miền phụ chỉ trong 1 phút.
-  - Tăng thời gian chờ cho môi trường GUI độc lập ([Crystal_5S_Setup.exe](file:///d:/Crystal-6S/Crystal_5S_Setup.exe)) lên 20 giây đảm bảo thao tác trên trình duyệt mượt mà và không gián đoạn tiến trình.
+  - Tăng thời gian chờ cho môi trường GUI độc lập ([Crystal_5S_Setup.exe](./Crystal_5S_Setup.exe)) lên 20 giây đảm bảo thao tác trên trình duyệt mượt mà và không gián đoạn tiến trình.
 
 ---
 
@@ -92,11 +110,11 @@
 
 ### 🛡️ Tự động hóa & Khôi phục Thiết lập Subdomain `workers.dev` cho Tài khoản Cloudflare Mới
 - **Kênh Tương tác Tức thời (`Interactive stdin`)**:
-  - Hỗ trợ nhập liệu bàn phím trực tiếp khi chạy `npm run deploy` trong trình cài đặt [scripts/auto_setup.mjs](file:///d:/Crystal-6S/scripts/auto_setup.mjs), cho phép người dùng trả lời và đặt tên Subdomain ngay trong cửa sổ dòng lệnh nếu Wrangler yêu cầu.
+  - Hỗ trợ nhập liệu bàn phím trực tiếp khi chạy `npm run deploy` trong trình cài đặt [scripts/auto_setup.mjs](./scripts/auto_setup.mjs), cho phép người dùng trả lời và đặt tên Subdomain ngay trong cửa sổ dòng lệnh nếu Wrangler yêu cầu.
 - **Cơ chế Tự Phục Hồi Thông Minh (Auto-Recovery)**:
   - Tự động phát hiện tài khoản Cloudflare mới chưa đăng ký tên miền phụ, tự động trích xuất và mở link thiết lập trong trình duyệt: `https://dash.cloudflare.com/<accountId>/workers-and-pages` (mục **Your subdomain**).
   - Hướng dẫn tiếng Việt 3 bước rõ ràng và dừng chờ Enter để thử lại ngay lập tức mà không cần cài đặt lại từ đầu.
-  - Hỗ trợ fallback thông minh khi chạy trong môi trường GUI độc lập ([Crystal_5S_Setup.exe](file:///d:/Crystal-6S/Crystal_5S_Setup.exe)), ngăn ngừa hoàn toàn tình trạng treo tiến trình.
+  - Hỗ trợ fallback thông minh khi chạy trong môi trường GUI độc lập ([Crystal_5S_Setup.exe](./Crystal_5S_Setup.exe)), ngăn ngừa hoàn toàn tình trạng treo tiến trình.
 - **Khắc phục Triệt để Lỗi `SQLITE_TOOBIG` trên Cloudflare D1**:
   - Tách riêng câu lệnh SQL khởi tạo `company_logo` và `company_name`.
   - Giới hạn ảnh logo nạp trực tiếp ban đầu qua CLI tối đa 35 KB, áp dụng chốt chặn an toàn độ dài chuỗi `< 45.000` ký tự (loại bỏ hoàn toàn nguy cơ vượt quá giới hạn 100.000 ký tự SQLite statement của Cloudflare D1).
