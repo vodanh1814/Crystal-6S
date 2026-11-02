@@ -364,7 +364,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
 
             {/* Title / Banner */}
-            <div className="flex items-center gap-2 truncate">
+            <div className="flex items-center gap-1.5 sm:gap-2 truncate">
               {companyLogo && !logoBroken && (
                 <img
                   src={companyLogo}
@@ -373,7 +373,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   className="w-5 h-5 object-contain rounded shrink-0 bg-white/95 p-0.5"
                 />
               )}
-              <span className="font-black text-xs sm:text-sm tracking-tight text-white truncate">
+              <span className="font-black text-xs sm:text-sm tracking-tight text-white truncate max-w-[130px] sm:max-w-none">
                 {companyName} <span className="text-slate-500 font-normal">·</span> {t('factory_andon_board')}
               </span>
               <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono font-bold text-emerald-400 shrink-0">
@@ -382,7 +382,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Admin-only Auto-Update Available Notification Pill */}
             {isAdmin && availableUpdateVer && (
               <Link
@@ -391,7 +391,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 title={t('new_version_found_msg', { v: availableUpdateVer })}
               >
                 <ArrowUpCircle className="w-3.5 h-3.5" />
-                <span>{t('update_available_badge', { v: availableUpdateVer })}</span>
+                <span className="hidden sm:inline">{t('update_available_badge', { v: availableUpdateVer })}</span>
               </Link>
             )}
             {/* Live Clock Indicator */}
@@ -402,14 +402,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </span>
             </div>
 
-            {/* Dedicated Full TV Button */}
+            {/* Dedicated Full TV Button - Hidden on mobile screens */}
             <button
               onClick={toggleFullTV}
-              className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow-sm shadow-emerald-500/20"
+              className="hidden sm:flex px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs items-center gap-1 cursor-pointer transition shadow-sm shadow-emerald-500/20"
               title={t('full_tv_mode')}
             >
               <Tv className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">
+              <span>
                 {isFullscreen ? t('exit_full_tv') : t('full_tv_mode')}
               </span>
             </button>
@@ -417,7 +417,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             {/* Alarm Bell Button */}
             <Link
               to="/findings?overdue=1"
-              className="relative p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="relative p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[32px] min-h-[32px] flex items-center justify-center"
               title={t('alarms')}
             >
               <Bell className="w-4 h-4" />

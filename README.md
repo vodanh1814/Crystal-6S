@@ -1,12 +1,25 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.5.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.5.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.2`
+## 1. Điểm nổi bật của phiên bản `v2.5.3`
+
+### 📱 Tối ưu hóa Toàn diện Bố cục Di động & Cuộn Chạm Mượt mà (Mobile & Tablet)
+- **Tối ưu hóa Bố cục Responsive Tương thích Mọi Kích thước Màn hình**:
+  - **Khử bỏ Tỷ lệ Flexbox Cứng trên Mobile**: Gỡ bỏ ràng buộc `flex-[58]` và `flex-[42]`, cho phép các thành phần trên điện thoại tự do giãn dòng và cuộn dọc tự nhiên.
+  - **Loại bỏ Hoàn toàn Bẫy Cuộn Lồng nhau**: Chỉ để 1 thanh cuộn duy nhất, thao tác chạm vuốt trên iPhone và Android siêu mượt, không bị khựng đơ.
+  - **Ma trận 16 Khu vực Đạt chuẩn**: Lưới 2 cột thông thoáng trên điện thoại (`min-h-[88px]`), phân tầng mạch lạc: Tên + Huy hiệu $\rightarrow$ Điểm số $\rightarrow$ Tồn / Đã sửa, không bị nén đè chữ.
+  - **Khắc phục Sập Chiều cao Biểu đồ Recharts**: Gán chiều cao tối thiểu 224px - 256px trên mobile/tablet, đảm bảo đường xu hướng 12 tuần hiển thị sắc nét.
+  - **Tối ưu Thanh Header Màn hình Hẹp**: Ẩn nút chiếu TV trên điện thoại, mở rộng không gian cho tiêu đề nhà máy và chuẩn hóa kích thước nút bấm cảm ứng.
+  - **Bảo toàn 100% Trải nghiệm Smart TV Wall**: Giữ nguyên vẹn tỷ lệ hiển thị không cuộn chuột trên màn hình TV xưởng và Desktop.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.5.2`
 
 ### 🏭 Hiển thị Tên Khu vực (`area_name`) Trực quan trên Dashboard Nhà máy
 - **Thay thế hoàn toàn mã viết tắt bằng tên khu vực dễ nhớ**:

@@ -4,6 +4,25 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.3] - 2026-11-02
+
+### Changed & Improved (Tối ưu hóa Toàn diện Giao diện Di động & Cuộn Chạm Mượt mà)
+- **Tối ưu hóa Bố cục Responsive Đa Nền tảng (Mobile, Tablet & TV Wall)**:
+  - **Khử bỏ Tỷ lệ Flex Cứng trên Thiết bị Di động**: Chuyển đổi `flex-[58]` và `flex-[42]` thành `flex-none lg:flex-[58]` và `flex-none lg:flex-[42]`. Cho phép các khối nội dung trên màn hình nhỏ tự do mở rộng theo chiều cao thực tế thay vì bị ép nén vào một màn hình duy nhất.
+  - **Loại bỏ Bẫy Cuộn Lồng nhau (Double Nested Scroll Containers)**: Tối ưu container trang thành 1 thanh cuộn duy nhất, giúp thao tác vuốt cuộn ngón tay trên điện thoại (iPhone Safari, Android Chrome) mượt mà, triệt tiêu hiện tượng khựng/lag cuộn chạm.
+  - **Tối ưu Ma trận 16 Khu vực (Area Cards)**:
+    - Hiển thị lưới 2 cột trên điện thoại (`grid-cols-2 sm:grid-cols-4`).
+    - Thiết lập chiều cao chuẩn (`min-h-[88px] sm:min-h-[94px] lg:min-h-0`), chia 3 tầng thông tin mạch lạc: Tên khu vực + Huy hiệu Đạt/Chờ $\rightarrow$ Điểm số lớn + TB Tháng $\rightarrow$ Số lỗi tồn và đã sửa. Loại bỏ hoàn toàn lỗi chữ bị nén bẹp đè lên nhau.
+  - **Khắc phục Biểu đồ Xu hướng 12 Tuần Recharts**: Đặt chiều cao hiển thị rõ ràng trên di động `h-56 sm:h-64 lg:h-full lg:flex-1` (224px - 256px), đảm bảo biểu đồ không bị sập chiều cao hay mất trục tọa độ trên màn hình điện thoại.
+  - **Dải 6 Thẻ KPI & Bảng 5S**: Tối ưu padding, gap và wrap số liệu ngăn chặn tràn viền hoặc nhảy dòng số điểm.
+- **Tối ưu Thanh Header trên Màn hình Hẹp**:
+  - Tự động ẩn nút "Toàn màn hình TV" trên điện thoại (`hidden sm:flex`), tiết kiệm không gian ngang cho tên nhà máy và logo công ty.
+  - Tối ưu giới hạn độ dài tiêu đề với `truncate max-w-[130px] sm:max-w-none`, không đè chèn lên các nút thao tác.
+  - Chuẩn hóa vùng chạm cảm ứng ($\ge 32 \times 32$ px) cho nút chuông cảnh báo và đổi ngôn ngữ.
+- **Bảo toàn 100% Trải nghiệm Smart TV Wall**: Giữ nguyên vẹn toàn bộ tỷ lệ hiển thị không cuộn chuột (`lg:overflow-hidden`, `lg:auto-rows-fr`) trên màn hình TV xưởng và máy tính để bàn.
+
+---
+
 ## [2.5.2] - 2026-11-02
 
 ### Changed & Improved (Cải tiến Giao diện Dashboard Trực quan)
