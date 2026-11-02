@@ -1,12 +1,31 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.5.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.5.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.0`
+## 1. Điểm nổi bật của phiên bản `v2.5.1`
+
+### 📺 Kết nối Điểm Lịch sử & Smart Fallback Dashboard Nhà máy
+- **Hiển thị Toàn diện Điểm Nhập Lịch sử trên Dashboard**:
+  - Tích hợp 150 điểm lịch sử từ cơ sở dữ liệu lên màn hình Dashboard TV công cộng.
+  - Phân cấp ưu tiên thông minh: điểm audit tuần thực tế luôn được ưu tiên; khi chưa có kiểm tra trong tháng sẽ tự động lấy điểm lịch sử (`historical`).
+- **Cơ chế Fallback Thông minh Đầu tháng (Smart Fallback)**:
+  - Khi bước sang đầu tháng mới (ví dụ Tuần W45 tháng 11/2026) chưa có kết quả audit, hệ thống tự động tìm kiếm lùi về tháng gần nhất (**Tháng 10/2026** với điểm trung bình **96.33%**).
+  - **KPI 1 (Điểm TB Tuần)**: Hiển thị trạng thái `Chờ đánh giá`, hiển thị mốc gần nhất `T10: 96.33%`.
+  - **KPI 2 (Điểm TB Tháng)**: Tiêu đề `ĐIỂM TB THÁNG 10/2026`, badge cam `Gần nhất` và nhãn `Dữ liệu lịch sử`, điểm TB: `96.33%`.
+  - **KPI 3 (Khu vực Đạt chuẩn)**: Tự động tính toán số khu vực đạt chuẩn/dưới chuẩn của tháng gần nhất (11/15 khu vực đạt $\ge 95\%$) kèm nhãn `T10 (Gần nhất)`.
+  - **Ma trận 16 Khu vực**: Tự động lấy điểm tháng gần nhất để tô màu xanh (đạt) / đỏ (dưới chuẩn) và hiển thị nhãn `Lịch sử`, không bị rỗng điểm.
+  - **Leaderboard Top & Bottom**: Xếp hạng khu vực theo tháng gần nhất `XẾP HẠNG THÁNG 10/2026`.
+  - **Biểu đồ Xu hướng 12 Tuần**: Tự động kết nối điểm trung bình tháng lịch sử với cờ `source: 'historical'`, đường xu hướng mượt mà với `connectNulls`.
+- **Tối ưu hóa Tốc độ Đóng gói EXE**:
+  - Nâng cấp `scripts/build_exe.mjs` sử dụng công cụ `bsdtar` chuẩn của Windows, đóng gói mã nguồn trong 0.5 giây và triệt tiêu lỗi khóa file.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.5.0`
 
 ### 📊 Quản trị & Import Điểm Lịch sử Excel Thông minh (Admin Only)
 - **Tải file mẫu Excel (.xlsx) chuẩn hóa theo danh sách Khu vực Nhà máy**:

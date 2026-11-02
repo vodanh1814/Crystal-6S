@@ -4,6 +4,30 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.1] - 2026-11-02
+
+### Added (Tính năng Mới: Kết nối Điểm Lịch sử & Smart Fallback Dashboard)
+- **Hiển thị Toàn diện Điểm Nhập Lịch sử lên Màn hình Dashboard Nhà máy**:
+  - Tích hợp 150 điểm lịch sử năm 2026 từ bảng `historical_monthly_scores` vào logic hiển thị của Dashboard TV công cộng.
+  - Phân cấp ưu tiên thông minh: điểm audit tuần thực tế luôn được ưu tiên số 1; nếu chưa có kiểm tra thực tế trong tháng thì tự động lấy điểm lịch sử của khu vực (`historical`).
+- **Cơ chế Fallback Thông minh (Smart Fallback for Early Month / Pending Week)**:
+  - Khi bước sang đầu tháng mới (ví dụ Tuần W45 tháng 11/2026) chưa có kết quả audit và chưa có điểm tháng 11, hệ thống tự động tìm kiếm lùi về tháng gần nhất có dữ liệu (**Tháng 10/2026** với điểm trung bình **96.33%**).
+  - **KPI 1 (Điểm TB Tuần)**: Hiển thị trạng thái `Chờ đánh giá` (badge `Chờ`), đồng thời hiển thị điểm số mốc gần nhất `T10: 96.33%`.
+  - **KPI 2 (Điểm TB Tháng)**: Tiêu đề động `ĐIỂM TB THÁNG 10/2026`, badge cam nổi bật `Gần nhất` và nhãn phụ `Dữ liệu lịch sử`. Điểm số trung bình toàn nhà máy: `96.33%`.
+  - **KPI 3 (Khu vực Đạt chuẩn)**: Tự động tính toán số khu vực đạt chuẩn ($\ge 95\%$) và dưới chuẩn của tháng gần nhất (11/15 khu vực đạt) kèm nhãn `T10 (Gần nhất)`.
+  - **Ma trận 16 Khu vực (16-Area Matrix Wall)**: Tự động lấy điểm tháng gần nhất của từng khu vực để tô màu phân loại đạt chuẩn (xanh) / dưới chuẩn (đỏ) và hiển thị nhãn nguồn `Lịch sử`, loại bỏ hoàn toàn tình trạng để trống hoặc chữ "Chưa chấm".
+  - **Bảng Xếp hạng (Leaderboard Top & Bottom)**: Xếp hạng top các khu vực dẫn đầu và khu vực cần cải thiện theo tháng gần nhất `XẾP HẠNG THÁNG 10/2026`.
+  - **Biểu đồ Xu hướng 12 Tuần (Trend 12 Weeks)**: Các tuần chưa có audit tuần được tự động kết nối với điểm trung bình tháng lịch sử với cờ `source: 'historical'`, hỗ trợ `connectNulls` giúp đường xu hướng mượt mà, tooltip hiển thị rõ `96.33% (Lịch sử T10)`.
+
+### Changed & Improved (Tối ưu hóa Hệ thống)
+- **Nâng cấp Tốc độ & Độ ổn định của Bộ đóng gói EXE (`scripts/build_exe.mjs`)**:
+  - Chuyển sang sử dụng `bsdtar` chuẩn của Windows để tạo gói nhúng mã nguồn trong 0.5 giây.
+  - Khắc phục triệt để lỗi xung đột khóa file (`IOException: File is being used by another process`) của PowerShell cũ.
+- **Bổ sung Khóa i18n Song ngữ**:
+  - Thêm các khóa `latest_month_badge`, `historical_data_badge`, `waiting_audit_badge`, `display_month_short` đồng bộ trong `src/i18n/vi.ts` và `src/i18n/en.ts`.
+
+---
+
 ## [2.5.0] - 2026-11-02
 
 ### Added (Tính năng Mới: Quản trị & Import Điểm Lịch sử Excel Thông minh)

@@ -176,13 +176,18 @@ execSync(`"${ICON_GEN_EXE}" "${ICO_PATH}"`, { stdio: 'inherit' });
 
 // ── STEP 2: Create Clean Source Archive (payload.zip) ──
 console.log('2/4. Đang nén mã nguồn sạch thành gói nhúng (payload.zip)...');
-const psZipCmd = `
-  $exclude = @('node_modules', '.wrangler', 'dist', '.dev.vars', '.git', '.exe_build', 'Crystal_5S_Installer.zip', 'Crystal_5S_Setup.exe', '*.tsbuildinfo', 'cookies*.txt', '.tmp*');
-  $files = Get-ChildItem -Path '${ROOT}' -Exclude $exclude;
-  if (Test-Path '${PAYLOAD_ZIP}') { Remove-Item '${PAYLOAD_ZIP}' -Force };
-  Compress-Archive -Path $files.FullName -DestinationPath '${PAYLOAD_ZIP}' -CompressionLevel Optimal -Force;
-`;
-execSync(`powershell -NoProfile -Command "${psZipCmd.replace(/\r?\n/g, ' ')}"`, { stdio: 'inherit' });
+if (fs.existsSync(PAYLOAD_ZIP)) fs.unlinkSync(PAYLOAD_ZIP);
+try {
+  // Use Windows built-in bsdtar for 100x faster, non-locking zip creation
+  execSync(`tar -a -c -f "${PAYLOAD_ZIP}" --exclude=node_modules --exclude=.wrangler --exclude=dist --exclude=.dev.vars --exclude=.git --exclude=.exe_build --exclude=Crystal_5S_Installer.zip --exclude=Crystal_5S_Setup.exe --exclude=*.tsbuildinfo --exclude=cookies*.txt --exclude=.tmp* .`, { stdio: 'inherit' });
+} catch {
+  const psZipCmd = `
+    $exclude = @('node_modules', '.wrangler', 'dist', '.dev.vars', '.git', '.exe_build', 'Crystal_5S_Installer.zip', 'Crystal_5S_Setup.exe', '*.tsbuildinfo', 'cookies*.txt', '.tmp*');
+    $files = Get-ChildItem -Path '${ROOT}' -Exclude $exclude;
+    Compress-Archive -Path $files.FullName -DestinationPath '${PAYLOAD_ZIP}' -CompressionLevel Optimal -Force;
+  `;
+  execSync(`powershell -NoProfile -Command "${psZipCmd.replace(/\r?\n/g, ' ')}"`, { stdio: 'inherit' });
+}
 
 // ── STEP 3: Write WPF Vector-Crisp Installer Program (UTF-8 with BOM!) ──
 const csCode = `\uFEFF

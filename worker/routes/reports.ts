@@ -499,25 +499,132 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     currentWeekAuditMap.set(a.area_id, a);
   }
 
-  // 4. Current month ranking (AVG score of submitted audits in current month)
-  const monthAuditsRes = await c.env.DB
+  // 4. Query all historical monthly scores for current year
+  const historicalRes = await c.env.DB
+    .prepare('SELECT year, month, area_id, score FROM historical_monthly_scores WHERE year = ?')
+    .bind(currentYear)
+    .all<{ year: number; month: string; area_id: number; score: number }>();
+
+  // Map: monthStr ('01'..'12') -> Map<area_id, score>
+  const historicalByMonth = new Map<string, Map<number, number>>();
+  const historicalScoresListByMonth = new Map<string, number[]>();
+  for (const h of historicalRes.results || []) {
+    const mStr = String(h.month).padStart(2, '0');
+    if (!historicalByMonth.has(mStr)) {
+      historicalByMonth.set(mStr, new Map());
+      historicalScoresListByMonth.set(mStr, []);
+    }
+    historicalByMonth.get(mStr)!.set(h.area_id, h.score);
+    historicalScoresListByMonth.get(mStr)!.push(h.score);
+  }
+
+  // Precompute average historical score for each month (e.g. Month 10 -> 96.33%)
+  const historicalAvgByMonth = new Map<string, number>();
+  for (const [mStr, scores] of historicalScoresListByMonth.entries()) {
+    const avg = calculateMonthlyScore(scores);
+    if (avg !== null) {
+      historicalAvgByMonth.set(mStr, avg);
+    }
+  }
+
+  // 5. Query all submitted audits in current year for area-month scoring
+  const yearAuditsRes = await c.env.DB
     .prepare(`
-      SELECT aas.area_id, aas.score
+      SELECT a.month, a.iso_year, a.iso_week, aas.area_id, aas.score
       FROM audit_area_scores aas
       JOIN audits a ON a.id = aas.audit_id
       JOIN areas ar ON ar.id = aas.area_id AND ar.active = 1
-      WHERE a.month = ? AND a.status = 'submitted' AND aas.score IS NOT NULL
+      WHERE a.iso_year = ? AND a.status = 'submitted' AND aas.score IS NOT NULL
     `)
-    .bind(currentMonth)
-    .all<{ area_id: number; score: number }>();
+    .bind(currentYear)
+    .all<{ month: string; iso_year: number; iso_week: number; area_id: number; score: number }>();
 
-  const monthScoresByArea = new Map<number, number[]>();
-  for (const a of monthAuditsRes.results || []) {
-    if (!monthScoresByArea.has(a.area_id)) {
-      monthScoresByArea.set(a.area_id, []);
+  // Map: monthStr ('01'..'12') -> Map<area_id, number[]>
+  const auditedByMonth = new Map<string, Map<number, number[]>>();
+  for (const a of yearAuditsRes.results || []) {
+    const mStr = a.month.slice(5, 7);
+    if (!auditedByMonth.has(mStr)) {
+      auditedByMonth.set(mStr, new Map());
     }
-    monthScoresByArea.get(a.area_id)!.push(a.score);
+    const areaMap = auditedByMonth.get(mStr)!;
+    if (!areaMap.has(a.area_id)) {
+      areaMap.set(a.area_id, []);
+    }
+    areaMap.get(a.area_id)!.push(a.score);
   }
+
+  // 6. Smart Fallback for Effective Month (Solution 1 + Solution 2)
+  const currentMonthNum = parseInt(currentMonth.slice(5, 7), 10);
+  const currentMonthNumStr = String(currentMonthNum).padStart(2, '0');
+
+  const hasCurrentMonthAudits = (auditedByMonth.get(currentMonthNumStr)?.size || 0) > 0;
+  const hasCurrentMonthHistorical = (historicalByMonth.get(currentMonthNumStr)?.size || 0) > 0;
+  const hasCurrentMonthData = hasCurrentMonthAudits || hasCurrentMonthHistorical;
+
+  let displayMonth = currentMonth;
+  let isFallbackMonth = false;
+
+  if (hasCurrentMonthData) {
+    displayMonth = currentMonth;
+    isFallbackMonth = false;
+  } else {
+    // Search backward from currentMonthNum - 1 down to 1 for latest month with data
+    let foundMonthStr: string | null = null;
+    for (let m = currentMonthNum - 1; m >= 1; m--) {
+      const mStr = String(m).padStart(2, '0');
+      if (
+        (auditedByMonth.get(mStr)?.size || 0) > 0 ||
+        (historicalByMonth.get(mStr)?.size || 0) > 0
+      ) {
+        foundMonthStr = mStr;
+        break;
+      }
+    }
+    if (foundMonthStr) {
+      displayMonth = `${currentYear}-${foundMonthStr}`;
+      isFallbackMonth = true;
+    }
+  }
+
+  const displayMonthNumStr = displayMonth.slice(5, 7);
+  const auditedForDisplayMonth = auditedByMonth.get(displayMonthNumStr);
+  const historicalForDisplayMonth = historicalByMonth.get(displayMonthNumStr);
+
+  // Compute each area's score for displayMonth (audited takes precedence over historical)
+  const areaMonthScoresMap = new Map<
+    number,
+    { score: number | null; source: 'audited' | 'historical' | null; audit_count: number }
+  >();
+  const allDisplayScoresForAvg: number[] = [];
+
+  for (const area of areas) {
+    const auditedList = auditedForDisplayMonth?.get(area.id) || [];
+    const histScore = historicalForDisplayMonth?.get(area.id);
+
+    let score: number | null = null;
+    let source: 'audited' | 'historical' | null = null;
+
+    if (auditedList.length > 0) {
+      score = calculateMonthlyScore(auditedList);
+      source = 'audited';
+    } else if (histScore !== undefined && histScore !== null) {
+      score = Math.round(histScore * 100) / 100;
+      source = 'historical';
+    }
+
+    if (score !== null) {
+      allDisplayScoresForAvg.push(score);
+    }
+
+    areaMonthScoresMap.set(area.id, {
+      score,
+      source,
+      audit_count: auditedList.length,
+    });
+  }
+
+  // Overall monthly average for displayMonth
+  const monthlyAvgOverall = calculateMonthlyScore(allDisplayScoresForAvg);
 
   // Findings counts per area (open, fixed, overdue, repeat)
   const areaFindingsRes = await c.env.DB
@@ -545,10 +652,10 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     });
   }
 
+  // Area status for current week and matrix wall
   const currentWeekStatus = areas.map((area) => {
     const audit = currentWeekAuditMap.get(area.id);
-    const mScores = monthScoresByArea.get(area.id) || [];
-    const mAvg = calculateMonthlyScore(mScores);
+    const mInfo = areaMonthScoresMap.get(area.id) || { score: null, source: null, audit_count: 0 };
     const fCounts = areaFindingsMap.get(area.id) || {
       open_count: 0,
       fixed_count: 0,
@@ -565,7 +672,8 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       score: audit ? audit.score : null,
       total_penalty: audit ? audit.total_penalty : null,
       passed: audit && audit.score !== null ? isScorePassing(audit.score, target) : null,
-      month_avg: mAvg,
+      month_avg: mInfo.score,
+      month_source: mInfo.source,
       open_count: fCounts.open_count,
       fixed_count: fCounts.fixed_count,
       overdue_count: fCounts.overdue_count,
@@ -573,17 +681,18 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     };
   });
 
+  // Ranking & Leaderboard based on displayMonth
   const ranking = areas
     .map((area) => {
-      const scores = monthScoresByArea.get(area.id) || [];
-      const avg = calculateMonthlyScore(scores);
+      const mInfo = areaMonthScoresMap.get(area.id) || { score: null, source: null, audit_count: 0 };
       return {
         area_id: area.id,
         area_code: area.code,
         area_name: area.name,
-        month_avg: avg,
-        audit_count: scores.length,
-        passed: avg !== null ? isScorePassing(avg, target) : null,
+        month_avg: mInfo.score,
+        month_source: mInfo.source,
+        audit_count: mInfo.audit_count,
+        passed: mInfo.score !== null ? isScorePassing(mInfo.score, target) : null,
       };
     })
     .sort((a, b) => {
@@ -593,13 +702,22 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       return b.month_avg - a.month_avg;
     });
 
-  // 5. 12-week trend of average score (single query instead of 12)
-  const trendWeeks: { label: string; isoYear: number; isoWeek: number }[] = [];
+  const rankedValid = ranking.filter((r) => r.month_avg !== null);
+  const topAreas = rankedValid.slice(0, 3);
+  const bottomAreas = [...rankedValid].reverse().slice(0, 3);
+
+  // 7. 12-week trend of average score (connected with historical monthly data)
+  const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string }[] = [];
   let curDate = today;
   for (let i = 0; i < 12; i++) {
     const wInfo = getISOWeek(curDate);
     const label = `W${wInfo.isoWeek < 10 ? '0' + wInfo.isoWeek : wInfo.isoWeek}`;
-    trendWeeks.unshift({ label, isoYear: wInfo.isoYear, isoWeek: wInfo.isoWeek });
+    trendWeeks.unshift({
+      label,
+      isoYear: wInfo.isoYear,
+      isoWeek: wInfo.isoWeek,
+      monthStr: wInfo.month.slice(5, 7),
+    });
     curDate = addDays(wInfo.weekStart, -7);
   }
 
@@ -628,14 +746,39 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
 
   const trendData = trendWeeks.map((tw) => {
     const scores = scoresByYearWeek.get(`${tw.isoYear}_${tw.isoWeek}`) || [];
+
+    if (scores.length > 0) {
+      return {
+        week: tw.label,
+        avg_score: calculateMonthlyScore(scores),
+        source: 'audited' as const,
+        month: tw.monthStr,
+        target,
+      };
+    }
+
+    // If no weekly audits, fallback to month historical average if available
+    const histAvg = historicalAvgByMonth.get(tw.monthStr);
+    if (histAvg !== undefined) {
+      return {
+        week: tw.label,
+        avg_score: histAvg,
+        source: 'historical' as const,
+        month: tw.monthStr,
+        target,
+      };
+    }
+
     return {
       week: tw.label,
-      avg_score: calculateMonthlyScore(scores),
+      avg_score: null,
+      source: null,
+      month: tw.monthStr,
       target,
     };
   });
 
-  // 6. Findings count & penalty by S group this month
+  // 8. Findings count & penalty by S group this month
   const sGroupRes = await c.env.DB
     .prepare(`
       SELECT ci.s_group, COUNT(f.id) as count, SUM(f.applied_penalty) as total_penalty
@@ -664,7 +807,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     penalty: sGroupMap.get(g)?.total_penalty || 0,
   }));
 
-  // 7. Alarm and finding count summary
+  // 9. Alarm and finding count summary
   const openCountRes = await c.env.DB
     .prepare(`
       SELECT COUNT(*) as cnt FROM findings f
@@ -698,7 +841,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     `)
     .first<{ cnt: number }>();
 
-  // 8. KPI Aggregates for TV Strip
+  // 10. KPI Aggregates for TV Strip
   const currentWeekAuditRow = await c.env.DB
     .prepare('SELECT id, status, score, total_penalty FROM audits WHERE iso_year = ? AND iso_week = ?')
     .bind(currentWeekInfo.isoYear, currentWeekInfo.isoWeek)
@@ -715,31 +858,49 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     ? currentWeekAuditRow.score
     : calculateMonthlyScore(weeklySubmittedScores);
 
-  const monthlySubmittedScores = (monthAuditsRes.results || []).map((a: any) => a.score);
-  const monthlyAvgOverall = calculateMonthlyScore(monthlySubmittedScores);
+  // Find the latest completed week score in trendData
+  const completedTrendPoints = trendData.filter((p, i) =>
+    p.avg_score !== null && (i < trendData.length - 1 || isCurrentWeekSubmitted)
+  );
+  const latestCompletedPoint = completedTrendPoints.length > 0
+    ? completedTrendPoints[completedTrendPoints.length - 1]
+    : null;
+  const prevCompletedPoint = completedTrendPoints.length > 1
+    ? completedTrendPoints[completedTrendPoints.length - 2]
+    : null;
 
-  const passedAreasCount = isCurrentWeekSubmitted
-    ? (currentWeekAreaScores.results || [])
-        .filter((a: any) => a.score !== null && a.score >= target).length
-    : 0;
-  const auditedAreasCount = isCurrentWeekSubmitted ? areas.length : 0;
-  const failingAreasCount = isCurrentWeekSubmitted
-    ? (currentWeekAreaScores.results || [])
-        .filter((a: any) => a.score !== null && a.score < target).length
-    : 0;
-  const pendingAuditsCount = areas.length - auditedAreasCount;
-
-  // Week-over-week delta vs previous week
-  const prevWeekAvg = trendData.length >= 2 ? trendData[trendData.length - 2].avg_score : null;
+  // Previous week / previous period average
+  const prevWeekAvg = latestCompletedPoint ? latestCompletedPoint.avg_score : null;
   const weeklyDelta =
-    weeklyAvg !== null && prevWeekAvg !== null ? Number((weeklyAvg - prevWeekAvg).toFixed(1)) : null;
+    weeklyAvg !== null && prevWeekAvg !== null
+      ? Number((weeklyAvg - prevWeekAvg).toFixed(1))
+      : (latestCompletedPoint?.avg_score != null && prevCompletedPoint?.avg_score != null
+          ? Number((latestCompletedPoint.avg_score - prevCompletedPoint.avg_score).toFixed(1))
+          : null);
 
-  // Top & bottom areas for Leaderboard card
-  const rankedValid = ranking.filter((r) => r.month_avg !== null);
-  const topAreas = rankedValid.slice(0, 3);
-  const bottomAreas = [...rankedValid].reverse().slice(0, 3);
+  // Target meeting counts:
+  // If current week is submitted, use current week audits;
+  // If not submitted yet, fallback to displayMonth scores!
+  let passedAreasCount = 0;
+  let auditedAreasCount = 0;
+  let failingAreasCount = 0;
+  let pendingAuditsCount = 0;
 
-  // 9. Top Urgent Alarms for Right 4 Cols on Dashboard
+  if (isCurrentWeekSubmitted) {
+    const validScores = (currentWeekAreaScores.results || []).filter((a: any) => a.score !== null);
+    auditedAreasCount = validScores.length;
+    passedAreasCount = validScores.filter((a: any) => a.score >= target).length;
+    failingAreasCount = validScores.filter((a: any) => a.score < target).length;
+    pendingAuditsCount = areas.length - auditedAreasCount;
+  } else {
+    // Fallback to displayMonth scores
+    auditedAreasCount = rankedValid.length;
+    passedAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg >= target).length;
+    failingAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg < target).length;
+    pendingAuditsCount = areas.length - auditedAreasCount;
+  }
+
+  // 11. Top Urgent Alarms for Right 4 Cols on Dashboard
   const urgentAlarmsRes = await c.env.DB
     .prepare(`
       SELECT f.id, f.area_id, f.repeat_level, f.applied_penalty, f.due_date, f.status,
@@ -813,7 +974,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     };
   });
 
-  // 10. Remediation Effectiveness Summary (On-Time Closure Rate, Avg Remediation Time, Repeat Rate)
+  // 12. Remediation Effectiveness Summary (On-Time Closure Rate, Avg Remediation Time, Repeat Rate)
   const remediationRowsRes = await c.env.DB
     .prepare(`
       SELECT f.id, f.area_id, f.repeat_level, f.status, f.due_date,
@@ -840,12 +1001,26 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       week_start: currentWeekInfo.weekStart,
       month: currentMonth,
     },
+    month_info: {
+      current_month: currentMonth,
+      display_month: displayMonth,
+      is_fallback: isFallbackMonth,
+      has_audits: hasCurrentMonthAudits,
+      source: isFallbackMonth
+        ? (historicalForDisplayMonth && historicalForDisplayMonth.size > 0 ? 'historical' : 'audited')
+        : (hasCurrentMonthAudits ? 'audited' : (hasCurrentMonthHistorical ? 'historical' : 'none')),
+    },
     target,
     kpi: {
       weekly_avg: weeklyAvg,
       weekly_delta: weeklyDelta,
       prev_week_avg: prevWeekAvg,
+      latest_completed_week: latestCompletedPoint ? latestCompletedPoint.week : null,
+      latest_completed_avg: latestCompletedPoint ? latestCompletedPoint.avg_score : null,
       monthly_avg_overall: monthlyAvgOverall,
+      display_month: displayMonth,
+      is_fallback_month: isFallbackMonth,
+      is_current_week_submitted: isCurrentWeekSubmitted,
       passed_areas_count: passedAreasCount,
       audited_areas_count: auditedAreasCount,
       failing_areas_count: failingAreasCount,

@@ -94,6 +94,7 @@ export const Dashboard: React.FC = () => {
   const {
     target,
     current_week,
+    month_info,
     kpi,
     remediation,
     is_authenticated,
@@ -139,7 +140,7 @@ export const Dashboard: React.FC = () => {
             <span className="font-semibold truncate">
               {t('weekly_avg_kpi', { week: `W${current_week.iso_week}` })}
             </span>
-            {kpi?.weekly_avg !== null && (
+            {kpi?.weekly_avg !== null ? (
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
                   kpi.weekly_avg >= target
@@ -148,6 +149,10 @@ export const Dashboard: React.FC = () => {
                 }`}
               >
                 {kpi.weekly_avg >= target ? t('tag_pass') : t('tag_fail')}
+              </span>
+            ) : (
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300">
+                {t('tag_pending')}
               </span>
             )}
           </div>
@@ -161,9 +166,9 @@ export const Dashboard: React.FC = () => {
                   : 'text-rose-400'
               }`}
             >
-              {kpi?.weekly_avg !== null ? `${kpi.weekly_avg}%` : t('noData')}
+              {kpi?.weekly_avg !== null ? `${kpi.weekly_avg}%` : t('waiting_audit_badge')}
             </span>
-            {kpi?.weekly_delta !== null && (
+            {kpi?.weekly_delta !== null ? (
               <span
                 className={`text-xs font-semibold ${
                   kpi.weekly_delta >= 0 ? 'text-emerald-400' : 'text-rose-400'
@@ -171,7 +176,12 @@ export const Dashboard: React.FC = () => {
               >
                 {kpi.weekly_delta >= 0 ? `▲ +${kpi.weekly_delta}%` : `▼ ${kpi.weekly_delta}%`}
               </span>
-            )}
+            ) : kpi?.latest_completed_avg !== null ? (
+              <span className="text-[11px] text-slate-400 font-mono">
+                {kpi.latest_completed_week || getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
+                <strong className="text-slate-200">{kpi.latest_completed_avg}%</strong>
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -179,18 +189,28 @@ export const Dashboard: React.FC = () => {
         <div className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-semibold truncate">
-              {t('monthly_avg_kpi', { month: formatMonthYear(current_week.month) })}
+              {t('monthly_avg_kpi', {
+                month: formatMonthYear(month_info?.display_month || current_week.month),
+              })}
             </span>
-            <span className="font-mono text-[10px] text-slate-400">
-              {t('target_standard', { target })}
-            </span>
+            {month_info?.is_fallback ? (
+              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">
+                {t('latest_month_badge')}
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] text-slate-400">
+                {t('target_standard', { target })}
+              </span>
+            )}
           </div>
           <div className="flex items-baseline justify-between mt-1">
             <span className="text-xl font-black font-mono text-white">
               {kpi?.monthly_avg_overall !== null ? `${kpi.monthly_avg_overall}%` : '-'}
             </span>
             <span className="text-xs text-slate-400 font-mono">
-              W{current_week.iso_week} ({current_week.iso_year})
+              {month_info?.is_fallback
+                ? t('historical_data_badge')
+                : `W${current_week.iso_week} (${current_week.iso_year})`}
             </span>
           </div>
         </div>
@@ -200,10 +220,12 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-semibold truncate">{t('areas_meeting_target')}</span>
             <span className="text-blue-400 text-[10px] font-bold">
-              {t('audited_areas_status', {
-                audited: kpi?.audited_areas_count || 0,
-                total: kpi?.total_areas_count || 0,
-              })}
+              {month_info?.is_fallback
+                ? t('display_month_short', { month: getMonthShortName(month_info.display_month) })
+                : t('audited_areas_status', {
+                    audited: kpi?.audited_areas_count || 0,
+                    total: kpi?.total_areas_count || 0,
+                  })}
             </span>
           </div>
           <div className="flex items-baseline justify-between mt-1">
@@ -285,7 +307,7 @@ export const Dashboard: React.FC = () => {
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
                 week: `W${current_week.iso_week}`,
-                month: formatMonthYear(current_week.month),
+                month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
             <div className="flex items-center gap-3 text-xs shrink-0">
@@ -308,8 +330,10 @@ export const Dashboard: React.FC = () => {
           <div className="mt-2 flex-1 min-h-0 grid grid-cols-2 sm:grid-cols-4 auto-rows-fr gap-2 overflow-y-auto lg:overflow-hidden">
             {current_week_status.map((area: any) => {
               const isSubmitted = area.status === 'submitted' && area.score !== null;
-              const isPass = isSubmitted && area.score >= target;
-              const isFail = isSubmitted && area.score < target;
+              // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
+              const displayScore = isSubmitted ? area.score : area.month_avg;
+              const isPass = displayScore !== null && displayScore >= target;
+              const isFail = displayScore !== null && displayScore < target;
               const isOverdue = area.overdue_count > 0;
 
               const boxCls = isOverdue
@@ -326,7 +350,7 @@ export const Dashboard: React.FC = () => {
                 ? 'text-rose-400'
                 : 'text-slate-400 text-xs font-normal';
 
-              const scoreTxt = isSubmitted ? `${area.score}%` : t('not_audited_yet');
+              const scoreTxt = displayScore !== null ? `${displayScore}%` : t('not_audited_yet');
 
               return (
                 <Link
@@ -342,14 +366,18 @@ export const Dashboard: React.FC = () => {
                       <span className="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">
                         {t('tag_overdue', { n: area.overdue_count })}
                       </span>
-                    ) : isFail ? (
-                      <span className="px-1.5 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold">
-                        {t('tag_fail')}
-                      </span>
-                    ) : isPass ? (
-                      <span className="text-xs font-bold text-emerald-400">{t('tag_pass')}</span>
+                    ) : isSubmitted ? (
+                      isPass ? (
+                        <span className="text-xs font-bold text-emerald-400">{t('tag_pass')}</span>
+                      ) : (
+                        <span className="px-1.5 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold">
+                          {t('tag_fail')}
+                        </span>
+                      )
                     ) : (
-                      <span className="text-[10px] text-slate-400">{t('tag_pending')}</span>
+                      <span className="text-[10px] text-amber-300/90 font-medium">
+                        {t('tag_pending')}
+                      </span>
                     )}
                   </div>
 
@@ -358,10 +386,20 @@ export const Dashboard: React.FC = () => {
                       {scoreTxt}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
-                      {getMonthShortName(current_week.month)}:{' '}
-                      <strong className="text-slate-200">
-                        {area.month_avg !== null ? `${area.month_avg}%` : '-'}
-                      </strong>
+                      {isSubmitted ? (
+                        <>
+                          {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
+                          <strong className="text-slate-200">
+                            {area.month_avg !== null ? `${area.month_avg}%` : '-'}
+                          </strong>
+                        </>
+                      ) : (
+                        <strong className="text-slate-300">
+                          {area.month_source === 'historical'
+                            ? t('source_historical')
+                            : getMonthShortName(month_info?.display_month || current_week.month)}
+                        </strong>
+                      )}
                     </span>
                   </div>
 
@@ -554,7 +592,14 @@ export const Dashboard: React.FC = () => {
                 <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#94a3b8' }} />
                 <YAxis domain={[85, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
                 <Tooltip
-                  formatter={(val: any) => [`${val}%`, t('score')]}
+                  formatter={(val: any, _name: any, item: any) => {
+                    const payload = item?.payload;
+                    const sourceLabel =
+                      payload?.source === 'historical'
+                        ? ` (${t('source_historical')} T${payload.month || ''})`
+                        : '';
+                    return [`${val}%${sourceLabel}`, t('score')];
+                  }}
                   contentStyle={{
                     backgroundColor: '#0f172a',
                     border: '1px solid #334155',
@@ -567,6 +612,7 @@ export const Dashboard: React.FC = () => {
                 <Line
                   type="monotone"
                   dataKey="avg_score"
+                  connectNulls
                   stroke="#10b981"
                   strokeWidth={2.5}
                   dot={{ r: 2.5, fill: '#10b981' }}
@@ -581,7 +627,9 @@ export const Dashboard: React.FC = () => {
         <div className="col-span-12 lg:col-span-4 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col justify-between min-h-0">
           <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span className="font-bold text-xs text-white uppercase truncate">
-              {t('breakdown_title', { month: formatMonthYear(current_week.month) })}
+              {t('breakdown_title', {
+                month: formatMonthYear(month_info?.display_month || current_week.month),
+              })}
             </span>
             <span className="text-[10px] text-slate-400 shrink-0">
               {t('total_findings_count', { n: totalFindingsInMonth })}
@@ -634,7 +682,9 @@ export const Dashboard: React.FC = () => {
         <div className="col-span-12 lg:col-span-3 h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 flex flex-col justify-between min-h-0">
           <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span className="font-bold text-xs text-white uppercase truncate">
-              {t('leaderboard_title', { month: formatMonthYear(current_week.month) })}
+              {t('leaderboard_title', {
+                month: formatMonthYear(month_info?.display_month || current_week.month),
+              })}
             </span>
             <span className="text-[10px] text-slate-400 shrink-0">{t('top_bottom_label')}</span>
           </div>
