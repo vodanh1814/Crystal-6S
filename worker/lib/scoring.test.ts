@@ -6,6 +6,7 @@ import {
   calculateMonthlyScore,
   isScorePassing,
   getEscalatedRepeatLevel,
+  cleanHistoricalScore,
 } from './scoring.ts';
 
 test('calculateAppliedPenalty handles escalation step of 1 per repeated week', () => {
@@ -76,4 +77,32 @@ test('getEscalatedRepeatLevel increments within month and resets on new month', 
   // Different month -> reset to 1
   assert.equal(getEscalatedRepeatLevel('2026-05', '2026-06', 1), 1);
   assert.equal(getEscalatedRepeatLevel('2026-05', '2026-06', 3), 1);
+});
+
+test('cleanHistoricalScore handles decimals, percentages, strings, and bounds', () => {
+  // Ratio from Excel decimal percentages (0.9 -> 90, 0.88 -> 88, 1 -> 100)
+  assert.equal(cleanHistoricalScore(0.9), 90);
+  assert.equal(cleanHistoricalScore('0.88'), 88);
+  assert.equal(cleanHistoricalScore(1), 100);
+  assert.equal(cleanHistoricalScore('0.965'), 96.5);
+
+  // Direct percentage numbers
+  assert.equal(cleanHistoricalScore(95), 95);
+  assert.equal(cleanHistoricalScore('92.5'), 92.5);
+  assert.equal(cleanHistoricalScore('89,4%'), 89.4);
+  assert.equal(cleanHistoricalScore(' 98 % '), 98);
+  assert.equal(cleanHistoricalScore(0), 0);
+  assert.equal(cleanHistoricalScore('0'), 0);
+  assert.equal(cleanHistoricalScore('0%'), 0);
+
+  // Empty or invalid values
+  assert.equal(cleanHistoricalScore(''), null);
+  assert.equal(cleanHistoricalScore(' - '), null);
+  assert.equal(cleanHistoricalScore(null), null);
+  assert.equal(cleanHistoricalScore(undefined), null);
+  assert.equal(cleanHistoricalScore('invalid'), null);
+
+  // Clamping to [0, 100]
+  assert.equal(cleanHistoricalScore(150), 100);
+  assert.equal(cleanHistoricalScore(-10), 0);
 });

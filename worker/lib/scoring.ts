@@ -57,3 +57,24 @@ export function getEscalatedRepeatLevel(
   // Reset at the start of a new month
   return 1;
 }
+
+/**
+ * Normalizes a historical score input from string, number, or ratio (e.g. 0.9 -> 90.0, 1 -> 100.0).
+ * Returns rounded number in range [0, 100] or null if invalid/empty.
+ */
+export function cleanHistoricalScore(
+  val: number | string | null | undefined
+): number | null {
+  if (val === null || val === undefined) return null;
+  const str = String(val).trim().replace(/%/g, '').replace(/,/g, '.');
+  if (!str) return null;
+  const num = Number(str);
+  if (isNaN(num)) return null;
+  let score = num;
+  // If in range (0, 1] e.g. 0.9, 0.88, 1.0 (from Excel percentage cell), scale to 0..100
+  if (num > 0 && num <= 1) {
+    score = num * 100;
+  }
+  score = Math.max(0, Math.min(100, Math.round(score * 100) / 100));
+  return score;
+}

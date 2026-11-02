@@ -3,7 +3,7 @@ import type { Env, Variables, Area } from '../types';
 import { authMiddleware, optionalAuthMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { getISOWeek, getVietnamToday, addDays, daysRemaining } from '../lib/week';
-import { calculateMonthlyScore, isScorePassing } from '../lib/scoring';
+import { calculateMonthlyScore, isScorePassing, cleanHistoricalScore } from '../lib/scoring';
 
 export const reportsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -388,24 +388,15 @@ reportsRouter.put('/historical-monthly', authMiddleware, async (c) => {
       continue;
     }
 
-    if (
-      entry.score === null ||
-      entry.score === undefined ||
-      String(entry.score).trim() === '' ||
-      isNaN(Number(entry.score))
-    ) {
+    const cleaned = cleanHistoricalScore(entry.score);
+    if (cleaned === null) {
       await c.env.DB
         .prepare('DELETE FROM historical_monthly_scores WHERE year = ? AND month = ? AND area_id = ?')
         .bind(year, month, areaId)
         .run();
       deletedCount++;
     } else {
-      let rawScore = Number(entry.score);
-      // Auto-convert ratio (e.g. 0.965 from Excel percentage copy -> 96.5)
-      if (rawScore > 0 && rawScore <= 1) {
-        rawScore = rawScore * 100;
-      }
-      const score = Math.max(0, Math.min(100, Math.round(rawScore * 100) / 100));
+      const score = cleaned;
 
       await c.env.DB
         .prepare(`

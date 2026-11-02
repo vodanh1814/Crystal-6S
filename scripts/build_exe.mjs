@@ -11,6 +11,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+const APP_VERSION = pkg.version || '2.5.0';
+const ASSEMBLY_VERSION = `${APP_VERSION}.0`;
 const CSC = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe';
 const WPF_DIR = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\WPF';
 const BUILD_DIR = path.join(ROOT, '.exe_build');
@@ -199,7 +202,7 @@ using WinForms = System.Windows.Forms;
 
 [assembly: AssemblyTitle("Crystal 5S Audit — All-in-One Installer & Configurator")]
 [assembly: AssemblyProduct("Crystal 5S Audit System")]
-[assembly: AssemblyVersion("2.3.2.0")]
+[assembly: AssemblyVersion("${ASSEMBLY_VERSION}")]
 
 namespace Crystal5SInstaller
 {
@@ -760,8 +763,8 @@ namespace Crystal5SInstaller
         {
             if (lang == "vi")
             {
-                this.Title = "Crystal 5S Audit v2.3.2 — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One Setup)";
-                lblTitle.Text = "CRYSTAL 5S AUDIT v2.3.2 — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
+                this.Title = "Crystal 5S Audit v${APP_VERSION} — Trình Cài Đặt & Cấu Hình Toàn Diện (All-in-One Setup)";
+                lblTitle.Text = "CRYSTAL 5S AUDIT v${APP_VERSION} — BỘ CÀI ĐẶT & CẤU HÌNH 1 MÀN HÌNH";
                 lblSubtitle.Text = "Tự động giải nén, gắn Thương hiệu & Logo, khởi tạo Admin, Database D1/R2 và chạy ngay";
                 btnLang.Content = "🇻🇳 Tiếng Việt  ⇄  EN";
                 btnTheme.Content = isDark ? "🌙 Giao diện Tối" : "☀ Giao diện Sáng";
@@ -798,8 +801,8 @@ namespace Crystal5SInstaller
             }
             else
             {
-                this.Title = "Crystal 5S Audit v2.3.2 — All-in-One Single-Screen Installer & Configurator";
-                lblTitle.Text = "CRYSTAL 5S AUDIT v2.3.2 — ALL-IN-ONE SYSTEM INSTALLER";
+                this.Title = "Crystal 5S Audit v${APP_VERSION} — All-in-One Single-Screen Installer & Configurator";
+                lblTitle.Text = "CRYSTAL 5S AUDIT v${APP_VERSION} — ALL-IN-ONE SYSTEM INSTALLER";
                 lblSubtitle.Text = "Automatically extract payload, apply Company Branding, create Admin user, provision D1/R2 & launch";
                 btnLang.Content = "🇬🇧 English  ⇄  VI";
                 btnTheme.Content = isDark ? "🌙 Dark Theme" : "☀ Light Theme";

@@ -13,6 +13,7 @@ import {
   GitBranch,
   ShieldAlert,
   FileText,
+  FileSpreadsheet,
   ExternalLink,
   Cloud,
   Database,
@@ -1272,6 +1273,33 @@ export const AdminTargets: React.FC = () => {
               {demoStats?.areas_count ?? '-'}
             </div>
           </div>
+        </div>
+
+        {/* Historical Scores Data & Update Link */}
+        <div className="mt-4 p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0 shadow-2xs">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                <span>{t('admin_historical_manage')}</span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono text-xs font-bold">
+                  {demoStats?.historical_scores_count ?? 0} {t('source_historical').toLowerCase()}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5 truncate sm:whitespace-normal">
+                {t('admin_historical_desc')}
+              </p>
+            </div>
+          </div>
+          <a
+            href="/reports?tab=monthly&import=1"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-xs transition flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <Upload className="w-4 h-4" />
+            <span>{t('admin_historical_manage')}</span>
+          </a>
         </div>
       </div>
 

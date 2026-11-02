@@ -8,7 +8,12 @@ import {
   Check,
   ClipboardPaste,
   Info,
+  AlertTriangle,
 } from 'lucide-react';
+import {
+  downloadHistoricalTemplate,
+  parseHistoricalExcelFile,
+} from '../lib/excelHistorical';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
@@ -29,7 +34,12 @@ import type { Area } from '../api/types';
 export const Reports: React.FC = () => {
   const { t } = useI18n();
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>('weekly');
+  const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'monthly' || params.get('import') === '1') return 'monthly';
+    if (params.get('tab') === 'remediation') return 'remediation';
+    return 'weekly';
+  });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -51,6 +61,15 @@ export const Reports: React.FC = () => {
   const [savingHistorical, setSavingHistorical] = useState(false);
   const [pasteBoxText, setPasteBoxText] = useState('');
   const [pasteNotice, setPasteNotice] = useState<string | null>(null);
+  const [showPasteBox, setShowPasteBox] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [parsingFile, setParsingFile] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState<{
+    success: boolean;
+    message: string;
+    unmatched?: string[];
+  } | null>(null);
+  const hasAutoOpened = React.useRef(false);
 
   const fetchReportData = useCallback(async () => {
     setLoading(true);
@@ -79,8 +98,32 @@ export const Reports: React.FC = () => {
     fetchReportData();
   }, [fetchReportData]);
 
-  // Open Historical Import Modal and pre-populate inputs
+  // Check URL query params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'monthly' || params.get('import') === '1') {
+      setTab('monthly');
+    }
+  }, []);
+
+  // Auto-open modal if URL requested import=1 (Admin only)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      (params.get('import') === '1' || params.get('import_historical') === '1') &&
+      isAdmin &&
+      monthlyData &&
+      monthlyData.matrix &&
+      !hasAutoOpened.current
+    ) {
+      hasAutoOpened.current = true;
+      openHistoricalModal();
+    }
+  }, [monthlyData, isAdmin]);
+
+  // Open Historical Import Modal and pre-populate inputs (Admin only)
   const openHistoricalModal = () => {
+    if (!isAdmin) return;
     const initialInputs: { [key: string]: string } = {};
     if (monthlyData && monthlyData.matrix) {
       for (const row of monthlyData.matrix) {
@@ -98,7 +141,70 @@ export const Reports: React.FC = () => {
     setHistoricalInputs(initialInputs);
     setPasteBoxText('');
     setPasteNotice(null);
+    setUploadFeedback(null);
+    setShowPasteBox(false);
     setImportModalOpen(true);
+  };
+
+  const handleDownloadTemplate = async () => {
+    if (!monthlyData?.matrix) return;
+    try {
+      const areas = monthlyData.matrix.map((row: any) => ({
+        id: row.area_id,
+        code: row.area_code,
+        name: row.area_name || row.area_code,
+      }));
+      await downloadHistoricalTemplate(areas, selectedYear, monthlyData.historical_scores);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tải file mẫu');
+    }
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !monthlyData?.matrix) return;
+
+    setParsingFile(true);
+    setUploadFeedback(null);
+    try {
+      const areas = monthlyData.matrix.map((row: any) => ({
+        id: row.area_id,
+        code: row.area_code,
+        name: row.area_name || row.area_code,
+      }));
+
+      const result = await parseHistoricalExcelFile(file, areas);
+
+      const nextInputs = { ...historicalInputs };
+      for (const entry of result.entries) {
+        const key = `${entry.area_id}_${entry.month}`;
+        nextInputs[key] = String(entry.score);
+      }
+
+      setHistoricalInputs(nextInputs);
+
+      const msg = t('upload_excel_success', {
+        areas: result.matchedAreas.length,
+        months: result.monthsFound.length,
+        total: result.totalScoresFound,
+      });
+
+      setUploadFeedback({
+        success: true,
+        message: msg,
+        unmatched: result.unmatchedLabels,
+      });
+    } catch (err: any) {
+      setUploadFeedback({
+        success: false,
+        message: err.message || t('excel_file_invalid'),
+      });
+    } finally {
+      setParsingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Helper to parse clean score from string/excel
@@ -694,41 +800,120 @@ export const Reports: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Paste box */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
-                <ClipboardPaste className="w-3.5 h-3.5 text-blue-600" />
-                <span>Dán nhanh từ Excel (Paste from Clipboard)</span>
-              </label>
-              {pasteNotice && (
-                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" />
-                  {pasteNotice}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <textarea
-                rows={2}
-                value={pasteBoxText}
-                onChange={(e) => setPasteBoxText(e.target.value)}
-                placeholder={t('paste_here_placeholder')}
-                className="flex-1 p-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Action Toolbar: Download Template, Upload Excel, Toggle Manual Paste */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  if (pasteBoxText.trim()) {
-                    applyClipboardMatrix(pasteBoxText, 0, 0);
-                  }
-                }}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm self-end transition cursor-pointer"
+                onClick={handleDownloadTemplate}
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                title={t('download_template_excel')}
               >
-                Áp dụng
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>{t('download_template_excel')}</span>
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileSelected}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={parsingFile}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-50"
+              >
+                {parsingFile ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                <span>{parsingFile ? t('parsing_excel') : t('upload_excel_btn')}</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPasteBox(!showPasteBox)}
+              className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 flex items-center gap-1.5 cursor-pointer"
+            >
+              <ClipboardPaste className="w-3.5 h-3.5 text-blue-600" />
+              <span>{showPasteBox ? 'Ẩn ô dán' : 'Dán từ clipboard'}</span>
+            </button>
           </div>
+
+          {/* Feedback banner if upload succeeded or encountered warnings/errors */}
+          {uploadFeedback && (
+            <div
+              className={`p-3.5 rounded-2xl text-xs flex flex-col gap-2 border ${
+                uploadFeedback.success
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                  : 'bg-rose-50 border-rose-200 text-rose-900'
+              }`}
+            >
+              <div className="flex items-center gap-2 font-bold">
+                {uploadFeedback.success ? (
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
+                <span>{uploadFeedback.message}</span>
+              </div>
+              {uploadFeedback.unmatched && uploadFeedback.unmatched.length > 0 && (
+                <div className="text-[11px] text-amber-900 bg-amber-50/80 p-2 rounded-xl border border-amber-200 flex items-start gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <span>
+                    {t('unmatched_warning', {
+                      count: uploadFeedback.unmatched.length,
+                      labels: uploadFeedback.unmatched.join(', '),
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Collapsible Quick Paste box */}
+          {showPasteBox && (
+            <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
+                  <ClipboardPaste className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Dán nhanh từ Excel (Paste from Clipboard)</span>
+                </label>
+                {pasteNotice && (
+                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" />
+                    {pasteNotice}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <textarea
+                  rows={2}
+                  value={pasteBoxText}
+                  onChange={(e) => setPasteBoxText(e.target.value)}
+                  placeholder={t('paste_here_placeholder')}
+                  className="flex-1 p-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pasteBoxText.trim()) {
+                      applyClipboardMatrix(pasteBoxText, 0, 0);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm self-end transition cursor-pointer"
+                >
+                  Áp dụng
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Interactive Matrix Table */}
           <div className="max-h-[50vh] overflow-auto rounded-2xl border border-slate-200 shadow-2xs">

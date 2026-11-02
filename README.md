@@ -1,12 +1,29 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.4.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.5.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.4.3`
+## 1. Điểm nổi bật của phiên bản `v2.5.0`
+
+### 📊 Quản trị & Import Điểm Lịch sử Excel Thông minh (Admin Only)
+- **Tải file mẫu Excel (.xlsx) chuẩn hóa theo danh sách Khu vực Nhà máy**:
+  - Tự động sinh file Excel ma trận 12 tháng theo hàng và các khu vực thực tế đang hoạt động theo cột.
+  - Tự động điền dữ liệu điểm đã có để quản trị viên tải về đối chiếu hoặc cập nhật bổ sung.
+- **Tải lên File Excel (.xlsx / .xls) 1-Click**:
+  - Hỗ trợ hoàn hảo định dạng bảng thực tế của nhà máy CETVN (điển hình như file `5S.xlsx`).
+  - Tự động nhận diện hướng ma trận (Tháng theo dòng / Khu vực theo cột hoặc ngược lại).
+  - Thuật toán Fuzzy & Synonym Matching linh hoạt cho toàn bộ khu vực dệt may (`Knitting`, `Warehouse`, `Greige_PP`, `QC-Final`, `QC-Greige`, `Dyeing`, `Setting`, `VAP`, `MTN`, `Utility`, `TSC`, `FM/CFD`, `Lab dip`...).
+  - Tự động chuyển đổi tỷ lệ thập phân ($0.9 \rightarrow 90.0, 1 \rightarrow 100.0$) và chuỗi phần trăm.
+- **Đồng bộ hóa Phiên bản Toàn diện & Nâng cấp Trình Đóng gói EXE**:
+  - Khắc phục lỗi lệch version, đồng bộ phiên bản `v2.5.0` xuyên suốt: Git, App SPA (`src/version.ts`), `package.json` và bộ cài độc lập `Crystal_5S_Setup.exe`.
+  - Tự động hóa `scripts/build_exe.mjs` liên kết động AssemblyVersion và UI Title từ `package.json`.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.4.3`
 
 ### ⚡ Chuẩn hóa & Rút gọn Tên miền Cloudflare Worker thành `5s-audit`
 - **Loại bỏ tiền tố công ty bị lặp**: Tên Worker được cố định là `5s-audit`, loại bỏ tiền tố thừa khi subdomain Cloudflare đã mang tên nhà máy.
