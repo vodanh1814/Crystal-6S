@@ -1,9 +1,6 @@
 name: Deploy Crystal 5S Audit to Cloudflare
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       cf_token:
