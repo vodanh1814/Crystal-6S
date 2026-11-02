@@ -110,13 +110,13 @@ export const Dashboard: React.FC = () => {
   const totalOverdue = counts.overdue || 0;
   const overdueAreasList = (current_week_status || [])
     .filter((a: any) => a.overdue_count > 0)
-    .map((a: any) => `${a.area_code} (${a.overdue_count})`)
+    .map((a: any) => `${a.area_name || a.area_code} (${a.overdue_count})`)
     .slice(0, 3)
     .join(' · ');
 
   const repeatAreasList = (current_week_status || [])
     .filter((a: any) => a.repeat_count > 0)
-    .map((a: any) => a.area_code)
+    .map((a: any) => a.area_name || a.area_code)
     .slice(0, 3)
     .join(' · ');
 
@@ -358,9 +358,12 @@ export const Dashboard: React.FC = () => {
                   to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
                   className={`rounded-md border ${boxCls} px-2.5 py-1.5 flex flex-col justify-between min-h-0 hover:border-slate-400 transition cursor-pointer group`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-xs text-white tracking-wide group-hover:text-emerald-400 transition-colors">
-                      {area.area_code}
+                  <div className="flex items-center justify-between gap-1 min-w-0">
+                    <span
+                      className="font-black text-xs text-white tracking-wide group-hover:text-emerald-400 transition-colors truncate"
+                      title={`${area.area_name || area.area_code} (${area.area_code})`}
+                    >
+                      {area.area_name || area.area_code}
                     </span>
                     {isOverdue ? (
                       <span className="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">
@@ -500,8 +503,11 @@ export const Dashboard: React.FC = () => {
                   >
                     <div className="flex items-center justify-between gap-2 text-xs min-w-0">
                       <div className="flex items-center gap-1.5 min-w-0 truncate">
-                        <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px] shrink-0">
-                          {f.area_code}
+                        <span
+                          className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px] shrink-0 max-w-[85px] truncate"
+                          title={`${f.area_name || f.area_code} (${f.area_code})`}
+                        >
+                          {f.area_name || f.area_code}
                         </span>
                         <span className="font-mono font-bold text-white text-[11px] shrink-0">
                           {f.item_code}
@@ -696,8 +702,11 @@ export const Dashboard: React.FC = () => {
                   key={a.area_id}
                   className="flex items-center justify-between px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/25"
                 >
-                  <span className="font-bold text-emerald-300 truncate text-[11px]">
-                    {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_code}
+                  <span
+                    className="font-bold text-emerald-300 truncate text-[11px]"
+                    title={`${a.area_name || a.area_code} (${a.area_code})`}
+                  >
+                    {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_name || a.area_code}
                   </span>
                   <span className="font-mono font-black text-emerald-400 text-xs">
                     {a.month_avg}%
@@ -714,8 +723,11 @@ export const Dashboard: React.FC = () => {
                   key={a.area_id}
                   className="flex items-center justify-between px-2 py-1 rounded bg-rose-500/15 border border-rose-500/35"
                 >
-                  <span className="font-bold text-rose-300 truncate text-[11px]">
-                    ⚠️ {a.area_code}
+                  <span
+                    className="font-bold text-rose-300 truncate text-[11px]"
+                    title={`${a.area_name || a.area_code} (${a.area_code})`}
+                  >
+                    ⚠️ {a.area_name || a.area_code}
                   </span>
                   <span className="font-mono font-black text-rose-400 text-xs">
                     {a.month_avg}%

@@ -1,12 +1,24 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
-**Phiên bản hiện tại: `v2.5.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
+**Phiên bản hiện tại: `v2.5.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md).
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.1`
+## 1. Điểm nổi bật của phiên bản `v2.5.2`
+
+### 🏭 Hiển thị Tên Khu vực (`area_name`) Trực quan trên Dashboard Nhà máy
+- **Thay thế hoàn toàn mã viết tắt bằng tên khu vực dễ nhớ**:
+  - **Ma trận 16 Khu vực (16-Area Matrix Wall)**: Hiển thị tên đầy đủ của từng bộ phận (`Knitting`, `Dyeing`, `Setting`, `Warehouse`, `Batching`, `Greige QC`, `Final QC`, `Lab test`...) giúp quan sát nhanh chóng trên Smart TV nhà xưởng.
+  - Tích hợp tooltip hover hiển thị đầy đủ tên và mã: `${area.area_name} (${area.area_code})`.
+  - Tối ưu layout với `truncate` và `min-w-0`, chống tràn viền và vỡ khung trên mọi độ phân giải.
+  - **Bảng xếp hạng Top & Bottom**: Vinh danh khu vực dẫn đầu và khu vực cần cải thiện bằng tên bộ phận trực quan.
+  - **Cảnh báo Khẩn cấp & Dải KPI**: Hiển thị tên khu vực trên thẻ sự cố và danh sách cảnh báo quá hạn / lỗi lặp lại.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.5.1`
 
 ### 📺 Kết nối Điểm Lịch sử & Smart Fallback Dashboard Nhà máy
 - **Hiển thị Toàn diện Điểm Nhập Lịch sử trên Dashboard**:

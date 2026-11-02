@@ -4,6 +4,18 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.2] - 2026-11-02
+
+### Changed & Improved (Cải tiến Giao diện Dashboard Trực quan)
+- **Hiển thị Tên Khu vực (`area_name`) thay vì Mã viết tắt (`area_code`) trên toàn bộ Dashboard**:
+  - **Ma trận 16 Khu vực (16-Area Matrix Wall)**: Hiển thị tên đầy đủ của từng bộ phận sản xuất (Knitting, Dyeing, Setting, Warehouse, Batching, Greige QC, Final QC, Lab test, Utility, FM/CFD...) thay vì mã viết tắt khó nhớ, giúp công nhân và quản lý dễ dàng nhận biết ngay lập tức trên màn hình TV nhà máy.
+  - Tích hợp tooltip hover `title` hiển thị kết hợp cả tên bộ phận và mã khu vực đầy đủ: `${area.area_name} (${area.area_code})`.
+  - Bổ sung các class chống tràn văn bản CSS hiện đại (`truncate`, `min-w-0`) giúp tiêu đề không bị nhảy dòng hay phá vỡ bố cục trên mọi kích thước hiển thị.
+  - **Bảng xếp hạng Top & Bottom (Leaderboard)**: Hiển thị tên bộ phận đầy đủ (🏆 1. Setting 98.0%, 🥈 2. Batching 97.0%...).
+  - **Thẻ Cảnh báo Khẩn cấp & Dải KPI**: Hiển thị tên khu vực rõ ràng trên huy hiệu cảnh báo (Urgent Alarms) và danh sách khu vực quá hạn / lặp lại lỗi.
+
+---
+
 ## [2.5.1] - 2026-11-02
 
 ### Added (Tính năng Mới: Kết nối Điểm Lịch sử & Smart Fallback Dashboard)

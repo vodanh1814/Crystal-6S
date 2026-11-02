@@ -2,7 +2,7 @@
  * Central application version & release metadata for Crystal 5S Audit.
  * Bump this version alongside package.json and CHANGELOG.md on every release.
  */
-export const APP_VERSION = '2.5.1';
+export const APP_VERSION = '2.5.2';
 export const APP_RELEASE_DATE = '2026-11-02';
 export const GITHUB_REPO = 'vodanh1814/Crystal-6S';
 export const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
