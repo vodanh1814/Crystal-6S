@@ -29,6 +29,8 @@ import {
   Copy,
   Check,
   Info,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -137,6 +139,8 @@ export const AdminTargets: React.FC = () => {
     latest_commit?: string;
     has_update: boolean;
     has_github_token?: boolean;
+    repo?: string;
+    repo_url?: string;
     changelog?: string;
     mode?: string;
     checked_at?: string;
@@ -152,6 +156,9 @@ export const AdminTargets: React.FC = () => {
   const [savingGhToken, setSavingGhToken] = useState(false);
   const [ghTokenSuccess, setGhTokenSuccess] = useState<string | null>(null);
   const [ghTokenError, setGhTokenError] = useState<string | null>(null);
+  const [githubRepoInput, setGithubRepoInput] = useState('');
+  const [showGithubGuide, setShowGithubGuide] = useState(false);
+  const [showCfGuide, setShowCfGuide] = useState(false);
 
   const checkGitUpdate = useCallback(async () => {
     if (!isAdmin) return;
@@ -175,17 +182,23 @@ export const AdminTargets: React.FC = () => {
     setGhTokenSuccess(null);
     setGhTokenError(null);
     try {
-      await api.put('/settings', { github_token: ghTokenInput.trim() });
+      const payload: Record<string, string> = {
+        github_token: ghTokenInput.trim(),
+      };
+      if (githubRepoInput.trim()) {
+        payload.github_repo = githubRepoInput.trim();
+      }
+      await api.put('/settings', payload);
       setGhTokenSuccess(
         ghTokenInput.trim()
-          ? 'Đã lưu và mã hóa GitHub Token thành công!'
-          : 'Đã xóa cấu hình GitHub Token (chuyển sang chế độ Public).'
+          ? t('pat_save_success')
+          : (githubRepoInput.trim() ? t('github_repo_save_success') : t('pat_remove_success'))
       );
       setGhTokenInput('');
       await checkGitUpdate();
       setTimeout(() => setGhTokenSuccess(null), 3500);
     } catch (err: any) {
-      setGhTokenError(err.message || 'Lỗi khi lưu GitHub Token');
+      setGhTokenError(err.message || t('pat_save_error'));
     } finally {
       setSavingGhToken(false);
     }
@@ -195,6 +208,12 @@ export const AdminTargets: React.FC = () => {
     checkGitUpdate();
   }, [checkGitUpdate]);
 
+  useEffect(() => {
+    if (updateInfo?.repo && !githubRepoInput) {
+      setGithubRepoInput(updateInfo.repo);
+    }
+  }, [updateInfo?.repo]);
+
   const handleApplyAutoUpdate = async () => {
     if (!isAdmin) return;
     setApplyingUpdate(true);
@@ -203,8 +222,12 @@ export const AdminTargets: React.FC = () => {
     const isCloud = updateInfo?.mode === 'cloud_worker';
     setUpdateLog(
       isCloud
-        ? '▶ Đang gửi lệnh kích hoạt CI/CD Auto-Update lên GitHub Actions & Cloudflare...'
-        : '▶ Đang chạy quy trình cập nhật an toàn 5 bước (Preflight -> Backup -> Fast-Forward -> Migration Verify)...'
+        ? (lang === 'en'
+            ? '▶ Dispatching CI/CD Auto-Update trigger to GitHub Actions & Cloudflare...'
+            : '▶ Đang gửi lệnh kích hoạt CI/CD Auto-Update lên GitHub Actions & Cloudflare...')
+        : (lang === 'en'
+            ? '▶ Running 5-step safe update (Preflight -> Backup -> Fast-Forward -> Migration Verify)...'
+            : '▶ Đang chạy quy trình cập nhật an toàn 5 bước (Preflight -> Backup -> Fast-Forward -> Migration Verify)...')
     );
 
     try {
@@ -228,7 +251,7 @@ export const AdminTargets: React.FC = () => {
           throw primaryErr;
         });
 
-      setUpdateLog(res.log || '✔ Đã cập nhật thành công!');
+      setUpdateLog(res.log || (lang === 'en' ? '✔ Successfully updated!' : '✔ Đã cập nhật thành công!'));
       setUpdateSuccess(t('update_success_msg', { v: res.new_version || APP_VERSION }));
       if (!isCloud) {
         setTimeout(() => {
@@ -236,7 +259,12 @@ export const AdminTargets: React.FC = () => {
         }, 2500);
       }
     } catch (err: any) {
-      setUpdateError(err.message || 'Auto-update failed');
+      const errMsg = err.message || 'Auto-update failed';
+      if (err.code === 'MISSING_GITHUB_TOKEN' || errMsg.includes('GITHUB_TOKEN') || errMsg.includes('workflow')) {
+        setUpdateError(t('pat_missing_deploy_error'));
+      } else {
+        setUpdateError(errMsg);
+      }
     } finally {
       setApplyingUpdate(false);
     }
@@ -417,7 +445,7 @@ export const AdminTargets: React.FC = () => {
         credentials: 'include',
       });
       if (!res.ok) {
-        throw new Error(`Lỗi tải backup: HTTP ${res.status}`);
+        throw new Error(lang === 'en' ? `Backup download failed: HTTP ${res.status}` : `Lỗi tải backup: HTTP ${res.status}`);
       }
       const blob = await res.blob();
       const dateStr = new Date().toISOString().slice(0, 10);
@@ -430,7 +458,7 @@ export const AdminTargets: React.FC = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert(err.message || 'Không thể tải bản sao lưu');
+      alert(err.message || (lang === 'en' ? 'Unable to download backup' : 'Không thể tải bản sao lưu'));
     } finally {
       setDownloadingBackup(false);
     }
@@ -501,7 +529,7 @@ export const AdminTargets: React.FC = () => {
     } catch (err: any) {
       setCfModalMessage({
         type: 'error',
-        text: err.message || 'Không thể xác thực với Cloudflare API',
+        text: err.message || (lang === 'en' ? 'Unable to authenticate with Cloudflare API' : 'Không thể xác thực với Cloudflare API'),
       });
     } finally {
       setTestingCfConn(false);
@@ -526,7 +554,7 @@ export const AdminTargets: React.FC = () => {
     } catch (err: any) {
       setCfModalMessage({
         type: 'error',
-        text: err.message || 'Lỗi khi lưu cấu hình Cloudflare',
+        text: err.message || (lang === 'en' ? 'Error saving Cloudflare configuration' : 'Lỗi khi lưu cấu hình Cloudflare'),
       });
     } finally {
       setSavingCfConfig(false);
@@ -573,7 +601,7 @@ export const AdminTargets: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
             >
               <Key className="w-3.5 h-3.5 text-slate-500" />
-              <span>{showTokenConfig ? 'Ẩn cấu hình Token' : 'Cấu hình Token'}</span>
+              <span>{showTokenConfig ? t('token_config_hide') : t('token_config_show')}</span>
             </button>
 
             <button
@@ -600,82 +628,173 @@ export const AdminTargets: React.FC = () => {
         {showTokenConfig && (
           <form
             onSubmit={handleSaveGhToken}
-            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
+            className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4"
           >
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-slate-700" />
                 <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                  Cấu hình GitHub Personal Access Token (PAT)
+                  {t('github_pat_title')}
                 </span>
               </div>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                  updateInfo?.has_github_token
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {updateInfo?.has_github_token ? 'Đã cấu hình Token' : 'Chưa cấu hình (Chế độ Public)'}
-              </span>
-            </div>
-            <div className="text-xs text-slate-600 space-y-1">
-              <div>
-                • <strong>Môi trường Local / Mạng LAN:</strong> Không cần Token khi repo là Public — hệ thống tự động kiểm tra và đồng bộ trực tiếp từ GitHub của Simon.
-              </div>
-              <div>
-                • <strong>Nền tảng Cloudflare Workers:</strong> Cần Personal Access Token (PAT) có quyền <code>workflow</code> nếu muốn kích hoạt GitHub Actions Deploy tự động từ giao diện web này.
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="password"
-                value={ghTokenInput}
-                onChange={(e) => setGhTokenInput(e.target.value)}
-                placeholder={
-                  updateInfo?.has_github_token
-                    ? '•••••••••••••••• (Nhập token mới hoặc để trống để gỡ)'
-                    : 'ghp_... hoặc github_pat_...'
-                }
-                className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="submit"
-                  disabled={savingGhToken}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                    updateInfo?.has_github_token
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}
                 >
-                  {savingGhToken ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Save className="w-3.5 h-3.5" />
-                  )}
-                  <span>{savingGhToken ? 'Đang lưu...' : 'Lưu Token'}</span>
-                </button>
+                  {updateInfo?.has_github_token ? t('pat_configured') : t('pat_not_configured')}
+                </span>
                 {updateInfo?.has_github_token && (
-                  <button
-                    type="button"
-                    disabled={savingGhToken}
-                    onClick={async () => {
-                      setSavingGhToken(true);
-                      try {
-                        await api.put('/settings', { github_token: '' });
-                        setGhTokenSuccess('Đã gỡ bỏ GitHub Token thành công.');
-                        await checkGitUpdate();
-                        setTimeout(() => setGhTokenSuccess(null), 3000);
-                      } catch (err: any) {
-                        setGhTokenError(err.message || 'Lỗi khi gỡ Token');
-                      } finally {
-                        setSavingGhToken(false);
-                      }
-                    }}
-                    className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer"
-                  >
-                    Gỡ Token
-                  </button>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-bold shadow-xs">
+                    {t('ready_for_1click_deploy')}
+                  </span>
                 )}
               </div>
             </div>
+
+            {/* Auto-pass Cloudflare credentials callout */}
+            <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 text-xs flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sky-600 shrink-0" />
+              <span>{t('cf_auto_pass_badge')}</span>
+            </div>
+
+            {/* Custom GitHub Repository */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                {t('github_repo_label')}
+              </label>
+              <input
+                type="text"
+                value={githubRepoInput}
+                onChange={(e) => setGithubRepoInput(e.target.value)}
+                placeholder="vodanh1814/Crystal-6S"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {t('github_repo_desc')}
+              </p>
+            </div>
+
+            {/* GitHub PAT Input & Guide Button */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  GitHub Personal Access Token (PAT)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowGithubGuide(!showGithubGuide)}
+                  className="text-xs text-sky-600 hover:text-sky-700 hover:underline font-bold cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>{t('guide_github_pat_btn')}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showGithubGuide ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {showGithubGuide && (
+                <div className="p-3.5 rounded-xl bg-white border border-sky-200 text-xs space-y-2 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sky-900">{t('guide_github_pat_btn')}</span>
+                    <a
+                      href="https://github.com/settings/tokens"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:underline"
+                    >
+                      <span>{t('open_github_token_page')}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <div className="space-y-1 text-slate-600 text-[11px] leading-relaxed">
+                    <p>{t('guide_github_step1')}</p>
+                    <p>{t('guide_github_step2')}</p>
+                    <p className="p-1.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-semibold">
+                      {t('guide_github_step3')}
+                    </p>
+                    <p>{t('guide_github_step4')}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="password"
+                  value={ghTokenInput}
+                  onChange={(e) => setGhTokenInput(e.target.value)}
+                  placeholder={
+                    updateInfo?.has_github_token
+                      ? t('pat_placeholder_configured')
+                      : t('pat_placeholder_empty')
+                  }
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="submit"
+                    disabled={savingGhToken}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  >
+                    {savingGhToken ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    <span>{savingGhToken ? t('pat_saving') : t('pat_save_btn')}</span>
+                  </button>
+                  {updateInfo?.has_github_token && (
+                    <button
+                      type="button"
+                      disabled={savingGhToken}
+                      onClick={async () => {
+                        setSavingGhToken(true);
+                        try {
+                          await api.put('/settings', { github_token: '' });
+                          setGhTokenSuccess(t('pat_remove_success'));
+                          await checkGitUpdate();
+                          setTimeout(() => setGhTokenSuccess(null), 3000);
+                        } catch (err: any) {
+                          setGhTokenError(err.message || t('pat_remove_error'));
+                        } finally {
+                          setSavingGhToken(false);
+                        }
+                      }}
+                      className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer"
+                    >
+                      {t('pat_remove_btn')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Cloudflare Quick Link in Settings */}
+            <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="text-slate-500 font-medium">
+                {cfStatus?.account?.has_token ? (
+                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Cloudflare: {cfStatus.account.name} ({cfStatus.account.plan})
+                  </span>
+                ) : (
+                  <span className="text-amber-700 font-bold flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {t('needs_cf_token_notice')}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCfModalOpen(true)}
+                className="text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <span>{t('cf_switch_account_btn')}</span>
+                <ExternalLink className="w-3 h-3" />
+              </button>
+            </div>
+
             {ghTokenSuccess && (
               <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
@@ -704,7 +823,7 @@ export const AdminTargets: React.FC = () => {
                     : 'bg-emerald-100 text-emerald-800'
                 }`}
               >
-                {isCloud ? 'Cloudflare Edge' : 'Local / Mạng LAN'}
+                {isCloud ? t('env_cloudflare_edge') : t('env_local_lan')}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-2">
@@ -765,9 +884,7 @@ export const AdminTargets: React.FC = () => {
                     {t('new_version_found_msg', { v: latestVer })}
                   </div>
                   <div className="text-xs text-amber-800 mt-0.5">
-                    {isCloud
-                      ? 'Bản cập nhật mới trên GitHub của Simon đã sẵn sàng để triển khai lên Cloudflare Workers.'
-                      : 'Tự động tải mã nguồn mới từ Git, cài đặt thư viện và nâng cấp cơ sở dữ liệu an toàn (giữ nguyên 100% dữ liệu).'}
+                    {isCloud ? t('update_ready_cloud') : t('update_ready_local')}
                   </div>
                 </div>
               </div>
@@ -804,8 +921,8 @@ export const AdminTargets: React.FC = () => {
                   )}
                   <span>
                     {applyingUpdate
-                      ? 'Đang kích hoạt CI/CD Deploy...'
-                      : `Kích hoạt Auto-Deploy GitHub Actions (v${latestVer})`}
+                      ? t('btn_deploying_trigger')
+                      : t('btn_trigger_deploy', { v: latestVer })}
                   </span>
                 </button>
               ) : (
@@ -815,7 +932,7 @@ export const AdminTargets: React.FC = () => {
                   className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shadow-md shadow-amber-600/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer transition"
                 >
                   <Key className="w-4 h-4" />
-                  <span>Cấu hình Token để bật Auto-Deploy</span>
+                  <span>{t('btn_config_token_to_deploy')}</span>
                 </button>
               )}
             </div>
@@ -825,19 +942,27 @@ export const AdminTargets: React.FC = () => {
               <div className="pt-3 border-t border-amber-200/80 text-xs text-amber-900 space-y-2">
                 <div className="font-bold flex items-center gap-1.5">
                   <Info className="w-4 h-4 text-amber-700" />
-                  <span>Hướng dẫn 2 cách cập nhật lên Cloudflare cho Nhà máy:</span>
+                  <span>{t('cloud_guide_title')}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
                   <div className="p-2.5 rounded-xl bg-white/80 border border-amber-200 space-y-1">
-                    <span className="font-bold text-slate-800">⚡ Cách 1: Deploy trực tiếp từ máy tính (Khuyên dùng)</span>
+                    <span className="font-bold text-slate-800">{t('cloud_guide_method1_title')}</span>
                     <p className="text-slate-600">
-                      Mở terminal trên máy tính kỹ thuật và chạy lệnh: <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-emerald-700 font-bold">npx wrangler deploy</code>. Bản mới sẽ lên sóng trong 15 giây mà không cần token.
+                      {lang === 'en' ? (
+                        <>Open terminal on engineering PC and run: <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-emerald-700 font-bold">npx wrangler deploy</code>. New version goes live in 15 seconds without tokens.</>
+                      ) : (
+                        <>Mở terminal trên máy tính kỹ thuật và chạy lệnh: <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-emerald-700 font-bold">npx wrangler deploy</code>. Bản mới sẽ lên sóng trong 15 giây mà không cần token.</>
+                      )}
                     </p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white/80 border border-amber-200 space-y-1">
-                    <span className="font-bold text-slate-800">🤖 Cách 2: Tự động qua GitHub Actions CI/CD</span>
+                    <span className="font-bold text-slate-800">{t('cloud_guide_method2_title')}</span>
                     <p className="text-slate-600">
-                      Nhập GitHub Personal Access Token (quyền <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-indigo-700">workflow</code>) vào ô cấu hình bên trên để mở khóa nút bấm Auto-Deploy 1-click từ giao diện web.
+                      {lang === 'en' ? (
+                        <>Enter GitHub Personal Access Token (<code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-indigo-700">workflow</code> scope) in the box above to enable 1-click Auto-Deploy from this web UI.</>
+                      ) : (
+                        <>Nhập GitHub Personal Access Token (quyền <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-indigo-700">workflow</code>) vào ô cấu hình bên trên để mở khóa nút bấm Auto-Deploy 1-click từ giao diện web.</>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -865,7 +990,7 @@ export const AdminTargets: React.FC = () => {
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5" />
                 )}
-                <span>Đồng bộ lại từ Git (Force Sync)</span>
+                <span>{t('force_sync_git')}</span>
               </button>
             )}
           </div>
@@ -877,7 +1002,7 @@ export const AdminTargets: React.FC = () => {
             <div className="space-y-1">
               <span className="font-semibold">{updateInfo.notice}</span>
               <div className="text-[11px] text-amber-700">
-                Nếu kho lưu trữ đã chuyển sang <strong>Public</strong>, hệ thống sẽ tự động cập nhật trực tiếp. Nếu là <strong>Private</strong>, hãy bấm nút <strong>Cấu hình Token</strong> ở trên để nhập GitHub PAT.
+                {t('public_repo_auto_update_notice')}
               </div>
             </div>
           </div>
@@ -958,7 +1083,7 @@ export const AdminTargets: React.FC = () => {
               onClick={handleDownloadBackup}
               disabled={downloadingBackup}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
-              title="Tải bản sao lưu toàn bộ dữ liệu (Audits, Lỗi 5S, Tiêu chí, Điểm...) dạng SQL"
+              title={t('backup_download_title')}
             >
               <Download className={`w-3.5 h-3.5 text-slate-600 ${downloadingBackup ? 'animate-bounce' : ''}`} />
               <span>{downloadingBackup ? t('cf_downloading_backup') : t('cf_download_backup_btn')}</span>
@@ -1065,17 +1190,17 @@ export const AdminTargets: React.FC = () => {
                 className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 hover:underline font-bold cursor-pointer"
               >
                 <Info className="w-3.5 h-3.5 shrink-0" />
-                <span>{showCustomDomainGuide ? 'Ẩn hướng dẫn gắn tên miền' : 'Cách gắn tên miền riêng công ty (5s.congty.com)'}</span>
+                <span>{showCustomDomainGuide ? t('custom_domain_guide_hide') : t('custom_domain_guide_show')}</span>
               </button>
             </div>
 
             {showCustomDomainGuide && (
               <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5 text-[11px] text-slate-600">
-                <div className="font-bold text-slate-800">Hướng dẫn 3 bước gắn Tên miền riêng (Miễn phí 100%):</div>
+                <div className="font-bold text-slate-800">{t('custom_domain_guide_heading')}</div>
                 <ol className="list-decimal list-inside space-y-1 text-slate-600">
-                  <li>Vào Cloudflare Dashboard &gt; Workers &gt; Chọn Worker &gt; Tab <strong>Settings</strong> &gt; <strong>Domains & Routes</strong>.</li>
-                  <li>Bấm <strong>Add Custom Domain</strong> &gt; Nhập tên miền (vd: <code>5s.nhamaycrystal.vn</code>) &gt; Bấm Add. Cloudflare tự cấp SSL xanh trong 30 giây.</li>
-                  <li>Bấm <strong>Cấu hình / Đổi tài khoản</strong> bên trên &gt; Nhập tên miền đó vào ô Custom Domain &gt; Lưu cấu hình.</li>
+                  <li>{t('custom_domain_step1')}</li>
+                  <li>{t('custom_domain_step2')}</li>
+                  <li>{t('custom_domain_step3')}</li>
                 </ol>
               </div>
             )}
@@ -1085,8 +1210,11 @@ export const AdminTargets: React.FC = () => {
         {/* Free Tier Quota Gauges (3 Progress Bars) */}
         <div className="space-y-4">
           <div className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center justify-between">
-            <span>Tiêu chuẩn Hạn ngạch Free Tier & Mức dùng hiện tại</span>
-            <span className="text-[11px] font-bold text-slate-400 lowercase">cập nhật lúc {cfStatus?.last_checked ? new Date(cfStatus.last_checked).toLocaleTimeString() : 'mới đây'}</span>
+            <span>{lang === 'en' ? 'Cloudflare Free Tier Quota & Live Usage' : 'Tiêu chuẩn Hạn ngạch Free Tier & Mức dùng hiện tại'}</span>
+            <span className="text-[11px] font-bold text-slate-400 lowercase">
+              {lang === 'en' ? 'updated at' : 'cập nhật lúc'}{' '}
+              {cfStatus?.last_checked ? new Date(cfStatus.last_checked).toLocaleTimeString() : (lang === 'en' ? 'recently' : 'mới đây')}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1127,11 +1255,11 @@ export const AdminTargets: React.FC = () => {
                     {cfStatus.quotas.workers_requests_daily.used.toLocaleString()} req
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Hạn mức: 100,000 / ngày
+                    {lang === 'en' ? 'Limit: 100,000 / day' : 'Hạn mức: 100,000 / ngày'}
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-tight">
-                  Tự động làm mới mỗi 00:00 UTC. Thời gian CPU tối đa: 10ms.
+                  {lang === 'en' ? 'Auto-resets at 00:00 UTC. Max CPU time: 10ms.' : 'Tự động làm mới mỗi 00:00 UTC. Thời gian CPU tối đa: 10ms.'}
                 </p>
               </div>
             )}
@@ -1173,11 +1301,13 @@ export const AdminTargets: React.FC = () => {
                     {cfStatus.quotas.d1_storage.used} MB
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Hạn mức: 500 MB / DB
+                    {lang === 'en' ? 'Limit: 500 MB / DB' : 'Hạn mức: 500 MB / DB'}
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-tight">
-                  Đọc: ~{cfStatus.quotas.d1_reads_daily.used} / 5M • Ghi: ~{cfStatus.quotas.d1_writes_daily.used} / 100k / ngày
+                  {lang === 'en'
+                    ? `Reads: ~${cfStatus.quotas.d1_reads_daily.used} / 5M • Writes: ~${cfStatus.quotas.d1_writes_daily.used} / 100k / day`
+                    : `Đọc: ~${cfStatus.quotas.d1_reads_daily.used} / 5M • Ghi: ~${cfStatus.quotas.d1_writes_daily.used} / 100k / ngày`}
                 </p>
               </div>
             )}
@@ -1219,11 +1349,11 @@ export const AdminTargets: React.FC = () => {
                     {cfStatus.quotas.r2_storage.used} GB
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Hạn mức: 10 GB (Free trọn đời)
+                    {lang === 'en' ? 'Limit: 10 GB (Lifetime Free)' : 'Hạn mức: 10 GB (Free trọn đời)'}
                   </span>
                 </div>
                 <p className="text-[10px] text-emerald-600 font-medium leading-tight">
-                  {cfStatus.quotas.r2_photos_count} ảnh • {t('cf_estimated_photos', { n: cfStatus.quotas.r2_estimated_capacity_photos.toLocaleString() })}
+                  {lang === 'en' ? `${cfStatus.quotas.r2_photos_count} photos` : `${cfStatus.quotas.r2_photos_count} ảnh`} • {t('cf_estimated_photos', { n: cfStatus.quotas.r2_estimated_capacity_photos.toLocaleString() })}
                 </p>
               </div>
             )}
@@ -1283,7 +1413,7 @@ export const AdminTargets: React.FC = () => {
                 placeholder="CRYSTAL"
               />
               <p className="text-[11px] text-slate-400 mt-1">
-                Hiển thị trên Header, Login, Sidebar, Page Title.
+                {lang === 'en' ? 'Displayed on Header, Login, Sidebar, Page Title.' : 'Hiển thị trên Header, Login, Sidebar, Page Title.'}
               </p>
             </div>
 
@@ -1370,11 +1500,15 @@ export const AdminTargets: React.FC = () => {
                     {t('protected_copyright')}: <span className="text-emerald-700 font-black">{APP_AUTHOR}</span>
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-mono font-bold">
-                    🔒 Cố định (Read-Only)
+                    🔒 {lang === 'en' ? 'Locked (Read-Only)' : 'Cố định (Read-Only)'}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 max-w-xl leading-relaxed">
-                  Bản quyền mã nguồn và kiến trúc giải pháp thuộc về tác giả <strong>{APP_AUTHOR}</strong> ({APP_COPYRIGHT}). Bạn có thể tùy biến Tên công ty và Logo nhà máy ở trên, nhưng bản quyền tác giả được bảo vệ vĩnh viễn.
+                  {lang === 'en' ? (
+                    <>Source code and system architecture copyright belong to author <strong>{APP_AUTHOR}</strong> ({APP_COPYRIGHT}). Organizations are free to customize Company Name and Factory Logo above, while author copyright remains permanently protected.</>
+                  ) : (
+                    <>Bản quyền mã nguồn và kiến trúc giải pháp thuộc về tác giả <strong>{APP_AUTHOR}</strong> ({APP_COPYRIGHT}). Bạn có thể tùy biến Tên công ty và Logo nhà máy ở trên, nhưng bản quyền tác giả được bảo vệ vĩnh viễn.</>
+                  )}
                 </p>
               </div>
             </div>
@@ -1386,7 +1520,7 @@ export const AdminTargets: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0 transition shadow-xs cursor-pointer"
             >
               <GithubIcon className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Liên hệ Simon (GitHub)</span>
+              <span>{lang === 'en' ? 'Contact Simon (GitHub)' : 'Liên hệ Simon (GitHub)'}</span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
             </a>
           </div>
@@ -1530,7 +1664,7 @@ export const AdminTargets: React.FC = () => {
           </div>
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Kho ảnh R2
+              {lang === 'en' ? 'R2 Photo Vault' : 'Kho ảnh R2'}
             </div>
             <div className="mt-1 text-xl font-black font-mono text-slate-800">
               {demoStats?.photos_count ?? '-'}
@@ -1656,10 +1790,10 @@ export const AdminTargets: React.FC = () => {
               <span>{t('clear_demo_warning')}</span>
             </div>
             <ul className="list-disc list-inside space-y-1 text-rose-700 pl-1 text-[11px]">
-              <li>Xóa tất cả các đợt kiểm tra 5S ({demoStats?.audits_count || 0} đợt audit)</li>
-              <li>Xóa tất cả lỗi 5S phát sinh ({demoStats?.findings_count || 0} lỗi)</li>
-              <li>Xóa toàn bộ ảnh Before/After ({demoStats?.photos_count || 0} ảnh trong kho R2)</li>
-              <li>Xóa điểm trung bình lịch sử nhập thử từ Excel</li>
+              <li>{lang === 'en' ? `Delete all 5S audits (${demoStats?.audits_count || 0} audits)` : `Xóa tất cả các đợt kiểm tra 5S (${demoStats?.audits_count || 0} đợt audit)`}</li>
+              <li>{lang === 'en' ? `Delete all 5S findings (${demoStats?.findings_count || 0} findings)` : `Xóa tất cả lỗi 5S phát sinh (${demoStats?.findings_count || 0} lỗi)`}</li>
+              <li>{lang === 'en' ? `Delete all Before/After photos (${demoStats?.photos_count || 0} photos in R2)` : `Xóa toàn bộ ảnh Before/After (${demoStats?.photos_count || 0} ảnh trong kho R2)`}</li>
+              <li>{lang === 'en' ? 'Delete imported Excel historical monthly scores' : 'Xóa điểm trung bình lịch sử nhập thử từ Excel'}</li>
             </ul>
           </div>
 
@@ -1674,7 +1808,9 @@ export const AdminTargets: React.FC = () => {
               <div>
                 <span>{t('clear_areas_checkbox')}</span>
                 <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-                  Chọn mục này nếu bạn muốn xóa sạch cả {demoStats?.areas_count || 16} khu vực mẫu ban đầu để tự khai báo danh sách khu vực thực tế của công ty.
+                  {lang === 'en'
+                    ? `Select this if you also want to clear all ${demoStats?.areas_count || 16} sample areas to set up custom company areas.`
+                    : `Chọn mục này nếu bạn muốn xóa sạch cả ${demoStats?.areas_count || 16} khu vực mẫu ban đầu để tự khai báo danh sách khu vực thực tế của công ty.`}
                 </p>
               </div>
             </label>
@@ -1734,6 +1870,42 @@ export const AdminTargets: React.FC = () => {
             {t('cf_modal_desc')}
           </p>
 
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowCfGuide(!showCfGuide)}
+              className="text-xs text-sky-600 hover:text-sky-700 hover:underline font-bold cursor-pointer inline-flex items-center gap-1"
+            >
+              <span>{t('guide_cf_token_btn')}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCfGuide ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+
+          {showCfGuide && (
+            <div className="p-3.5 rounded-xl bg-sky-50/80 border border-sky-200 text-xs space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sky-900">{t('guide_cf_token_btn')}</span>
+                <a
+                  href="https://dash.cloudflare.com/profile/api-tokens"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:underline"
+                >
+                  <span>{t('open_cf_token_page')}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <div className="space-y-1.5 text-slate-600 text-[11px] leading-relaxed">
+                <p>{t('guide_cf_step1')}</p>
+                <p>{t('guide_cf_step2')}</p>
+                <p className="p-1.5 rounded bg-white border border-sky-200 text-sky-900 font-semibold">
+                  {t('guide_cf_step3')}
+                </p>
+                <p>{t('guide_cf_step4')}</p>
+              </div>
+            </div>
+          )}
+
           {cfModalMessage && (
             <div
               className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
@@ -1760,11 +1932,11 @@ export const AdminTargets: React.FC = () => {
                 type="text"
                 value={cfAccountIdInput}
                 onChange={(e) => setCfAccountIdInput(e.target.value)}
-                placeholder="Ví dụ: e4c9a81b2f34567890abcdef12345678"
+                placeholder={lang === 'en' ? 'Example: e4c9a81b2f34567890abcdef12345678' : 'Ví dụ: e4c9a81b2f34567890abcdef12345678'}
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Tìm thấy trong Cloudflare Dashboard &gt; Trang chủ &gt; Cột bên phải mục Account ID.
+                {lang === 'en' ? 'Found in Cloudflare Dashboard > Home > Account ID in right sidebar.' : 'Tìm thấy trong Cloudflare Dashboard > Trang chủ > Cột bên phải mục Account ID.'}
               </p>
             </div>
 
@@ -1779,7 +1951,7 @@ export const AdminTargets: React.FC = () => {
                   rel="noreferrer"
                   className="text-[11px] text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1 font-semibold"
                 >
-                  <span>Tạo token trên Cloudflare</span>
+                  <span>{lang === 'en' ? 'Create token on Cloudflare' : 'Tạo token trên Cloudflare'}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -1791,7 +1963,7 @@ export const AdminTargets: React.FC = () => {
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Token được mã hóa bảo mật chuẩn AES-GCM-256 trước khi lưu. Cần quyền: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).
+                {lang === 'en' ? 'Token is encrypted with AES-GCM-256 before storing. Required: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).' : 'Token được mã hóa bảo mật chuẩn AES-GCM-256 trước khi lưu. Cần quyền: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).'}
               </p>
             </div>
 

@@ -142,7 +142,7 @@ export const FindingDetail: React.FC = () => {
       {!user && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900">
           <div className="text-xs sm:text-sm font-semibold">
-            Chế độ xem chỉ đọc. Đăng nhập để cập nhật kết quả cải thiện (Area MNG) hoặc xác nhận duyệt lỗi (Auditor).
+            {t('read_only_view_notice')}
           </div>
           <Link
             to="/login"

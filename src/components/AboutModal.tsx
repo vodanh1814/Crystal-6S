@@ -147,7 +147,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
                 <span>Cloudflare Workers</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Serverless Edge Network toàn cầu, phản hồi &lt;10ms.
+                {t('about_feature_edge')}
               </p>
             </div>
 
@@ -157,7 +157,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
                 <span>D1 Database</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                SQLite Serverless ACID transaction, an toàn dữ liệu 100%.
+                {t('about_feature_d1')}
               </p>
             </div>
 
@@ -167,7 +167,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
                 <span>Cloudflare R2</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Kho ảnh vi phạm 2K tự động nén, 10 GB miễn phí trọn đời.
+                {t('about_feature_r2')}
               </p>
             </div>
           </div>

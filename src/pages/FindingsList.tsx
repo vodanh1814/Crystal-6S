@@ -282,7 +282,7 @@ export const FindingsList: React.FC = () => {
                       </span>
                     )}
                     <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                      -{finding.applied_penalty}đ
+                      -{finding.applied_penalty}{t('pts_unit')}
                     </span>
                   </div>
 
@@ -369,7 +369,7 @@ export const FindingsList: React.FC = () => {
                     ) : (
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-[10px] text-slate-400 bg-slate-50 text-center px-1">
                         <Clock className="w-4 h-4 text-slate-300" />
-                        <span>Chờ After</span>
+                        <span>{t('pending_after')}</span>
                       </div>
                     )}
                   </div>
@@ -409,7 +409,7 @@ export const FindingsList: React.FC = () => {
                       </span>
                       <span className="text-xs font-bold text-slate-600">{finding.item_code}</span>
                       <span className="text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
-                        -{finding.applied_penalty}đ
+                        -{finding.applied_penalty}{t('pts_unit')}
                       </span>
                     </div>
                     <StatusBadge status={finding.status} type="finding" />
@@ -446,7 +446,7 @@ export const FindingsList: React.FC = () => {
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
                         <ImageIcon className="w-5 h-5 mb-1 text-slate-300" />
-                        <span>Chưa có ảnh</span>
+                        <span>{t('no_photo')}</span>
                       </div>
                     )}
                   </div>
@@ -478,7 +478,7 @@ export const FindingsList: React.FC = () => {
                         <span className="text-[11px] font-bold text-slate-600">
                           {t('no_after_photo_yet')}
                         </span>
-                        <span className="text-[10px] text-slate-400">Đang khắc phục</span>
+                        <span className="text-[10px] text-slate-400">{t('in_progress')}</span>
                       </div>
                     )}
                   </div>
@@ -488,7 +488,7 @@ export const FindingsList: React.FC = () => {
                 <div className="p-4 space-y-2.5">
                   {finding.fix_note ? (
                     <div className="text-xs bg-emerald-50 text-emerald-800 p-2 rounded-xl border border-emerald-100 line-clamp-2">
-                      <strong className="font-bold">Khắc phục:</strong> {finding.fix_note}
+                      <strong className="font-bold">{t('fix_label')}</strong> {finding.fix_note}
                     </div>
                   ) : finding.description ? (
                     <p className="text-xs text-slate-500 line-clamp-1 italic">

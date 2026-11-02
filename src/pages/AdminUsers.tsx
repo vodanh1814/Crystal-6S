@@ -8,7 +8,7 @@ import type { UserWithAreas, Area } from '../api/types';
 
 export const AdminUsers: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [users, setUsers] = useState<UserWithAreas[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -233,13 +233,13 @@ export const AdminUsers: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 text-xs">
                         {u.role === 'admin' ? (
-                          <span className="text-purple-700 font-bold italic">Tất cả khu vực (Toàn quyền)</span>
+                          <span className="text-purple-700 font-bold italic">{t('all_areas_full')}</span>
                         ) : u.role === 'auditor' ? (
                           <span className="text-blue-700 font-bold italic">
-                            Toàn nhà máy (Đi chấm 5S & Verify đóng lỗi)
+                            {t('plant_wide_auditor')}
                           </span>
                         ) : u.role === 'viewer' ? (
-                          <span className="text-slate-400 italic">Tất cả khu vực (Chỉ xem)</span>
+                          <span className="text-slate-400 italic">{t('all_areas_view_only')}</span>
                         ) : u.areas.length === 0 ? (
                           <span className="text-rose-500 font-medium italic">{t('not_assigned')}</span>
                         ) : (
@@ -260,10 +260,10 @@ export const AdminUsers: React.FC = () => {
                           <button
                             onClick={() => openAssignModal(u)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 text-xs font-bold text-blue-700 cursor-pointer transition"
-                            title="Phân quyền khu vực"
+                            title={t('assign_areas_title')}
                           >
                             <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Phân quyền KV</span>
+                            <span>{t('assign_areas_btn')}</span>
                           </button>
                         )}
                         <button
@@ -334,7 +334,7 @@ export const AdminUsers: React.FC = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
-                placeholder="Nguyễn Văn A"
+                placeholder={lang === 'en' ? 'John Doe' : 'Nguyễn Văn A'}
               />
             </div>
           </div>
@@ -342,7 +342,7 @@ export const AdminUsers: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                {editingUser ? `${t('reset_password')} (để trống nếu không đổi)` : t('password')}
+                {editingUser ? `${t('reset_password')} ${t('leave_blank_pwd')}` : t('password')}
               </label>
               <input
                 type="password"
@@ -357,7 +357,7 @@ export const AdminUsers: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Vai trò (Role)
+                {t('role_label')}
               </label>
               <select
                 value={role}
@@ -365,10 +365,10 @@ export const AdminUsers: React.FC = () => {
                 onChange={(e) => setRole(e.target.value as any)}
                 className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold disabled:bg-slate-100"
               >
-                <option value="auditor">Auditor (Kiểm tra viên 5S)</option>
-                <option value="manager">Area MNG (Quản lý khu vực)</option>
-                <option value="admin">Admin (Quản trị viên)</option>
-                <option value="viewer">Viewer (Chỉ xem)</option>
+                <option value="auditor">{t('role_auditor_option')}</option>
+                <option value="manager">{t('role_manager_option')}</option>
+                <option value="admin">{t('role_admin')}</option>
+                <option value="viewer">{t('role_viewer')}</option>
               </select>
             </div>
           </div>
@@ -392,7 +392,11 @@ export const AdminUsers: React.FC = () => {
           {/* Area Selection Grid (Only displayed for Area MNG 'manager') */}
           {role === 'auditor' && (
             <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold">
-              💡 <strong>Auditor (Đánh giá viên 5S):</strong> Không thuộc riêng khu vực nào — có quyền đi chấm điểm 5S và kiểm tra / xác nhận đóng lỗi (Verify) cho toàn bộ các khu vực trong nhà máy.
+              {lang === 'en' ? (
+                <>💡 <strong>Auditor (5S Inspector):</strong> Not assigned to any single area — authorized to audit 5S and verify / close findings across all factory areas.</>
+              ) : (
+                <>💡 <strong>Auditor (Đánh giá viên 5S):</strong> Không thuộc riêng khu vực nào — có quyền đi chấm điểm 5S và kiểm tra / xác nhận đóng lỗi (Verify) cho toàn bộ các khu vực trong nhà máy.</>
+              )}
             </div>
           )}
 
@@ -401,10 +405,14 @@ export const AdminUsers: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                    Phân quyền khu vực phụ trách (Area MNG — Quản lý khắc phục lỗi)
+                    {lang === 'en'
+                      ? 'Assigned Areas (Area MNG — Remediation Manager)'
+                      : 'Phân quyền khu vực phụ trách (Area MNG — Quản lý khắc phục lỗi)'}
                   </span>
                   <p className="text-[11px] text-slate-500">
-                    Chọn khu vực giao cho Area MNG này cập nhật ảnh After ({selectedAreaIds.length}/{areas.length} khu vực)
+                    {lang === 'en'
+                      ? `Select areas assigned to this Area MNG to upload After photos (${selectedAreaIds.length}/${areas.length} areas)`
+                      : `Chọn khu vực giao cho Area MNG này cập nhật ảnh After (${selectedAreaIds.length}/${areas.length} khu vực)`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -413,7 +421,7 @@ export const AdminUsers: React.FC = () => {
                     onClick={() => toggleAllModalAreas(true)}
                     className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                   >
-                    Chọn tất cả
+                    {lang === 'en' ? 'Select All' : 'Chọn tất cả'}
                   </button>
                   <span className="text-slate-300">·</span>
                   <button
@@ -421,7 +429,7 @@ export const AdminUsers: React.FC = () => {
                     onClick={() => toggleAllModalAreas(false)}
                     className="text-xs font-semibold text-slate-500 hover:underline cursor-pointer"
                   >
-                    Bỏ chọn
+                    {lang === 'en' ? 'Deselect' : 'Bỏ chọn'}
                   </button>
                 </div>
               </div>
@@ -482,13 +490,17 @@ export const AdminUsers: React.FC = () => {
       <Modal
         isOpen={assignModalOpen}
         onClose={() => setAssignModalOpen(false)}
-        title={`Phân quyền khu vực - ${assignUser?.username} (${assignUser?.role === 'auditor' ? 'Auditor' : 'Area MNG'})`}
+        title={lang === 'en'
+          ? `Assign Areas - ${assignUser?.username} (${assignUser?.role === 'auditor' ? 'Auditor' : 'Area MNG'})`
+          : `Phân quyền khu vực - ${assignUser?.username} (${assignUser?.role === 'auditor' ? 'Auditor' : 'Area MNG'})`}
         maxWidth="lg"
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs">
             <p className="text-slate-500 font-medium">
-              Tích chọn các khu vực giao cho {assignUser?.full_name} ({assignAreaIds.length}/{areas.length} khu vực)
+              {lang === 'en'
+                ? `Select areas assigned to ${assignUser?.full_name} (${assignAreaIds.length}/${areas.length} areas)`
+                : `Tích chọn các khu vực giao cho ${assignUser?.full_name} (${assignAreaIds.length}/${areas.length} khu vực)`}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -496,7 +508,7 @@ export const AdminUsers: React.FC = () => {
                 onClick={() => toggleAllAssignAreas(true)}
                 className="font-bold text-blue-600 hover:underline cursor-pointer"
               >
-                Chọn tất cả
+                {lang === 'en' ? 'Select All' : 'Chọn tất cả'}
               </button>
               <span className="text-slate-300">·</span>
               <button
@@ -504,7 +516,7 @@ export const AdminUsers: React.FC = () => {
                 onClick={() => toggleAllAssignAreas(false)}
                 className="font-semibold text-slate-500 hover:underline cursor-pointer"
               >
-                Bỏ chọn
+                {lang === 'en' ? 'Deselect' : 'Bỏ chọn'}
               </button>
             </div>
           </div>

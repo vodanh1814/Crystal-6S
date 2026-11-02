@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.7] - 2026-11-02
+
+### Added & Improved (Tự động truyền Cloudflare Token vào GitHub Actions, Hướng dẫn Trực quan & Chuẩn hóa 100% Tiếng Anh)
+- **Tự động hóa 100% Cloudflare Auto-Deploy từ Web Settings (Không cần tạo Secret trên GitHub)**:
+  - Khi Admin nhập Cloudflare API Token và Account ID tại trang Cài đặt (`/admin/targets`), hệ thống mã hóa bảo mật chuẩn AES-GCM-256 vào Database D1.
+  - Khi bấm *"Auto-Update Now"*, backend Cloudflare Worker tự động truyền trực tiếp Token & Account ID sang GitHub Actions qua dispatch inputs (`cf_token`, `cf_account_id`).
+  - GitHub Actions Workflow (`deploy.yml`) tự động che dấu bảo mật (`::add-mask::`) chống lộ token trong log, chạy kiểm thử, migrate D1 và deploy trực tiếp về Cloudflare mà không yêu cầu người dùng phải tự cấu hình GitHub Repository Secrets.
+- **Tích hợp Hướng dẫn Lấy Token Trực quan 1-Chạm (Interactive Guides)**:
+  - Bổ sung nút bung hướng dẫn 4 bước tạo GitHub PAT kèm link trực tiếp (quyền `workflow` & `repo`).
+  - Bổ sung nút bung hướng dẫn 4 bước lấy Cloudflare Account ID và tạo API Token với template *Edit Cloudflare Workers*.
+  - Bổ sung trường tùy chỉnh GitHub Repository (`owner/repo`) cho phép các nhà máy độc lập liên kết kho mã nguồn riêng.
+- **Chuẩn hóa Toàn diện Song ngữ Tiếng Anh (100% English Localization)**:
+  - Rà soát và loại bỏ triệt để mọi chuỗi tiếng Việt hardcoded trên toàn bộ hệ thống (`AdminTargets`, `AdminUsers`, `Reports`, `Lightbox`, `AboutModal`, `Dashboard`, `AuditDetail`, `FindingsList`, `Profile`).
+  - Tự động đính kèm header `Accept-Language: en` trong `api/client.ts` để Worker backend phản hồi toàn bộ thông báo lỗi và log deployment bằng tiếng Anh chuẩn mực khi người dùng chọn English.
+
+---
+
 ## [2.5.6] - 2026-11-02
 
 ### Added & Improved (Hỗ trợ Kiến trúc Đa Nhà máy, Tự động Đính kèm File Cài đặt & Tối ưu Luồng Update)

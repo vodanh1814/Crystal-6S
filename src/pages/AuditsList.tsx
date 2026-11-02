@@ -225,7 +225,7 @@ export const AuditsList: React.FC = () => {
           <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200/60 text-xs text-blue-900 flex items-start gap-2">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div>
-              <strong>1 Đợt kiểm tra / tuần cho toàn nhà máy:</strong> Sau khi tạo, bạn có thể ghi nhận lỗi theo từng khu vực và nhập bảng số lỗi ngoại vi (BOD, Customer, IE). Điểm tuần mặc định khởi tạo 100% cho tất cả khu vực.
+              <strong>{t('weekly_audit_note_title')}</strong> {t('weekly_audit_note_desc')}
             </div>
           </div>
 

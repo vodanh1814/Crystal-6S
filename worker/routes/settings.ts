@@ -50,11 +50,11 @@ async function resolveGithubRepo(db: D1Database): Promise<string> {
 // Helper to fetch settings map
 export async function getAppSettings(
   db: D1Database
-): Promise<{ company_name: string; company_logo: string }> {
+): Promise<{ company_name: string; company_logo: string; github_repo: string }> {
   try {
     const rows = await db
       .prepare(
-        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo')"
+        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo', 'github_repo')"
       )
       .all<AppSetting>();
 
@@ -66,12 +66,14 @@ export async function getAppSettings(
     return {
       company_name: map['company_name'] || 'CRYSTAL',
       company_logo: map['company_logo'] || '',
+      github_repo: map['github_repo'] || GITHUB_REPO,
     };
   } catch (err) {
     console.error('Failed to query app_settings:', err);
     return {
       company_name: 'CRYSTAL',
       company_logo: '',
+      github_repo: GITHUB_REPO,
     };
   }
 }
@@ -80,9 +82,12 @@ export async function getAppSettings(
 settingsRouter.get('/', async (c) => {
   const settings = await getAppSettings(c.env.DB);
   const ghToken = await resolveGithubToken(c.env);
+  const activeRepo = await resolveGithubRepo(c.env.DB);
+  const activeRepoUrl = `https://github.com/${activeRepo}`;
   return c.json({
     settings: {
       ...settings,
+      github_repo: activeRepo,
       has_github_token: Boolean(ghToken),
     },
     version: APP_VERSION,
@@ -124,6 +129,23 @@ settingsRouter.put('/', authMiddleware, async (c) => {
       .run();
   }
 
+  
+  if (body.github_repo !== undefined) {
+    const rawRepo = String(body.github_repo || '').trim();
+    if (rawRepo) {
+      await c.env.DB
+        .prepare(`
+          INSERT INTO app_settings (key, value, updated_at) VALUES ('github_repo', ?, datetime('now'))
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `)
+        .bind(rawRepo)
+        .run();
+    } else {
+      await c.env.DB
+        .prepare("DELETE FROM app_settings WHERE key = 'github_repo'")
+        .run();
+    }
+  }
   if (body.github_token !== undefined) {
     const ghToken = String(body.github_token || '').trim();
     const encryptedToken = ghToken ? await encryptSecret(ghToken, c.env.JWT_SECRET) : '';
@@ -152,11 +174,14 @@ settingsRouter.put('/', authMiddleware, async (c) => {
 // GET /api/settings/update-check - Check GitHub repository for newer version (Admin only!)
 settingsRouter.get('/update-check', authMiddleware, async (c) => {
   const user = c.get('user');
+  const isEn = c.req.header('accept-language')?.toLowerCase().includes('en');
   if (!isAdmin(user)) {
     return c.json({ error: 'Forbidden: Only Admin can check or apply system updates' }, 403);
   }
 
   const ghToken = await resolveGithubToken(c.env);
+  const activeRepo = await resolveGithubRepo(c.env.DB);
+  const activeRepoUrl = `https://github.com/${activeRepo}`;
 
   const headers: Record<string, string> = {
     'User-Agent': 'Crystal-5S-Audit-Updater',
@@ -174,7 +199,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
     // 1. Try GitHub API
     try {
       const pkgRes = await fetch(
-        `https://api.github.com/repos/${GITHUB_REPO}/contents/package.json?ref=main`,
+        `https://api.github.com/repos/${activeRepo}/contents/package.json?ref=main`,
         { headers }
       );
       if (pkgRes.ok) {
@@ -195,7 +220,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
           rawHeaders['Authorization'] = `token ${ghToken}`;
         }
         const rawRes = await fetch(
-          `https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json`,
+          `https://raw.githubusercontent.com/${activeRepo}/main/package.json`,
           { headers: rawHeaders }
         );
         if (rawRes.ok) {
@@ -214,13 +239,17 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         latest_version: APP_VERSION,
         has_update: false,
         has_github_token: Boolean(ghToken),
-        repo: GITHUB_REPO,
-        repo_url: GITHUB_REPO_URL,
+        repo: activeRepo,
+        repo_url: activeRepoUrl,
         checked_at: new Date().toISOString(),
         mode: 'cloud_worker',
-        notice: ghToken
-          ? 'Không thể truy cập GitHub repository với Token hiện tại. Vui lòng kiểm tra lại quyền hạn của Token.'
-          : 'Kho GitHub đang ở chế độ Private hoặc chưa được cấu hình Token. Nếu chuyển repo sang Public, hệ thống sẽ tự động cập nhật mà không cần Token.',
+        notice: isEn
+          ? (ghToken
+              ? 'Cannot access GitHub repository with current Token. Please check token permissions.'
+              : 'GitHub repository is Private or unconfigured Token. If Public, auto-update is enabled.')
+          : (ghToken
+              ? 'Không thể truy cập GitHub repository với Token hiện tại. Vui lòng kiểm tra lại quyền hạn của Token.'
+              : 'Kho GitHub đang ở chế độ Private hoặc chưa được cấu hình Token. Nếu chuyển repo sang Public, hệ thống sẽ tự động cập nhật mà không cần Token.'),
       });
     }
 
@@ -229,7 +258,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
     // Fetch CHANGELOG.md (GitHub API first, then raw fallback)
     try {
       const chgRes = await fetch(
-        `https://api.github.com/repos/${GITHUB_REPO}/contents/CHANGELOG.md?ref=main`,
+        `https://api.github.com/repos/${activeRepo}/contents/CHANGELOG.md?ref=main`,
         { headers }
       );
       if (chgRes.ok) {
@@ -239,7 +268,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         changelog = new TextDecoder('utf-8').decode(bytes);
       } else {
         const rawChg = await fetch(
-          `https://raw.githubusercontent.com/${GITHUB_REPO}/main/CHANGELOG.md`,
+          `https://raw.githubusercontent.com/${activeRepo}/main/CHANGELOG.md`,
           {
             headers: ghToken
               ? { Authorization: `token ${ghToken}`, 'User-Agent': 'Crystal-5S-Audit-Updater' }
@@ -258,8 +287,8 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
       has_update: hasUpdate,
       has_github_token: Boolean(ghToken),
       changelog: changelog.slice(0, 3000),
-      repo: GITHUB_REPO,
-      repo_url: GITHUB_REPO_URL,
+      repo: activeRepo,
+      repo_url: activeRepoUrl,
       checked_at: new Date().toISOString(),
       mode: 'cloud_worker',
     });
@@ -269,8 +298,8 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
       latest_version: APP_VERSION,
       has_update: false,
       has_github_token: Boolean(ghToken),
-      repo: GITHUB_REPO,
-      repo_url: GITHUB_REPO_URL,
+      repo: activeRepo,
+      repo_url: activeRepoUrl,
       checked_at: new Date().toISOString(),
       mode: 'cloud_worker',
       error: err.message || 'Failed to check GitHub for updates',
@@ -281,22 +310,26 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
 // POST /api/settings/cloud-update-apply - Trigger Cloudflare CI/CD deployment via GitHub Actions (Admin only!)
 settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
   const user = c.get('user');
+  const isEn = c.req.header('accept-language')?.toLowerCase().includes('en');
   if (!isAdmin(user)) {
-    return c.json({ error: 'Forbidden: Only Admin can apply system updates' }, 403);
+    return c.json({ error: isEn ? 'Forbidden: Only Admin can apply system updates' : 'Forbidden: Chỉ Admin mới có quyền cập nhật hệ thống' }, 403);
   }
 
   const ghToken = await resolveGithubToken(c.env);
   if (!ghToken) {
     return c.json(
       {
-        error:
-          'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong ô Cấu hình Token bên dưới để kích hoạt GitHub Actions Deploy tự động. Hoặc bạn có thể chạy lệnh "npx wrangler deploy" trực tiếp từ máy tính.',
+        code: 'MISSING_GITHUB_TOKEN',
+        error: isEn
+          ? 'Cloudflare Auto-Update requires a configured GITHUB_TOKEN (with workflow scope) in the Token Settings section below to trigger GitHub Actions Deploy. Or you can run \'npx wrangler deploy\' directly from your computer.'
+          : 'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong ô Cấu hình Token bên dưới để kích hoạt GitHub Actions Deploy tự động. Hoặc bạn có thể chạy lệnh "npx wrangler deploy" trực tiếp từ máy tính.',
       },
       400
     );
   }
 
   const activeRepo = await resolveGithubRepo(c.env.DB);
+  const cfConfig = await resolveCloudflareConfig(c.env);
 
   const headers: Record<string, string> = {
     'User-Agent': 'Crystal-5S-Audit-Updater',
@@ -305,13 +338,23 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
     'Content-Type': 'application/json',
   };
 
+  const dispatchPayload: Record<string, any> = {
+    ref: 'main',
+  };
+  if (cfConfig.apiToken || cfConfig.accountId) {
+    dispatchPayload.inputs = {
+      cf_token: cfConfig.apiToken || '',
+      cf_account_id: cfConfig.accountId || '',
+    };
+  }
+
   try {
     const dispatchRes = await fetch(
       `https://api.github.com/repos/${activeRepo}/actions/workflows/deploy.yml/dispatches`,
       {
         method: 'POST',
         headers,
-        body: JSON.stringify({ ref: 'main' }),
+        body: JSON.stringify(dispatchPayload),
       }
     );
 
@@ -319,13 +362,20 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
       const errBody = await dispatchRes.text().catch(() => '');
       let helpfulTip = '';
       if (dispatchRes.status === 404) {
-        helpfulTip = ` (Kiểm tra lại repository "${activeRepo}" hoặc đảm bảo Token có quyền truy cập repo)`;
+        helpfulTip = isEn
+          ? ` (Please check repository "${activeRepo}" or verify that your Token has permission to access it)`
+          : ` (Kiểm tra lại repository "${activeRepo}" hoặc đảm bảo Token có quyền truy cập repo)`;
       } else if (dispatchRes.status === 401 || dispatchRes.status === 403) {
-        helpfulTip = ' (Token không đủ quyền "workflow" hoặc đã hết hạn)';
+        helpfulTip = isEn
+          ? ' (Token does not have sufficient "workflow" permission or has expired)'
+          : ' (Token không đủ quyền "workflow" hoặc đã hết hạn)';
       }
       return c.json(
         {
-          error: `Không thể kích hoạt GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 150)}${helpfulTip}`,
+          code: 'DISPATCH_FAILED',
+          error: isEn
+            ? `Unable to trigger GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 150)}${helpfulTip}`
+            : `Không thể kích hoạt GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 150)}${helpfulTip}`,
         },
         400
       );
@@ -345,17 +395,30 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
       mode: 'cloud_worker',
       previous_version: APP_VERSION,
       new_version: 'latest (CI/CD deploying)',
-      log: [
-        `▶ Đã xác thực quyền Admin (${user.username}).`,
-        `▶ Đã gửi lệnh kích hoạt GitHub Actions Workflow (deploy.yml) trên nhánh main của ${activeRepo}.`,
-        `✔ Tiến trình CI/CD trên GitHub đang tự động chạy kiểm tra (typecheck + test), áp dụng D1 migrations (--remote) và triển khai phiên bản mới lên Cloudflare Workers.`,
-        `ℹ Vui lòng đợi khoảng 1-2 phút để Cloudflare cập nhật phiên bản mới trên toàn mạng lưới.`,
-      ].join('\n'),
+      log: isEn
+        ? [
+            `▶ Authenticated as Administrator (${user.username}).`,
+            `▶ Dispatched GitHub Actions Workflow (deploy.yml) on main branch of ${activeRepo}.`,
+            cfConfig.apiToken
+              ? '✔ Successfully auto-passed Cloudflare API credentials from Web Settings into GitHub Actions.'
+              : 'ℹ No Cloudflare credentials in Web Settings; utilizing GitHub Repository Secrets.',
+            '✔ GitHub Actions CI/CD is executing verification (typecheck + test), remote D1 migrations, and deploying to Cloudflare Workers.',
+            'ℹ Please allow 1-2 minutes for Cloudflare edge network to propagate the new release.',
+          ].join('\n')
+        : [
+            `▶ Đã xác thực quyền Admin (${user.username}).`,
+            `▶ Đã gửi lệnh kích hoạt GitHub Actions Workflow (deploy.yml) trên nhánh main của ${activeRepo}.`,
+            cfConfig.apiToken
+              ? '✔ Đã tự động truyền Cloudflare API Token từ trang Cài đặt sang GitHub Actions an toàn.'
+              : 'ℹ Đang sử dụng Cloudflare Secrets được cấu hình sẵn trên GitHub Repository.',
+            '✔ Tiến trình CI/CD trên GitHub đang tự động chạy kiểm tra (typecheck + test), áp dụng D1 migrations (--remote) và triển khai phiên bản mới lên Cloudflare Workers.',
+            'ℹ Vui lòng đợi khoảng 1-2 phút để Cloudflare cập nhật phiên bản mới trên toàn mạng lưới.',
+          ].join('\n'),
     });
   } catch (err: any) {
     return c.json(
       {
-        error: 'Failed to trigger cloud auto-update: ' + (err.message || ''),
+        error: (isEn ? 'Failed to trigger cloud auto-update: ' : 'Lỗi khi kích hoạt cập nhật Cloudflare: ') + (err.message || ''),
       },
       500
     );
@@ -660,6 +723,7 @@ settingsRouter.get('/cloudflare-status', authMiddleware, async (c) => {
 // POST /api/settings/cloudflare-test - Verify token and account ID without saving (Admin only)
 settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
   const user = c.get('user');
+  const isEn = c.req.header('accept-language')?.toLowerCase().includes('en');
   if (!isAdmin(user)) {
     return c.json({ error: 'Forbidden: Admin access required' }, 403);
   }
@@ -669,10 +733,10 @@ settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
   const accountId = String(body.account_id || '').trim();
 
   if (!apiToken) {
-    return c.json({ ok: false, error: 'Vui lòng nhập Cloudflare API Token để kiểm tra' }, 400);
+    return c.json({ ok: false, error: isEn ? 'Please enter a Cloudflare API Token to test' : 'Vui lòng nhập Cloudflare API Token để kiểm tra' }, 400);
   }
 
-  const verify = await verifyCloudflareToken(apiToken);
+  const verify = await verifyCloudflareToken(apiToken, isEn);
   if (!verify.valid) {
     return c.json({ ok: false, error: verify.message || 'API Token không hợp lệ' }, 400);
   }
@@ -683,7 +747,7 @@ settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
   let predictedWorkerUrl: string | null = null;
 
   if (accountId) {
-    const acc = await getCloudflareAccountInfo(apiToken, accountId);
+    const acc = await getCloudflareAccountInfo(apiToken, accountId, isEn);
     if (!acc.valid) {
       return c.json({
         ok: false,
@@ -703,7 +767,7 @@ settingsRouter.post('/cloudflare-test', authMiddleware, async (c) => {
 
   return c.json({
     ok: true,
-    message: 'Kết nối Cloudflare thành công! Token có hiệu lực.',
+    message: isEn ? 'Cloudflare connection successful! Token is valid.' : 'Kết nối Cloudflare thành công! Token có hiệu lực.',
     account_name: accountName,
     plan,
     predicted_subdomain: predictedSubdomain,
@@ -828,7 +892,7 @@ settingsRouter.put('/cloudflare-config', authMiddleware, async (c) => {
 
   return c.json({
     ok: true,
-    message: 'Đã cập nhật cấu hình tài khoản Cloudflare và tên miền thành công',
+    message: c.req.header('accept-language')?.toLowerCase().includes('en') ? 'Successfully updated Cloudflare account and domain configuration' : 'Đã cập nhật cấu hình tài khoản Cloudflare và tên miền thành công',
   });
 });
 

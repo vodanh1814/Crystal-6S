@@ -80,7 +80,7 @@ export const Profile: React.FC = () => {
             </span>
             {user?.role === 'auditor' ? (
               <p className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg inline-block">
-                Toàn nhà máy (Auditor — Đi chấm 5S & Verify giải quyết lỗi tất cả khu vực)
+                {t('plant_wide_auditor')}
               </p>
             ) : areas.length === 0 ? (
               <p className="text-xs text-slate-400 italic">{t('no_assigned_areas')}</p>

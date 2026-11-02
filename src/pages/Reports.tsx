@@ -156,7 +156,7 @@ export const Reports: React.FC = () => {
       }));
       await downloadHistoricalTemplate(areas, selectedYear, monthlyData.historical_scores);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải file mẫu');
+      alert(err.message || t('template_download_error'));
     }
   };
 
@@ -261,7 +261,7 @@ export const Reports: React.FC = () => {
     }
 
     setHistoricalInputs(nextInputs);
-    setPasteNotice(`Đã điền ${filledCount} ô từ dữ liệu Excel.`);
+    setPasteNotice(t('excel_paste_cells_filled', { count: filledCount }));
   };
 
   // Handle cell paste
@@ -364,11 +364,11 @@ export const Reports: React.FC = () => {
         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
           isPass ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
         }`}
-        title={source === 'historical' ? 'Điểm nhập lịch sử' : 'Điểm audit tuần'}
+        title={source === 'historical' ? t('historical_score_tooltip') : t('weekly_score_tooltip')}
       >
         <span>{score.toFixed(1)}%</span>
         {source === 'historical' && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Lịch sử" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={t('historical_badge')} />
         )}
       </span>
     );
@@ -474,7 +474,7 @@ export const Reports: React.FC = () => {
             <button
               onClick={openHistoricalModal}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-              title="Nhập điểm lịch sử các tháng từ Excel"
+              title={t('import_excel_tooltip')}
             >
               <Upload className="w-3.5 h-3.5" />
               <span>{t('import_historical_scores')}</span>
@@ -622,7 +622,7 @@ export const Reports: React.FC = () => {
                     {remediationData.summary?.on_time_findings || 0} /{' '}
                     {(remediationData.summary?.resolved_findings || 0) +
                       (remediationData.summary?.overdue_findings || 0)}{' '}
-                    đúng hạn
+                    {t('on_time_short')}
                   </span>
                 </div>
               </div>
@@ -639,7 +639,7 @@ export const Reports: React.FC = () => {
                       : '-'}
                   </span>
                   <span className="text-xs font-semibold text-sky-700">
-                    Hạn chuẩn: ≤ 7 {t('days_unit')}
+                    {t('std_deadline')}
                   </span>
                 </div>
               </div>
@@ -654,7 +654,7 @@ export const Reports: React.FC = () => {
                   </span>
                   <span className="text-xs font-semibold text-purple-700">
                     {remediationData.summary?.repeat_findings || 0} /{' '}
-                    {remediationData.summary?.total_findings || 0} lỗi lặp
+                    {remediationData.summary?.total_findings || 0} {t('repeat_findings_label')}
                   </span>
                 </div>
               </div>
@@ -672,7 +672,7 @@ export const Reports: React.FC = () => {
                   </span>
                   <span className="text-xs font-semibold text-slate-600">
                     {remediationData.summary?.resolved_findings || 0} /{' '}
-                    {remediationData.summary?.total_findings || 0} đã xử lý
+                    {remediationData.summary?.total_findings || 0} {t('status_fixed')}
                   </span>
                 </div>
               </div>
@@ -842,7 +842,7 @@ export const Reports: React.FC = () => {
               className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 flex items-center gap-1.5 cursor-pointer"
             >
               <ClipboardPaste className="w-3.5 h-3.5 text-blue-600" />
-              <span>{showPasteBox ? 'Ẩn ô dán' : 'Dán từ clipboard'}</span>
+              <span>{showPasteBox ? t('hide_paste_box') : t('show_paste_box')}</span>
             </button>
           </div>
 
@@ -883,7 +883,7 @@ export const Reports: React.FC = () => {
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
                   <ClipboardPaste className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Dán nhanh từ Excel (Paste from Clipboard)</span>
+                  <span>{t('paste_clipboard_title')}</span>
                 </label>
                 {pasteNotice && (
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
@@ -909,7 +909,7 @@ export const Reports: React.FC = () => {
                   }}
                   className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm self-end transition cursor-pointer"
                 >
-                  Áp dụng
+                  {t('apply_btn')}
                 </button>
               </div>
             </div>
@@ -920,7 +920,7 @@ export const Reports: React.FC = () => {
             <table className="w-full text-xs text-left border-collapse">
               <thead className="bg-slate-100 sticky top-0 z-10 border-b border-slate-200 text-slate-700 font-bold">
                 <tr>
-                  <th className="py-2.5 px-3 bg-slate-100 whitespace-nowrap">Khu vực</th>
+                  <th className="py-2.5 px-3 bg-slate-100 whitespace-nowrap">{t('area_col_header')}</th>
                   {MONTH_SHORT_NAMES.map(
                     (m, idx) => (
                       <th key={idx} className="py-2.5 px-2 text-center whitespace-nowrap min-w-[58px]">
@@ -967,7 +967,7 @@ export const Reports: React.FC = () => {
           {/* Modal Footer */}
           <div className="pt-3 flex items-center justify-between border-t border-slate-100">
             <span className="text-[11px] text-slate-400 italic">
-              Để trống nếu muốn xóa điểm lịch sử của tháng đó.
+              {t('leave_blank_clear_note')}
             </span>
             <div className="flex items-center gap-2">
               <button

@@ -418,4 +418,136 @@ export const en: typeof vi = {
   viewing_month_badge: 'Viewing: {month}',
   back_to_current_month: 'Back to Current',
   all_data_for_month: 'All dashboard data filtered for {month}',
+
+  // Units & Points
+  pts_unit: 'pts',
+  findings_unit: 'findings',
+  on_time: 'On-Time',
+  remediation_day_unit: 'd',
+  repeat_findings_label: 'Repeat',
+
+  // Admin Targets & Updates
+  env_local_lan: 'Local / LAN Server',
+  env_cloudflare_edge: 'Cloudflare Edge',
+  token_config_hide: 'Hide Token Config',
+  token_config_show: 'Configure Token',
+  github_pat_title: 'Configure GitHub Personal Access Token (PAT)',
+  pat_configured: 'Token Configured',
+  pat_not_configured: 'Not Configured (Public Mode)',
+  pat_desc_local: 'Local / LAN Environment: No token needed when repository is Public — system automatically checks and syncs directly from Simon\'s GitHub.',
+  pat_desc_cloud: 'Cloudflare Workers Platform: Requires a Personal Access Token (PAT) with workflow scope to trigger automated GitHub Actions Deploy from this web UI.',
+  pat_placeholder_configured: '•••••••••••••••• (Enter new token or leave empty to remove)',
+  pat_placeholder_empty: 'ghp_... or github_pat_...',
+  pat_save_btn: 'Save Token',
+  pat_saving: 'Saving...',
+  pat_remove_btn: 'Remove Token',
+  pat_save_success: 'GitHub Token saved and encrypted successfully!',
+  pat_remove_success: 'GitHub Token removed successfully (switched to Public mode).',
+  pat_save_error: 'Error saving GitHub Token',
+  pat_remove_error: 'Error removing Token',
+  update_ready_cloud: 'New update on Simon\'s GitHub is ready to be deployed to Cloudflare Workers.',
+  update_ready_local: 'Automatically pulls new code from Git, updates dependencies, and applies database migrations safely (preserving 100% of data).',
+  btn_trigger_deploy: 'Trigger GitHub Actions Auto-Deploy (v{v})',
+  btn_deploying_trigger: 'Triggering CI/CD Deploy...',
+  btn_config_token_to_deploy: 'Configure Token to Enable Auto-Deploy',
+  cloud_guide_title: '2 Ways to Deploy Updates to Cloudflare for Your Factory:',
+  cloud_guide_method1_title: '⚡ Method 1: Direct Deploy from Computer (Recommended)',
+  cloud_guide_method1_desc: 'Open terminal on your engineering PC and run: {cmd}. The new version goes live in 15 seconds without tokens.',
+  cloud_guide_method2_title: '🤖 Method 2: Automated via GitHub Actions CI/CD',
+  cloud_guide_method2_desc: 'Enter GitHub Personal Access Token (with workflow scope) in the box above to unlock 1-click Auto-Deploy from this web UI.',
+  force_sync_git: 'Re-sync from Git (Force Sync)',
+  public_repo_auto_update_notice: 'If repository is Public, the system auto-updates directly. If Private, click Configure Token above to enter GitHub PAT.',
+
+  // Admin Targets - Copyright Card
+  copyright_locked_notice: 'This copyright section is permanently locked to protect Simon\'s system architecture intellectual property. Organizations are free to customize Company Name and Factory Logo in the section below.',
+
+  // Admin Targets - Custom Domain Guide & Backup
+  backup_download_title: 'Download complete database backup (Audits, Findings, Checklist, Scores...) as SQL dump',
+  custom_domain_guide_hide: 'Hide custom domain guide',
+  custom_domain_guide_show: 'How to attach company custom domain (5s.company.com)',
+  custom_domain_guide_heading: '3-Step Guide to Attach Custom Domain (100% Free):',
+  custom_domain_step1: 'Go to Cloudflare Dashboard > Workers > Select Worker > Settings tab > Domains & Routes.',
+  custom_domain_step2: 'Click Add Custom Domain > Enter domain name (e.g. 5s.factory.com) > Click Add. Cloudflare issues green SSL in 30 seconds.',
+  custom_domain_step3: 'Click Configure / Switch Account above > Enter your domain into "Custom Domain" field and Save.',
+
+  // About Modal Features
+  about_feature_edge: 'Global Serverless Edge Network, <10ms response time.',
+  about_feature_d1: 'SQLite Serverless ACID transactions, 100% data safety.',
+  about_feature_r2: '2K defect photo vault with auto-compression, 10 GB lifetime free.',
+
+  // Lightbox
+  lightbox_before: 'Before',
+  lightbox_after: 'After Remediation',
+  view_finding_detail: 'View finding details',
+  close_esc: 'Close (Esc)',
+
+  // Admin Users
+  all_areas_full: 'All Areas (Full Access)',
+  plant_wide_auditor: 'Plant-Wide (Audit & Verify findings across all areas)',
+  all_areas_view_only: 'All Areas (View Only)',
+  assign_areas_title: 'Area Assignment',
+  assign_areas_btn: 'Assign Areas',
+  role_label: 'Role',
+  role_auditor_option: 'Auditor (5S Inspector)',
+  role_manager_option: 'Area MNG (Area Manager)',
+  leave_blank_pwd: '(leave blank to keep unchanged)',
+
+  // Audit Detail & Audits List
+  zoom_photo_2k: 'Click to zoom 2K photo',
+  weekly_audit_note_title: '1 Plant-Wide Audit / Week:',
+  weekly_audit_note_desc: 'Once created, you can record findings per area and enter supplemental audit penalties (BOD, Customer, IE).',
+
+  // Findings List & Detail
+  pending_after: 'Pending After',
+  no_photo: 'No photo',
+  in_progress: 'In progress',
+  fix_label: 'Remediation:',
+  read_only_view_notice: 'Read-only mode. Log in to submit remediation (Area MNG) or verify and close findings (Auditor).',
+
+  // Reports
+  historical_score_tooltip: 'Imported historical score',
+  weekly_score_tooltip: 'Weekly audit score',
+  historical_badge: 'Historical',
+  import_excel_tooltip: 'Import historical monthly scores from Excel',
+  on_time_short: 'on-time',
+  std_deadline: 'Std deadline: ≤ 7 days',
+  repeat_findings_count: '{n} repeat findings',
+  resolved_findings_count: '{n} resolved',
+  hide_paste_box: 'Hide Paste Box',
+  show_paste_box: 'Paste from Clipboard',
+  paste_clipboard_title: 'Quick Paste from Excel (Paste from Clipboard)',
+  apply_btn: 'Apply',
+  area_col_header: 'Area',
+  leave_blank_clear_note: 'Leave cell empty to clear historical score for that month.',
+
+  // Setup
+  keep_sample_areas: '✔ Keep 16 Sample Areas',
+  clear_sample_areas: '✕ Clear (Create Custom)',
+  admin_account_title: 'Administrator Account (Admin)',
+  min_6_chars: 'min 6 chars',
+  finish_setup_btn: '🚀 COMPLETE SETUP & ENTER SYSTEM',
+
+  // GitHub & Cloudflare Deployment Guides & Settings
+  github_repo_label: 'GitHub Repository',
+  github_repo_desc: 'Format: owner/repo (e.g., vodanh1814/Crystal-6S or your factory\'s own repo).',
+  github_repo_save_success: 'GitHub repository updated successfully!',
+  guide_github_pat_btn: '📖 How to get GitHub PAT (3 steps)',
+  guide_github_step1: '1. Open GitHub Personal Access Token settings (direct link below).',
+  guide_github_step2: '2. Set Note (e.g., Crystal-5S-Deploy), choose Expiration (No expiration or 90 days).',
+  guide_github_step3: '3. Select scopes: "workflow" (required for auto-deploy) and "repo" (if repo is Private).',
+  guide_github_step4: '4. Click "Generate token", copy the ghp_... token and paste below, then click "Save Token".',
+  open_github_token_page: 'Open GitHub Token Settings',
+  guide_cf_token_btn: '📖 How to get Cloudflare Token & Account ID (3 steps)',
+  guide_cf_step1: '1. Get Account ID: Log in to Cloudflare Dashboard > Home > Right sidebar under Account ID (copy 32-char ID).',
+  guide_cf_step2: '2. Create API Token: Click link below > Click "Create Token" > Select template "Edit Cloudflare Workers" (or Custom).',
+  guide_cf_step3: '3. Ensure token has permissions: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).',
+  guide_cf_step4: '4. Click "Continue to summary" > "Create Token", copy the token and paste into Cloudflare Settings.',
+  open_cf_token_page: 'Open Cloudflare Token Settings',
+  cf_auto_pass_badge: '✔ Automatically passes Token to GitHub Actions on update (No manual Secrets setup required)',
+  ready_for_1click_deploy: '✔ Ready for 1-Click Auto-Deploy',
+  needs_cf_token_notice: 'Cloudflare API Token & Account ID required below to enable Auto-Deploy',
+  template_download_error: 'Error downloading Excel template file',
+  excel_paste_cells_filled: 'Filled {count} cells from Excel clipboard data.',
+  pat_missing_deploy_error: 'Cloudflare Auto-Update requires a configured GITHUB_TOKEN (with workflow scope) in the Token Settings section below to trigger GitHub Actions deployment. Or you can run "npx wrangler deploy" directly from your computer.',
+
 };

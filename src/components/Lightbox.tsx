@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
+import { useI18n } from '../i18n/context';
 
 export interface LightboxPhoto {
   id: number;
@@ -26,6 +27,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
   currentIndex,
   onNavigate,
 }) => {
+  const { t } = useI18n();
   useEffect(() => {
     if (!isOpen) return;
 
@@ -67,7 +69,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   : 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
               }`}
             >
-              {current.kind === 'before' ? 'Trước (Before)' : 'Sau cải thiện (After)'}
+              {current.kind === 'before' ? t('lightbox_before') : t('lightbox_after')}
             </span>
           )}
           {current.area_code && (
@@ -92,16 +94,16 @@ export const Lightbox: React.FC<LightboxProps> = ({
             <Link
               to={`/findings/${current.finding_id}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
-              title="Xem chi tiết lỗi"
+              title={t('view_finding_detail')}
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Chi tiết lỗi</span>
+              <span className="hidden sm:inline">{t('view_finding_detail')}</span>
             </Link>
           )}
           <button
             onClick={onClose}
             className="p-2 rounded-full bg-slate-800/80 hover:bg-rose-600 text-slate-300 hover:text-white transition cursor-pointer"
-            title="Đóng (Esc)"
+            title={t('close_esc')}
           >
             <X className="w-5 h-5" />
           </button>

@@ -386,7 +386,7 @@ export const AuditDetail: React.FC = () => {
                 {t('penalty')}
               </div>
               <div className="text-lg font-black text-rose-600">
-                -{currentPlantPenalty || 0}đ
+                -{currentPlantPenalty || 0}{t('pts_unit')}
               </div>
             </div>
           </div>
@@ -466,7 +466,7 @@ export const AuditDetail: React.FC = () => {
                           <span className="text-slate-800 font-bold">
                             {t('findings_count_short', { n: areaFindings.length })}{' '}
                             <span className="text-rose-600 font-black">
-                              (-{as.finding_penalty}đ)
+                              (-{as.finding_penalty}{t('pts_unit')})
                             </span>
                           </span>
                         ) : (
@@ -547,7 +547,7 @@ export const AuditDetail: React.FC = () => {
                     {/* Total Penalty */}
                     <td className="py-3 px-4 text-right">
                       <span className="font-black text-rose-600">
-                        -{as.total_penalty || 0}đ
+                        -{as.total_penalty || 0}{t('pts_unit')}
                       </span>
                     </td>
 
@@ -594,7 +594,7 @@ export const AuditDetail: React.FC = () => {
               {t('findings_list')} ({findings.length})
             </h2>
             <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
-              {t('penalty')}: -{currentPlantPenalty || 0}đ
+              {t('penalty')}: -{currentPlantPenalty || 0}{t('pts_unit')}
             </span>
           </div>
 
@@ -656,7 +656,7 @@ export const AuditDetail: React.FC = () => {
                         </span>
                       ) : (
                         <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
-                          -{f.applied_penalty}đ
+                          -{f.applied_penalty}{t('pts_unit')}
                         </span>
                       )}
                       <StatusBadge status={f.status} type="finding" />
@@ -706,7 +706,7 @@ export const AuditDetail: React.FC = () => {
                             setLightboxOpen(true);
                           }}
                           className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 cursor-pointer group hover:border-blue-400 shrink-0"
-                          title="Bấm để phóng to 2K"
+                          title={t('zoom_photo_2k')}
                         >
                           <img
                             src={`/api/photos/${p.id}`}
@@ -779,7 +779,7 @@ export const AuditDetail: React.FC = () => {
           </span>
           <ScoreBadge score={currentPlantScore} target={target} size="md" showStatusText />
           <span className="hidden sm:inline text-xs font-bold text-rose-600">
-            (-{currentPlantPenalty || 0}đ)
+            (-{currentPlantPenalty || 0}{t('pts_unit')})
           </span>
         </div>
 
@@ -868,7 +868,7 @@ export const AuditDetail: React.FC = () => {
                   <optgroup key={g} label={`S${g}`}>
                     {groupItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.code}: {lang === 'en' ? item.content_en || item.content_vi : item.content_vi} (-{item.penalty}đ)
+                        {item.code}: {lang === 'en' ? item.content_en || item.content_vi : item.content_vi} (-{item.penalty}{t('pts_unit')})
                       </option>
                     ))}
                   </optgroup>

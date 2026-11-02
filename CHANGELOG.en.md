@@ -7,6 +7,22 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.5.7] - 2026-11-02
+
+### Added & Improved (Auto-Pass Cloudflare Token to GitHub Actions, Interactive Token Guides & 100% English Localization)
+- **Zero-Manual-Secret Cloudflare Auto-Deploy from Web Settings**:
+  - Administrators only need to enter their Cloudflare API Token and Account ID in Web Settings (`/admin/targets`). Credentials are encrypted with AES-GCM-256 into D1 Database.
+  - When clicking "Auto-Update Now", the Cloudflare Worker automatically passes these credentials directly into GitHub Actions via `workflow_dispatch` inputs (`cf_token`, `cf_account_id`).
+  - GitHub Actions workflow (`deploy.yml`) securely masks credentials with `::add-mask::`, executes tests, runs remote D1 migrations, and deploys to Cloudflare Workers without requiring manual GitHub Secrets setup.
+- **Interactive Step-by-Step Guides for GitHub PAT & Cloudflare Tokens**:
+  - Built-in accordion guides with direct links to GitHub Token Settings and Cloudflare Dashboard.
+  - Configurable GitHub Repository (`owner/repo`) enabling independent factories and forks to deploy directly to their own repositories.
+- **100% English Localization & Bilingual API Protocol**:
+  - Completely audited and eliminated hardcoded Vietnamese across all views and components.
+  - Automatic `Accept-Language: en` header from frontend client, enabling bilingual Worker API responses for errors and deployment logs.
+
+---
+
 ## [2.5.6] - 2026-11-02
 
 ### Added & Improved (Multi-Factory Architecture, Automated Release Installer & Enhanced Update UX)

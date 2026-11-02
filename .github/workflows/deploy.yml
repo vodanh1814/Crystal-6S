@@ -1,7 +1,21 @@
 name: Deploy Crystal 5S Audit to Cloudflare
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      cf_token:
+        description: 'Cloudflare API Token (Passed automatically from Web Settings)'
+        required: false
+        type: string
+        default: ''
+      cf_account_id:
+        description: 'Cloudflare Account ID (Passed automatically from Web Settings)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   deploy:
@@ -16,15 +30,31 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Verify Cloudflare Secrets
-        env:
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Resolve and Secure Cloudflare Credentials
         run: |
+          # 1. Resolve Cloudflare API Token (Priority: Dispatch Input -> Repository Secret)
+          INPUT_TOKEN="${{ inputs.cf_token }}"
+          SECRET_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          CF_TOKEN="${INPUT_TOKEN:-$SECRET_TOKEN}"
+
+          # 2. Resolve Cloudflare Account ID (Priority: Dispatch Input -> Repository Secret)
+          INPUT_ACC="${{ inputs.cf_account_id }}"
+          SECRET_ACC="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          CF_ACCOUNT="${INPUT_ACC:-$SECRET_ACC}"
+
+          # 3. Validate existence
           if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
-            echo "::error::Thiếu GitHub Secrets 'CLOUDFLARE_API_TOKEN' hoặc 'CLOUDFLARE_ACCOUNT_ID' trong repository. Vui lòng thêm tại Settings -> Secrets and variables -> Actions."
+            echo "::error::Missing Cloudflare credentials. Please configure Cloudflare API Token and Account ID in Web Settings or in GitHub Repository Secrets."
             exit 1
           fi
+
+          # 4. Mask sensitive values so they never leak in GitHub Actions logs
+          echo "::add-mask::$CF_TOKEN"
+          echo "::add-mask::$CF_ACCOUNT"
+
+          # 5. Export to environment for all subsequent steps
+          echo "CLOUDFLARE_API_TOKEN=$CF_TOKEN" >> $GITHUB_ENV
+          echo "CLOUDFLARE_ACCOUNT_ID=$CF_ACCOUNT" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm ci || npm install
@@ -35,13 +65,7 @@ jobs:
           npm test
 
       - name: Apply D1 Migrations (Remote)
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler d1 migrations apply cetvn-5s-db --remote --yes
 
       - name: Build and Deploy to Cloudflare Workers
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npm run deploy

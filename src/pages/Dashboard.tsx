@@ -521,7 +521,7 @@ export const Dashboard: React.FC = () => {
           <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1.5 min-w-0">
             <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
               <span className="text-[10px] text-slate-400 font-semibold truncate">
-                {lang === 'en' ? 'On-Time' : 'Đúng hạn'}
+                {t('on_time')}
               </span>
               <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
                 {remediation?.on_time_rate_pct !== null && remediation?.on_time_rate_pct !== undefined
@@ -531,18 +531,18 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
               <span className="text-[10px] text-slate-400 font-semibold truncate">
-                {lang === 'en' ? 'Avg Time' : 'TG sửa TB'}
+                {t('avg_remediation_time')}
               </span>
               <span className="text-xs font-black font-mono text-sky-400 shrink-0">
                 {remediation?.avg_remediation_days !== null &&
                 remediation?.avg_remediation_days !== undefined
-                  ? `${remediation.avg_remediation_days}${lang === 'en' ? 'd' : ' ngày'}`
+                  ? `${remediation.avg_remediation_days}${t('remediation_day_unit')}`
                   : '-'}
               </span>
             </div>
             <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
               <span className="text-[10px] text-slate-400 font-semibold truncate">
-                {lang === 'en' ? 'Repeat' : 'Tái diễn'}
+                {t('repeat_findings_label')}
               </span>
               <span className="text-xs font-black font-mono text-purple-400 shrink-0">
                 {remediation?.repeat_rate_pct !== undefined ? `${remediation.repeat_rate_pct}%` : '0%'}
@@ -592,7 +592,7 @@ export const Dashboard: React.FC = () => {
                           </span>
                         ) : (
                           <span className="text-amber-300 font-mono text-[10px] shrink-0">
-                            -{f.applied_penalty}đ
+                            -{f.applied_penalty}{t('pts_unit')}
                           </span>
                         )}
                       </div>
@@ -750,7 +750,7 @@ export const Dashboard: React.FC = () => {
                     ></div>
                   </div>
                   <span className="col-span-3 text-right font-mono font-bold text-rose-400 text-[10px]">
-                    {group.count} lỗi (-{group.penalty}đ)
+                    {group.count} {t('findings_unit')} (-{group.penalty}{t('pts_unit')})
                   </span>
                 </div>
               );

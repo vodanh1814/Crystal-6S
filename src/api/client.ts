@@ -2,9 +2,11 @@ const API_BASE = '/api';
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
     this.name = 'ApiError';
   }
 }
@@ -16,6 +18,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   // Set Content-Type: application/json if sending non-FormData
   if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  // Set Accept-Language according to user preference
+  if (!headers.has('Accept-Language') && typeof window !== 'undefined') {
+    try {
+      const activeLang = localStorage.getItem('crystal_5s_lang') || 'vi';
+      headers.set('Accept-Language', activeLang === 'en' ? 'en-US,en;q=0.9' : 'vi-VN,vi;q=0.9');
+    } catch {}
   }
 
   const response = await fetch(url, {
@@ -38,7 +48,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     const errorMsg = data && typeof data === 'object' && data.error ? data.error : response.statusText || 'Request failed';
-    throw new ApiError(errorMsg, response.status);
+    const errorCode = data && typeof data === 'object' && data.code ? data.code : undefined;
+    throw new ApiError(errorMsg, response.status, errorCode);
   }
 
   return data as T;

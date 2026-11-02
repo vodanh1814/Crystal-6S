@@ -416,4 +416,136 @@ export const vi = {
   viewing_month_badge: 'Đang xem: {month}',
   back_to_current_month: 'Về tháng hiện tại',
   all_data_for_month: 'Toàn bộ số liệu hiển thị theo {month}',
+
+  // Units & Points
+  pts_unit: 'đ',
+  findings_unit: 'lỗi',
+  on_time: 'Đúng hạn',
+  remediation_day_unit: 'ngày',
+  repeat_findings_label: 'Tái diễn',
+
+  // Admin Targets & Updates
+  env_local_lan: 'Local / Mạng LAN',
+  env_cloudflare_edge: 'Cloudflare Edge',
+  token_config_hide: 'Ẩn cấu hình Token',
+  token_config_show: 'Cấu hình Token',
+  github_pat_title: 'Cấu hình GitHub Personal Access Token (PAT)',
+  pat_configured: 'Đã cấu hình Token',
+  pat_not_configured: 'Chưa cấu hình (Chế độ Public)',
+  pat_desc_local: 'Môi trường Local / Mạng LAN: Không cần Token khi repo là Public — hệ thống tự động kiểm tra và đồng bộ trực tiếp từ GitHub của Simon.',
+  pat_desc_cloud: 'Nền tảng Cloudflare Workers: Cần Personal Access Token (PAT) có quyền workflow nếu muốn kích hoạt GitHub Actions Deploy tự động từ giao diện web này.',
+  pat_placeholder_configured: '•••••••••••••••• (Nhập token mới hoặc để trống để gỡ)',
+  pat_placeholder_empty: 'ghp_... hoặc github_pat_...',
+  pat_save_btn: 'Lưu Token',
+  pat_saving: 'Đang lưu...',
+  pat_remove_btn: 'Gỡ Token',
+  pat_save_success: 'Đã lưu và mã hóa GitHub Token thành công!',
+  pat_remove_success: 'Đã xóa cấu hình GitHub Token (chuyển sang chế độ Public).',
+  pat_save_error: 'Lỗi khi lưu GitHub Token',
+  pat_remove_error: 'Lỗi khi gỡ Token',
+  update_ready_cloud: 'Bản cập nhật mới trên GitHub của Simon đã sẵn sàng để triển khai lên Cloudflare Workers.',
+  update_ready_local: 'Tự động tải mã nguồn mới từ Git, cài đặt thư viện và nâng cấp cơ sở dữ liệu an toàn (giữ nguyên 100% dữ liệu).',
+  btn_trigger_deploy: 'Kích hoạt Auto-Deploy GitHub Actions (v{v})',
+  btn_deploying_trigger: 'Đang kích hoạt CI/CD Deploy...',
+  btn_config_token_to_deploy: 'Cấu hình Token để bật Auto-Deploy',
+  cloud_guide_title: 'Hướng dẫn 2 cách cập nhật lên Cloudflare cho Nhà máy:',
+  cloud_guide_method1_title: '⚡ Cách 1: Deploy trực tiếp từ máy tính (Khuyên dùng)',
+  cloud_guide_method1_desc: 'Mở terminal trên máy tính kỹ thuật và chạy lệnh: {cmd}. Bản mới sẽ lên sóng trong 15 giây mà không cần token.',
+  cloud_guide_method2_title: '🤖 Cách 2: Tự động qua GitHub Actions CI/CD',
+  cloud_guide_method2_desc: 'Nhập GitHub Personal Access Token (quyền workflow) vào ô cấu hình bên trên để mở khóa nút bấm Auto-Deploy 1-click từ giao diện web.',
+  force_sync_git: 'Đồng bộ lại từ Git (Force Sync)',
+  public_repo_auto_update_notice: 'Nếu kho lưu trữ đã chuyển sang Public, hệ thống sẽ tự động cập nhật trực tiếp. Nếu là Private, hãy bấm nút Cấu hình Token ở trên để nhập GitHub PAT.',
+
+  // Admin Targets - Copyright Card
+  copyright_locked_notice: 'Phần bản quyền này được khóa cố định nhằm bảo vệ quyền tác giả kiến trúc hệ thống của Simon. Doanh nghiệp có thể tự do tùy chỉnh Tên công ty và Logo nhà máy ở khối bên dưới.',
+
+  // Admin Targets - Custom Domain Guide & Backup
+  backup_download_title: 'Tải bản sao lưu toàn bộ dữ liệu (Audits, Lỗi 5S, Tiêu chí, Điểm...) dạng SQL',
+  custom_domain_guide_hide: 'Ẩn hướng dẫn gắn tên miền',
+  custom_domain_guide_show: 'Cách gắn tên miền riêng công ty (5s.congty.com)',
+  custom_domain_guide_heading: 'Hướng dẫn 3 bước gắn Tên miền riêng (Miễn phí 100%):',
+  custom_domain_step1: 'Vào Cloudflare Dashboard > Workers > Chọn Worker > Tab Settings > Domains & Routes.',
+  custom_domain_step2: 'Bấm Add Custom Domain > Nhập tên miền (vd: 5s.nhamay.vn) > Bấm Add. Cloudflare tự cấp SSL xanh trong 30 giây.',
+  custom_domain_step3: 'Bấm Cấu hình / Đổi tài khoản bên trên > Nhập tên miền vào ô "Tên miền riêng" và Lưu lại.',
+
+  // About Modal Features
+  about_feature_edge: 'Serverless Edge Network toàn cầu, phản hồi <10ms.',
+  about_feature_d1: 'SQLite Serverless ACID transaction, an toàn dữ liệu 100%.',
+  about_feature_r2: 'Kho ảnh vi phạm 2K tự động nén, 10 GB miễn phí trọn đời.',
+
+  // Lightbox
+  lightbox_before: 'Trước (Before)',
+  lightbox_after: 'Sau cải thiện (After)',
+  view_finding_detail: 'Xem chi tiết lỗi',
+  close_esc: 'Đóng (Esc)',
+
+  // Admin Users
+  all_areas_full: 'Tất cả khu vực (Toàn quyền)',
+  plant_wide_auditor: 'Toàn nhà máy (Đi chấm 5S & Verify đóng lỗi)',
+  all_areas_view_only: 'Tất cả khu vực (Chỉ xem)',
+  assign_areas_title: 'Phân quyền khu vực',
+  assign_areas_btn: 'Phân quyền KV',
+  role_label: 'Vai trò (Role)',
+  role_auditor_option: 'Auditor (Kiểm tra viên 5S)',
+  role_manager_option: 'Area MNG (Quản lý khu vực)',
+  leave_blank_pwd: '(để trống nếu không đổi)',
+
+  // Audit Detail & Audits List
+  zoom_photo_2k: 'Bấm để phóng to 2K',
+  weekly_audit_note_title: '1 Đợt kiểm tra / tuần cho toàn nhà máy:',
+  weekly_audit_note_desc: 'Sau khi tạo, bạn có thể ghi nhận lỗi theo từng khu vực và nhập điểm trừ đánh giá bổ sung (BOD, Khách hàng, IE).',
+
+  // Findings List & Detail
+  pending_after: 'Chờ After',
+  no_photo: 'Chưa có ảnh',
+  in_progress: 'Đang khắc phục',
+  fix_label: 'Khắc phục:',
+  read_only_view_notice: 'Chế độ xem chỉ đọc. Đăng nhập để cập nhật kết quả cải thiện (Area MNG) hoặc xác nhận duyệt lỗi (Auditor).',
+
+  // Reports
+  historical_score_tooltip: 'Điểm nhập lịch sử',
+  weekly_score_tooltip: 'Điểm audit tuần',
+  historical_badge: 'Lịch sử',
+  import_excel_tooltip: 'Nhập điểm lịch sử các tháng từ Excel',
+  on_time_short: 'đúng hạn',
+  std_deadline: 'Hạn chuẩn: ≤ 7 ngày',
+  repeat_findings_count: '{n} lỗi lặp',
+  resolved_findings_count: '{n} đã xử lý',
+  hide_paste_box: 'Ẩn ô dán',
+  show_paste_box: 'Dán từ clipboard',
+  paste_clipboard_title: 'Dán nhanh từ Excel (Paste from Clipboard)',
+  apply_btn: 'Áp dụng',
+  area_col_header: 'Khu vực',
+  leave_blank_clear_note: 'Để trống nếu muốn xóa điểm lịch sử của tháng đó.',
+
+  // Setup
+  keep_sample_areas: '✔ Giữ 16 khu vực mẫu',
+  clear_sample_areas: '✕ Xóa trống (Tự tạo mới)',
+  admin_account_title: 'Tài khoản Quản trị viên (Admin)',
+  min_6_chars: 'tối thiểu 6 ký tự',
+  finish_setup_btn: '🚀 HOÀN TẤT CẤU HÌNH & VÀO HỆ THỐNG',
+
+  // GitHub & Cloudflare Deployment Guides & Settings
+  github_repo_label: 'Kho lưu trữ GitHub (Repository)',
+  github_repo_desc: 'Định dạng: owner/repo (ví dụ: vodanh1814/Crystal-6S hoặc repo riêng của nhà máy bạn).',
+  github_repo_save_success: 'Đã lưu cấu hình kho GitHub thành công!',
+  guide_github_pat_btn: '📖 Hướng dẫn lấy Token GitHub (3 bước)',
+  guide_github_step1: '1. Mở trang tạo Personal Access Token của GitHub (link trực tiếp bên dưới).',
+  guide_github_step2: '2. Đặt tên Note (ví dụ: Crystal-5S-Deploy), chọn Expiration (No expiration hoặc 90 days).',
+  guide_github_step3: '3. Tích chọn quyền: "workflow" (bắt buộc để kích hoạt deploy) và "repo" (nếu kho là Private).',
+  guide_github_step4: '4. Bấm "Generate token", sao chép chuỗi ghp_... và dán vào ô bên dưới rồi bấm "Lưu Token".',
+  open_github_token_page: 'Mở trang tạo Token trên GitHub',
+  guide_cf_token_btn: '📖 Hướng dẫn lấy Token & Account ID Cloudflare (3 bước)',
+  guide_cf_step1: '1. Lấy Account ID: Đăng nhập Cloudflare Dashboard > Trang chủ > Cột bên phải mục Account ID (sao chép chuỗi mã 32 ký tự).',
+  guide_cf_step2: '2. Tạo API Token: Nhấp link bên dưới > Bấm "Create Token" > Chọn template "Edit Cloudflare Workers" (hoặc Custom).',
+  guide_cf_step3: '3. Đảm bảo token có đủ quyền: Workers Scripts (Edit), D1 (Edit), R2 Storage (Edit).',
+  guide_cf_step4: '4. Bấm "Continue to summary" > "Create Token", sao chép chuỗi Token và dán vào ô Cấu hình Cloudflare.',
+  open_cf_token_page: 'Mở trang tạo Token trên Cloudflare',
+  cf_auto_pass_badge: '✔ Tự động truyền Token sang GitHub Actions khi cập nhật (Không cần tạo Secrets thủ công)',
+  ready_for_1click_deploy: '✔ Sẵn sàng Auto-Deploy 1-Click',
+  needs_cf_token_notice: 'Cần nhập Cloudflare API Token & Account ID bên dưới để kích hoạt Deploy tự động',
+  template_download_error: 'Lỗi khi tải file mẫu Excel',
+  excel_paste_cells_filled: 'Đã điền {count} ô từ dữ liệu Excel.',
+  pat_missing_deploy_error: 'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong ô Cấu hình Token bên dưới để kích hoạt GitHub Actions Deploy tự động. Hoặc bạn có thể chạy lệnh "npx wrangler deploy" trực tiếp từ máy tính.',
+
 };

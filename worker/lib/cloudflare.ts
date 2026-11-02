@@ -93,13 +93,13 @@ export function calculateMetricStatus(percent: number): 'safe' | 'warning' | 'da
 /**
  * Verifies Cloudflare API Token validity via Cloudflare API v4
  */
-export async function verifyCloudflareToken(apiToken: string): Promise<{
+export async function verifyCloudflareToken(apiToken: string, isEn: boolean = false): Promise<{
   valid: boolean;
   status?: string;
   message?: string;
 }> {
   if (!apiToken || !apiToken.trim()) {
-    return { valid: false, message: 'API Token không được để trống' };
+    return { valid: false, message: isEn ? 'API Token cannot be empty' : 'API Token không được để trống' };
   }
 
   try {
@@ -116,13 +116,13 @@ export async function verifyCloudflareToken(apiToken: string): Promise<{
       return {
         valid: true,
         status: data.result?.status || 'active',
-        message: 'Token Cloudflare hợp lệ và đang hoạt động.',
+        message: isEn ? 'Cloudflare Token is valid and active.' : 'Token Cloudflare hợp lệ và đang hoạt động.',
       };
     }
 
     const errMsg =
       data.errors?.[0]?.message ||
-      (res.status === 401 ? 'Token không hợp lệ hoặc đã hết hạn.' : `HTTP ${res.status}`);
+      (res.status === 401 ? (isEn ? 'Token is invalid or expired.' : 'Token không hợp lệ hoặc đã hết hạn.') : `HTTP ${res.status}`);
     return {
       valid: false,
       status: 'invalid',
@@ -131,7 +131,7 @@ export async function verifyCloudflareToken(apiToken: string): Promise<{
   } catch (err: any) {
     return {
       valid: false,
-      message: `Không thể kết nối đến Cloudflare API: ${err.message || ''}`,
+      message: isEn ? `Cannot connect to Cloudflare API: ${err.message || ''}` : `Không thể kết nối đến Cloudflare API: ${err.message || ''}`,
     };
   }
 }
@@ -141,10 +141,11 @@ export async function verifyCloudflareToken(apiToken: string): Promise<{
  */
 export async function getCloudflareAccountInfo(
   apiToken: string,
-  accountId: string
+  accountId: string,
+  isEn: boolean = false
 ): Promise<{ valid: boolean; account_name?: string; plan?: string; error?: string }> {
   if (!apiToken || !accountId) {
-    return { valid: false, error: 'Thiếu API Token hoặc Account ID' };
+    return { valid: false, error: isEn ? 'Missing API Token or Account ID' : 'Thiếu API Token hoặc Account ID' };
   }
 
   try {
