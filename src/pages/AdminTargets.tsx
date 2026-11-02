@@ -540,6 +540,7 @@ export const AdminTargets: React.FC = () => {
   const currentVer = updateInfo?.current_version || APP_VERSION;
   const latestVer = updateInfo?.latest_version || APP_VERSION;
   const hasNewUpdate = Boolean(updateInfo?.has_update);
+  const isCloud = updateInfo?.mode === 'cloud_worker';
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -618,9 +619,14 @@ export const AdminTargets: React.FC = () => {
                 {updateInfo?.has_github_token ? 'Đã cấu hình Token' : 'Chưa cấu hình (Chế độ Public)'}
               </span>
             </div>
-            <p className="text-xs text-slate-600">
-              Chỉ cần thiết khi GitHub repository ở chế độ <strong>Private</strong>. Khi repository là <strong>Public</strong>, hệ thống tự động kiểm tra và đồng bộ mà không cần Token.
-            </p>
+            <div className="text-xs text-slate-600 space-y-1">
+              <div>
+                • <strong>Môi trường Local / Mạng LAN:</strong> Không cần Token khi repo là Public — hệ thống tự động kiểm tra và đồng bộ trực tiếp từ GitHub của Simon.
+              </div>
+              <div>
+                • <strong>Nền tảng Cloudflare Workers:</strong> Cần Personal Access Token (PAT) có quyền <code>workflow</code> nếu muốn kích hoạt GitHub Actions Deploy tự động từ giao diện web này.
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="password"
@@ -687,8 +693,19 @@ export const AdminTargets: React.FC = () => {
         {/* Version Comparison Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              {t('current_version_label')}
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                {t('current_version_label')}
+              </div>
+              <span
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  isCloud
+                    ? 'bg-sky-100 text-sky-800'
+                    : 'bg-emerald-100 text-emerald-800'
+                }`}
+              >
+                {isCloud ? 'Cloudflare Edge' : 'Local / Mạng LAN'}
+              </span>
             </div>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-xl font-black font-mono text-slate-900">v{currentVer}</span>
@@ -737,38 +754,95 @@ export const AdminTargets: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Banner & One-Click Auto-Update Action */}
+        {/* Status Banner & Multi-Environment Auto-Update Action */}
         {hasNewUpdate ? (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <ArrowUpCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5 animate-bounce" />
-              <div>
-                <div className="text-sm font-black text-amber-900">
-                  {t('new_version_found_msg', { v: latestVer })}
-                </div>
-                <div className="text-xs text-amber-700 mt-0.5">
-                  Tự động tải mã nguồn mới từ Git, cài đặt thư viện và nâng cấp Database D1 an toàn (giữ nguyên 100% dữ liệu).
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-300 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <ArrowUpCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5 animate-bounce" />
+                <div>
+                  <div className="text-sm font-black text-amber-900">
+                    {t('new_version_found_msg', { v: latestVer })}
+                  </div>
+                  <div className="text-xs text-amber-800 mt-0.5">
+                    {isCloud
+                      ? 'Bản cập nhật mới trên GitHub của Simon đã sẵn sàng để triển khai lên Cloudflare Workers.'
+                      : 'Tự động tải mã nguồn mới từ Git, cài đặt thư viện và nâng cấp cơ sở dữ liệu an toàn (giữ nguyên 100% dữ liệu).'}
+                  </div>
                 </div>
               </div>
+
+              {!isCloud ? (
+                <button
+                  type="button"
+                  onClick={handleApplyAutoUpdate}
+                  disabled={applyingUpdate}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50 transition"
+                >
+                  {applyingUpdate ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUpCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {applyingUpdate
+                      ? t('updating_system')
+                      : t('auto_update_now_btn', { v: latestVer })}
+                  </span>
+                </button>
+              ) : updateInfo?.has_github_token ? (
+                <button
+                  type="button"
+                  onClick={handleApplyAutoUpdate}
+                  disabled={applyingUpdate}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50 transition"
+                >
+                  {applyingUpdate ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUpCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {applyingUpdate
+                      ? 'Đang kích hoạt CI/CD Deploy...'
+                      : `Kích hoạt Auto-Deploy GitHub Actions (v${latestVer})`}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowTokenConfig(true)}
+                  className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shadow-md shadow-amber-600/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer transition"
+                >
+                  <Key className="w-4 h-4" />
+                  <span>Cấu hình Token để bật Auto-Deploy</span>
+                </button>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleApplyAutoUpdate}
-              disabled={applyingUpdate}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50 transition"
-            >
-              {applyingUpdate ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ArrowUpCircle className="w-4 h-4" />
-              )}
-              <span>
-                {applyingUpdate
-                  ? t('updating_system')
-                  : t('auto_update_now_btn', { v: latestVer })}
-              </span>
-            </button>
+            {/* Cloudflare Guide Notice when token is missing */}
+            {isCloud && !updateInfo?.has_github_token && (
+              <div className="pt-3 border-t border-amber-200/80 text-xs text-amber-900 space-y-2">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-amber-700" />
+                  <span>Hướng dẫn 2 cách cập nhật lên Cloudflare cho Nhà máy:</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white/80 border border-amber-200 space-y-1">
+                    <span className="font-bold text-slate-800">⚡ Cách 1: Deploy trực tiếp từ máy tính (Khuyên dùng)</span>
+                    <p className="text-slate-600">
+                      Mở terminal trên máy tính kỹ thuật và chạy lệnh: <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-emerald-700 font-bold">npx wrangler deploy</code>. Bản mới sẽ lên sóng trong 15 giây mà không cần token.
+                    </p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/80 border border-amber-200 space-y-1">
+                    <span className="font-bold text-slate-800">🤖 Cách 2: Tự động qua GitHub Actions CI/CD</span>
+                    <p className="text-slate-600">
+                      Nhập GitHub Personal Access Token (quyền <code className="px-1 py-0.5 rounded bg-slate-100 font-mono text-indigo-700">workflow</code>) vào ô cấu hình bên trên để mở khóa nút bấm Auto-Deploy 1-click từ giao diện web.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-3">

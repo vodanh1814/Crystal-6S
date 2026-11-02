@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.5.5`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.5.6`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -28,6 +28,46 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 - **Full International Support**:
   - Published complete English documentation ([`README.en.md`](./README.en.md)) and English Changelog ([`CHANGELOG.en.md`](./CHANGELOG.en.md)).
   - Bilingual switcher links on all documentation files.
+
+---
+
+## 🏭 Deployment & Auto-Update Guide for Your Factory
+
+The system is designed with a **Multi-Factory (Multi-Instance)** architecture. Any organization can independently deploy their own instance using either of the following two methods while keeping data secure and updates seamless:
+
+### 🏢 Option 1: On-Premise LAN / Local Server Deployment (Recommended for Factories)
+> *Ideal for manufacturing plants seeking 100% data security within an isolated local network (intranet), with zero cloud dependencies.*
+
+1. **Download Installer**:
+   - Visit the [Releases](https://github.com/vodanh1814/Crystal-6S/releases) page on GitHub and download **`Crystal_5S_Setup.exe`**.
+2. **Install & Launch**:
+   - Run `Crystal_5S_Setup.exe` on a designated factory workstation or local server (supports Windows 10/11, Windows Server).
+   - Select installation directory and click **"Install & Launch"**.
+   - The installer automatically sets up Node.js, SQLite, and runs continuously in the background as a system service.
+3. **Access Across the Factory**:
+   - All desktop computers, smartphones, tablets, and Smart TV Wall screens connected to the factory Wi-Fi/LAN can access via the host IP (e.g. `http://192.168.1.100:5173`).
+4. **1-Click Safe Auto-Update**:
+   - Whenever author **Simon** publishes a new release on GitHub, an update banner appears in Admin Settings (`/admin/targets`): **"Auto-Update Now (vX.Y.Z) - 1 Click"**.
+   - Simply click the button: the system automatically synchronizes the latest Git source code, updates dependencies, and applies database migrations safely — **preserving 100% of historical audit scores, findings, and photos**.
+
+---
+
+### ☁️ Option 2: Independent Cloudflare Deployment (100% Free Tier — Global Access)
+> *Ideal for multi-site manufacturing enterprises or executives who require remote real-time access over the Internet.*
+
+1. **Fork the Repository**:
+   - Click the **Fork** button at the top-right of this repository to clone it into your own GitHub organization or account.
+2. **Automated Setup via CLI**:
+   ```bash
+   git clone https://github.com/<your-org>/Crystal-6S.git
+   cd Crystal-6S
+   npm install
+   npm run setup:cloud
+   ```
+   - The interactive wizard automatically provisions your free Cloudflare D1 Database and R2 Object Storage bucket, then deploys to Cloudflare Workers with zero infrastructure costs.
+3. **Updating Your Cloudflare Instance**:
+   - **Method A (Fastest — 15 seconds)**: Run `npx wrangler deploy` from your development terminal.
+   - **Method B (1-Click via Web)**: Configure a GitHub PAT with `workflow` scope in Admin Settings and set GitHub Repository Secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) to trigger automated CI/CD deployment via GitHub Actions.
 
 ---
 

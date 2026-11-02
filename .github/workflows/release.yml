@@ -1,0 +1,28 @@
+name: Release Crystal 5S Audit
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish Release & Windows Installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Publish GitHub Release with Setup EXE
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Crystal_5S_Setup.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: false

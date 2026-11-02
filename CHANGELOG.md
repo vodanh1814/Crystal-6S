@@ -7,6 +7,25 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.6] - 2026-11-02
+
+### Added & Improved (Hỗ trợ Kiến trúc Đa Nhà máy, Tự động Đính kèm File Cài đặt & Tối ưu Luồng Update)
+- **Hỗ trợ Triển khai Đa Nhà máy (Multi-Factory Setup)**:
+  - Thêm tài liệu hướng dẫn triển khai chuẩn hóa cho các nhà máy bên ngoài theo 2 phương án: Triển khai Mạng LAN nội bộ (Local EXE / Windows Service) và Triển khai Độc lập trên Cloudflare của doanh nghiệp.
+  - Hỗ trợ biến cấu hình `github_repo` linh hoạt: Cho phép các nhà máy đã fork repo có thể kích hoạt CI/CD trên repo riêng của họ thay vì chỉ trỏ về upstream.
+- **Tối ưu hóa Giao diện & Trải nghiệm Cập nhật Hệ thống (Update UI/UX)**:
+  - Phân tách rõ ràng giao diện cập nhật giữa **Môi trường Local / Mạng LAN** (nút cập nhật 1-click không cần token) và **Nền tảng Cloudflare Workers** (hướng dẫn cụ thể 2 cách: lệnh `wrangler deploy` hoặc kích hoạt GitHub Actions).
+  - Tự động hiển thị huy hiệu môi trường nhận diện: `Local / Mạng LAN` hoặc `Cloudflare Edge`.
+  - Thay thế hoàn toàn lỗi đỏ khó hiểu khi thiếu token trên Cloudflare bằng bảng hướng dẫn 2 lựa chọn thông minh ngay trên banner cập nhật.
+- **Tự động Phát hành Bộ cài đặt Windows EXE (`.github/workflows/release.yml`)**:
+  - Tích hợp GitHub Actions tự động tạo GitHub Release và đính kèm sẵn file `Crystal_5S_Setup.exe` mỗi khi có tag phát hành mới `v*`.
+  - Cho phép người dùng và các nhà máy tải trực tiếp file EXE về chạy ngay mà không cần cài đặt môi trường lập trình.
+- **Tối ưu hóa CI/CD Deploy Workflow (`.github/workflows/deploy.yml`)**:
+  - Bổ sung bước tiền kiểm tra bí mật (`Verify Cloudflare Secrets`) với thông báo lỗi tường minh nếu thiếu `CLOUDFLARE_API_TOKEN` hoặc `CLOUDFLARE_ACCOUNT_ID`.
+  - Bổ sung cờ xác nhận tự động `--yes` cho lệnh áp dụng migrations D1 (`wrangler d1 migrations apply ... --yes`) chống treo trong môi trường phi tương tác.
+
+---
+
 ## [2.5.5] - 2026-11-02
 
 ### Added & Improved (Lọc Đánh giá Theo Tháng, Khóa Bản quyền Tác giả Simon & Tài liệu Tiếng Anh)

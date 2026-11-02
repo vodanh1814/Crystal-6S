@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.5.5`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.5.6`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -27,6 +27,46 @@
 ### 🌐 Bổ sung Toàn diện Tài liệu Tiếng Anh (English Docs)
 - Xuất bản tài liệu hướng dẫn tiếng Anh chuẩn mực ([`README.en.md`](./README.en.md)) và nhật ký phiên bản tiếng Anh ([`CHANGELOG.en.md`](./CHANGELOG.en.md)).
 - Tích hợp các nút chuyển đổi ngôn ngữ song ngữ ở đầu các tài liệu.
+
+---
+
+## 🏭 Hướng dẫn Triển khai & Tự Động Cập nhật cho Nhà máy của Bạn
+
+Hệ thống được thiết kế theo chuẩn **Mô hình Đa Nhà máy (Multi-Instance)**. Mỗi doanh nghiệp có thể tự do triển khai độc lập theo 1 trong 2 phương án dưới đây mà vẫn đảm bảo tính bảo mật và khả năng cập nhật mượt mà:
+
+### 🏢 Phương án 1: Triển khai Cục bộ trên Mạng LAN / Máy chủ Nội bộ (Khuyên dùng cho xưởng sản xuất)
+> *Phù hợp cho các nhà máy muốn bảo mật 100% dữ liệu sản xuất bên trong mạng nội bộ intranet, không đưa dữ liệu ra ngoài Internet.*
+
+1. **Tải file cài đặt**:
+   - Truy cập mục [Releases](https://github.com/vodanh1814/Crystal-6S/releases) trên GitHub và tải về file **`Crystal_5S_Setup.exe`**.
+2. **Cài đặt & Khởi chạy**:
+   - Chạy file `Crystal_5S_Setup.exe` trên máy tính hoặc máy chủ tại xưởng (hỗ trợ Windows 10/11, Windows Server).
+   - Chọn thư mục lưu trữ và bấm **"Cài đặt & Khởi chạy"**.
+   - Trình cài đặt sẽ tự động thiết lập Node.js, SQLite và chạy ngầm vĩnh viễn dưới dạng dịch vụ hệ thống.
+3. **Sử dụng trong toàn nhà máy**:
+   - Mọi máy tính, điện thoại, máy tính bảng và màn hình Smart TV trong mạng LAN đều có thể truy cập qua IP máy chủ (ví dụ: `http://192.168.1.100:5173`).
+4. **Cơ chế Cập nhật Tự động (1-Click Auto-Update)**:
+   - Khi tác giả **Simon** phát hành phiên bản mới trên GitHub, trong trang Quản trị (`/admin/targets`) sẽ xuất hiện nút màu xanh: **"Tự động Cập nhật Ngay (vX.Y.Z) - 1 Click"**.
+   - Bạn chỉ cần bấm nút này: Hệ thống sẽ tự động đồng bộ mã nguồn mới từ Git, cài đặt thư viện và nâng cấp cơ sở dữ liệu an toàn — **giữ nguyên 100% dữ liệu phiếu đánh giá và hình ảnh lịch sử**.
+
+---
+
+### ☁️ Phương án 2: Triển khai Độc lập trên Cloudflare của Doanh nghiệp (Miễn phí 100% — Truy cập Toàn cầu)
+> *Phù hợp cho các doanh nghiệp có nhiều nhà máy ở các tỉnh khác nhau hoặc ban giám đốc muốn theo dõi từ xa qua Internet điện thoại/laptop.*
+
+1. **Fork kho lưu trữ**:
+   - Bấm nút **Fork** ở góc phải trên cùng của repository này về tài khoản GitHub của doanh nghiệp bạn.
+2. **Triển khai tự động bằng dòng lệnh (CLI)**:
+   ```bash
+   git clone https://github.com/<your-org>/Crystal-6S.git
+   cd Crystal-6S
+   npm install
+   npm run setup:cloud
+   ```
+   - Script tự động kết nối tài khoản Cloudflare của bạn, tạo cơ sở dữ liệu D1 (`cetvn-5s-db`) và bộ nhớ ảnh R2 (`cetvn-5s-photos`), sau đó tự động deploy lên Cloudflare Workers hoàn toàn miễn phí.
+3. **Cơ chế Cập nhật Tự động trên Cloudflare**:
+   - **Cách A (Nhanh nhất — 15 giây)**: Mở terminal trên máy tính kỹ thuật và chạy lệnh: `npx wrangler deploy`.
+   - **Cách B (Tự động 1-click từ Web)**: Cấu hình GitHub Token có quyền `workflow` trong trang Quản trị và thêm 2 Secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) trong GitHub Repo của bạn để kích hoạt tự động qua GitHub Actions.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "crystal-5s-audit",
   "private": true,
-  "version": "2.5.5",
+  "version": "2.5.6",
   "description": "Crystal 5S Audit — Smart Factory Andon & 5S Continuous Improvement System designed by Simon",
   "author": "Simon (https://github.com/vodanh1814)",
   "homepage": "https://5s-audit.cetvn.workers.dev",
@@ -26,7 +26,7 @@
     "preview": "npm run build && vite preview",
     "typecheck": "tsc -b",
     "db:migrate:local": "wrangler d1 migrations apply cetvn-5s-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply cetvn-5s-db --remote",
+    "db:migrate:remote": "wrangler d1 migrations apply cetvn-5s-db --remote --yes",
     "db:sample:local": "wrangler d1 execute cetvn-5s-db --local --file=seed/sample_areas.sql",
     "db:sample:remote": "wrangler d1 execute cetvn-5s-db --remote --file=seed/sample_areas.sql",
     "deploy": "npm run build && wrangler deploy",

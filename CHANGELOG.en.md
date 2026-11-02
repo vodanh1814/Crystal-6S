@@ -7,6 +7,25 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.5.6] - 2026-11-02
+
+### Added & Improved (Multi-Factory Architecture, Automated Release Installer & Enhanced Update UX)
+- **Multi-Factory Deployment & Architecture (Multi-Instance)**:
+  - Added comprehensive factory deployment guides for both on-premise factory LANs (standalone Windows EXE / system service) and enterprise Cloudflare instances.
+  - Added configurable `github_repo` support so forked factory repositories can trigger CI/CD workflows on their own organization repositories.
+- **Enhanced System Update UX & Environment Differentiation**:
+  - Clear separation between **On-Premise / LAN Server** (1-click zero-token Git sync) and **Cloudflare Workers** (clear 2-option guide: CLI `wrangler deploy` or GitHub Actions auto-deploy).
+  - Prominent environment badge indicators: `Local / LAN` vs `Cloudflare Edge`.
+  - Replaced ambiguous missing-token error on Cloudflare with an actionable 2-way deployment advisory directly on the update card.
+- **Automated Windows Installer Release (`.github/workflows/release.yml`)**:
+  - Integrated GitHub Actions workflow to automatically create GitHub Releases and attach `Crystal_5S_Setup.exe` whenever a release tag `v*` is pushed.
+  - Enables factories worldwide to download and launch the system instantly without needing a Node.js development environment.
+- **CI/CD Deploy Workflow Hardening (`.github/workflows/deploy.yml`)**:
+  - Added automated pre-flight secret validation (`Verify Cloudflare Secrets`) providing clear error guidance if `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` is missing.
+  - Added non-interactive `--yes` confirmation flag to remote D1 database migrations (`wrangler d1 migrations apply ... --yes`).
+
+---
+
 ## [2.5.5] - 2026-11-02
 
 ### Added & Improved (Interactive Month Filter, Protected Author Copyright & English Docs)

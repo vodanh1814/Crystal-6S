@@ -35,6 +35,18 @@ async function resolveGithubToken(env: Env): Promise<string> {
   return '';
 }
 
+async function resolveGithubRepo(db: D1Database): Promise<string> {
+  try {
+    const row = await db
+      .prepare("SELECT value FROM app_settings WHERE key = 'github_repo'")
+      .first<{ value: string }>();
+    if (row?.value && row.value.trim().includes('/')) {
+      return row.value.trim();
+    }
+  } catch {}
+  return GITHUB_REPO;
+}
+
 // Helper to fetch settings map
 export async function getAppSettings(
   db: D1Database
@@ -278,11 +290,13 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
     return c.json(
       {
         error:
-          'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong biến môi trường Worker hoặc mục Quản trị để kích hoạt GitHub Actions Deploy tự động.',
+          'Cloudflare Auto-Update yêu cầu cấu hình GITHUB_TOKEN (có quyền workflow) trong ô Cấu hình Token bên dưới để kích hoạt GitHub Actions Deploy tự động. Hoặc bạn có thể chạy lệnh "npx wrangler deploy" trực tiếp từ máy tính.',
       },
       400
     );
   }
+
+  const activeRepo = await resolveGithubRepo(c.env.DB);
 
   const headers: Record<string, string> = {
     'User-Agent': 'Crystal-5S-Audit-Updater',
@@ -293,7 +307,7 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
 
   try {
     const dispatchRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/deploy.yml/dispatches`,
+      `https://api.github.com/repos/${activeRepo}/actions/workflows/deploy.yml/dispatches`,
       {
         method: 'POST',
         headers,
@@ -303,9 +317,15 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
 
     if (!dispatchRes.ok && dispatchRes.status !== 204) {
       const errBody = await dispatchRes.text().catch(() => '');
+      let helpfulTip = '';
+      if (dispatchRes.status === 404) {
+        helpfulTip = ` (Kiểm tra lại repository "${activeRepo}" hoặc đảm bảo Token có quyền truy cập repo)`;
+      } else if (dispatchRes.status === 401 || dispatchRes.status === 403) {
+        helpfulTip = ' (Token không đủ quyền "workflow" hoặc đã hết hạn)';
+      }
       return c.json(
         {
-          error: `Không thể kích hoạt GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 200)}`,
+          error: `Không thể kích hoạt GitHub Actions workflow (HTTP ${dispatchRes.status}): ${errBody.slice(0, 150)}${helpfulTip}`,
         },
         400
       );
@@ -317,7 +337,7 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
       'trigger_cloud_update',
       'settings',
       null,
-      `from=${APP_VERSION}`
+      `from=${APP_VERSION}&repo=${activeRepo}`
     );
 
     return c.json({
@@ -327,7 +347,7 @@ settingsRouter.post('/cloud-update-apply', authMiddleware, async (c) => {
       new_version: 'latest (CI/CD deploying)',
       log: [
         `▶ Đã xác thực quyền Admin (${user.username}).`,
-        `▶ Đã gửi lệnh kích hoạt GitHub Actions Workflow (deploy.yml) trên nhánh main của ${GITHUB_REPO}.`,
+        `▶ Đã gửi lệnh kích hoạt GitHub Actions Workflow (deploy.yml) trên nhánh main của ${activeRepo}.`,
         `✔ Tiến trình CI/CD trên GitHub đang tự động chạy kiểm tra (typecheck + test), áp dụng D1 migrations (--remote) và triển khai phiên bản mới lên Cloudflare Workers.`,
         `ℹ Vui lòng đợi khoảng 1-2 phút để Cloudflare cập nhật phiên bản mới trên toàn mạng lưới.`,
       ].join('\n'),
