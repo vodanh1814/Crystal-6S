@@ -7,6 +7,19 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.9] - 2026-11-04
+
+### Added & Improved (Cập nhật 150 Điểm số Lịch sử Năm 2026 Chuẩn 1 Số Thập phân & File Seed Dữ liệu)
+- **Đồng bộ 150 Điểm số Lịch sử Thực tế từ Bảng Ma trận Nhà máy Năm 2026**:
+  - Cập nhật toàn bộ điểm số của 15 khu vực sản xuất qua 10 tháng (Tháng 1 đến Tháng 10 năm 2026) theo đúng số liệu thực tế có 1 chữ số thập phân (`89,5%`, `94,3%`, `81,5%`, `90,5%`, `98,5%`, v.v.).
+  - Thay thế hoàn toàn dữ liệu điểm nguyên làm tròn cũ trên Cloudflare D1 Remote (`cetvn-5s-db`) và Local D1.
+  - Tự động tính toán lại toàn diện điểm trung bình tháng toàn nhà máy, bảng xếp hạng Top 2 vinh danh và Bottom 2 nhắc nhở trên TV Dashboard.
+- **Bổ sung File Seed & Script Tạo Dữ liệu SQL Chuẩn Hóa**:
+  - `seed/update_historical_scores_2026.sql`: Lưu trữ 150 câu lệnh SQL nạp điểm lịch sử với cú pháp an toàn `ON CONFLICT DO UPDATE`.
+  - `scripts/generate_historical_sql.mjs`: Script hỗ trợ nạp và tái tạo dữ liệu ma trận điểm số nhà máy.
+
+---
+
 ## [2.5.8] - 2026-11-04
 
 ### Added & Improved (Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân & Tối ưu Giao diện Đa Ngôn ngữ)

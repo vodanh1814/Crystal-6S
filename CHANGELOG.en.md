@@ -7,6 +7,19 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.5.9] - 2026-11-04
+
+### Added & Improved (Updated 150 2026 Historical Monthly Scores with 1-Decimal Precision & Seed Script)
+- **Synchronized 150 Plant-wide Historical Monthly Scores for 2026**:
+  - Updated all 15 manufacturing area scores across 10 months (Jan - Oct 2026) with authentic 1-decimal-place numbers (`89.5%`, `94.3%`, `81.5%`, `90.5%`, `98.5%`, etc.) directly from the plant's official Excel matrix.
+  - Replaced legacy rounded integer scores across both remote Cloudflare D1 database (`cetvn-5s-db`) and local development SQLite.
+  - Automatically recalculates plant-wide monthly averages, Top 2 and Bottom 2 area leaderboards on the TV Dashboard.
+- **Added Seed & Data Generator Script**:
+  - `seed/update_historical_scores_2026.sql`: Contains 150 structured SQL statements utilizing safe `ON CONFLICT DO UPDATE` semantics.
+  - `scripts/generate_historical_sql.mjs`: Utility script to process and reproduce monthly matrix datasets.
+
+---
+
 ## [2.5.8] - 2026-11-04
 
 ### Added & Improved (Standardized 1-Decimal-Place Score Formatting & Bilingual Separator Support)
