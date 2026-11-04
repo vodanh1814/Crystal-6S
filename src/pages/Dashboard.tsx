@@ -25,6 +25,7 @@ import {
 import { api } from '../api/client';
 import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
+import { formatScore, formatDelta } from '../lib/format';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -234,7 +235,7 @@ export const Dashboard: React.FC = () => {
                   : 'text-rose-400'
               }`}
             >
-              {kpi?.weekly_avg !== null ? `${kpi.weekly_avg}%` : t('waiting_audit_badge')}
+              {kpi?.weekly_avg !== null ? formatScore(kpi.weekly_avg, lang) : t('waiting_audit_badge')}
             </span>
             {kpi?.weekly_delta !== null ? (
               <span
@@ -242,12 +243,12 @@ export const Dashboard: React.FC = () => {
                   kpi.weekly_delta >= 0 ? 'text-emerald-400' : 'text-rose-400'
                 }`}
               >
-                {kpi.weekly_delta >= 0 ? `▲ +${kpi.weekly_delta}%` : `▼ ${kpi.weekly_delta}%`}
+                {formatDelta(kpi.weekly_delta, lang)}
               </span>
             ) : kpi?.latest_completed_avg !== null ? (
               <span className="text-[11px] text-slate-400 font-mono truncate">
                 {kpi.latest_completed_week || getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
-                <strong className="text-slate-200">{kpi.latest_completed_avg}%</strong>
+                <strong className="text-slate-200">{formatScore(kpi.latest_completed_avg, lang)}</strong>
               </span>
             ) : null}
           </div>
@@ -273,7 +274,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
             <span className="text-xl font-black font-mono text-white leading-none">
-              {kpi?.monthly_avg_overall !== null ? `${kpi.monthly_avg_overall}%` : '-'}
+              {formatScore(kpi?.monthly_avg_overall, lang)}
             </span>
             <span className="text-xs text-slate-400 font-mono truncate">
               {month_info?.is_fallback
@@ -418,7 +419,7 @@ export const Dashboard: React.FC = () => {
                 ? 'text-rose-400'
                 : 'text-slate-400 text-xs font-normal';
 
-              const scoreTxt = displayScore !== null ? `${displayScore}%` : t('not_audited_yet');
+              const scoreTxt = displayScore !== null ? formatScore(displayScore, lang) : t('not_audited_yet');
 
               return (
                 <Link
@@ -467,7 +468,7 @@ export const Dashboard: React.FC = () => {
                         <>
                           {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
                           <strong className="text-slate-200">
-                            {area.month_avg !== null ? `${area.month_avg}%` : '-'}
+                            {formatScore(area.month_avg, lang)}
                           </strong>
                         </>
                       ) : (
@@ -524,9 +525,7 @@ export const Dashboard: React.FC = () => {
                 {t('on_time')}
               </span>
               <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
-                {remediation?.on_time_rate_pct !== null && remediation?.on_time_rate_pct !== undefined
-                  ? `${remediation.on_time_rate_pct}%`
-                  : '-'}
+                {formatScore(remediation?.on_time_rate_pct, lang)}
               </span>
             </div>
             <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
@@ -545,7 +544,7 @@ export const Dashboard: React.FC = () => {
                 {t('repeat_findings_label')}
               </span>
               <span className="text-xs font-black font-mono text-purple-400 shrink-0">
-                {remediation?.repeat_rate_pct !== undefined ? `${remediation.repeat_rate_pct}%` : '0%'}
+                {formatScore(remediation?.repeat_rate_pct ?? 0, lang)}
               </span>
             </div>
           </div>
@@ -678,7 +677,7 @@ export const Dashboard: React.FC = () => {
                       payload?.source === 'historical'
                         ? ` (${t('source_historical')} T${payload.month || ''})`
                         : '';
-                    return [`${val}%${sourceLabel}`, t('score')];
+                    return [`${formatScore(val, lang)}${sourceLabel}`, t('score')];
                   }}
                   contentStyle={{
                     backgroundColor: '#0f172a',
@@ -783,7 +782,7 @@ export const Dashboard: React.FC = () => {
                     {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_name || a.area_code}
                   </span>
                   <span className="font-mono font-black text-emerald-400 text-xs">
-                    {a.month_avg}%
+                    {formatScore(a.month_avg, lang)}
                   </span>
                 </div>
               ))
@@ -804,7 +803,7 @@ export const Dashboard: React.FC = () => {
                     ⚠️ {a.area_name || a.area_code}
                   </span>
                   <span className="font-mono font-black text-rose-400 text-xs">
-                    {a.month_avg}%
+                    {formatScore(a.month_avg, lang)}
                   </span>
                 </div>
               ))

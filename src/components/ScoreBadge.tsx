@@ -1,5 +1,6 @@
 import React from 'react';
 import { useI18n } from '../i18n/context';
+import { formatScore } from '../lib/format';
 
 interface ScoreBadgeProps {
   score: number | null | undefined;
@@ -14,7 +15,7 @@ export const ScoreBadge: React.FC<ScoreBadgeProps> = ({
   showStatusText = false,
   size = 'md',
 }) => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   if (score === null || score === undefined) {
     return <span className="text-slate-400 font-mono text-sm">-</span>;
@@ -37,7 +38,7 @@ export const ScoreBadge: React.FC<ScoreBadgeProps> = ({
       <span
         className={`inline-flex items-center justify-center font-semibold rounded-md border ring-1 ${bgClasses} ${sizeClasses[size]}`}
       >
-        {score.toFixed(1)}%
+        {formatScore(score, lang)}
       </span>
       {showStatusText && (
         <span

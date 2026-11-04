@@ -29,6 +29,7 @@ import { Modal } from '../components/Modal';
 import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import { compressImage } from '../lib/imageCompression';
 import { formatMonthYear } from '../lib/date';
+import { formatScore } from '../lib/format';
 import type { Audit, Finding, ChecklistItem, AuditAreaScore } from '../api/types';
 
 export const AuditDetail: React.FC = () => {
@@ -560,7 +561,7 @@ export const AuditDetail: React.FC = () => {
                             : 'bg-rose-100 text-rose-800'
                         }`}
                       >
-                        {as.score.toFixed(1)}%
+                        {formatScore(as.score, lang)}
                       </span>
                     </td>
 

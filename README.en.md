@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.5.7`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.5.8`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,18 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.5.5`
+## 1. Highlights of Version `v2.5.8`
+
+### 🎯 Plant-wide Standardized 1-Decimal-Place Score Formatting (`formatScore`)
+- **Consistent & Professional Score Precision**:
+  - All scores across TV Dashboard, Top 2 / Bottom 2 rankings, 16 factory area cards, reports, ScoreBadge, and audit details are consistently displayed with 1 decimal digit (`95,3%`, `95,0%`, `100,0%`).
+  - Locale-aware separators: Comma `,` for Vietnamese (`95,3%`), Dot `.` for English (`95.3%`).
+  - Directional weekly score delta indicator (`formatDelta`) with arrow indicators: `▲ +1,5%` / `▼ -2,3%`.
+  - Robust `src/lib/format.ts` utilities with graceful null/undefined/NaN fallback.
+
+### 🚀 Zero-Manual-Secret Auto-Deploy & Standalone Windows Installer (`v2.5.7`)
+- **Zero-Manual-Secret Cloudflare Auto-Deploy**: Automatically forwards Cloudflare API Token & Account ID from Web Settings to GitHub Actions workflows, streamlining CI/CD deployment without manual GitHub secrets.
+- **Standalone Windows Installer (`Crystal_5S_Setup.exe`)**: Automatically built and published with GitHub Releases, enabling 1-click on-premise installation on factory local networks.
 
 ### 📅 Interactive Month Filter on Dashboard
 - **On-Demand Month Historical Analysis**:

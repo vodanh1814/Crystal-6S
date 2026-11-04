@@ -7,6 +7,21 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.5.8] - 2026-11-04
+
+### Added & Improved (Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân & Tối ưu Giao diện Đa Ngôn ngữ)
+- **Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân Toàn Hệ thống (`formatScore`)**:
+  - Tích hợp bộ tiện ích định dạng điểm số tập trung `src/lib/format.ts` (`formatScore`, `formatDelta`).
+  - Mọi vị trí hiển thị điểm số (TV Dashboard, bảng xếp hạng Top 2 / Bottom 2, thẻ 16 khu vực xưởng, tỷ lệ khắc phục đúng hạn/lặp lại, tooltip biểu đồ xu hướng Recharts, ScoreBadge, bảng điểm từng khu vực trong phiếu đánh giá, ô ma trận tuần/tháng trong Báo cáo) đều hiển thị nhất quán 1 chữ số thập phân (`95,3%`, `95,0%`, `100,0%`).
+  - Tự động bản địa hóa dấu phân cách thập phân: Tiếng Việt hiển thị dấu phẩy `,` (ví dụ: `95,3%`), Tiếng Anh hiển thị dấu chấm `.` (ví dụ: `95.3%`).
+  - Xử lý giá trị biên an toàn tuyệt đối: `null`, `undefined`, `NaN` fallback thành `"-"`, ngăn ngừa hoàn toàn crash giao diện.
+- **Chuẩn hóa Hiển thị Biến động Điểm số Theo Tuần (`formatDelta`)**:
+  - Hiển thị phần trăm tăng giảm điểm số kèm ký hiệu mũi tên trực quan: `▲ +1,5%` / `▼ -2,3%` (VI) hoặc `▲ +1.5%` / `▼ -2.3%` (EN).
+- **Bộ Kiểm thử Tự động Chuyên biệt (`worker/lib/format.test.ts`)**:
+  - Bổ sung test suite kiểm thử toàn diện mọi trường hợp biên: số nguyên, số thập phân, quy tắc làm tròn số học, giá trị 0, giá trị 100, định dạng đa ngôn ngữ.
+
+---
+
 ## [2.5.7] - 2026-11-02
 
 ### Added & Improved (Tự động truyền Cloudflare Token vào GitHub Actions, Hướng dẫn Trực quan & Chuẩn hóa 100% Tiếng Anh)

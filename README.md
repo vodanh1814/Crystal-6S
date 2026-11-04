@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.5.7`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.5.8`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,18 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.5`
+## 1. Điểm nổi bật của phiên bản `v2.5.8`
+
+### 🎯 Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân Toàn Hệ thống (`formatScore`)
+- **Hiển thị Chính xác & Chuyên nghiệp**:
+  - Mọi điểm số trên TV Dashboard, bảng vinh danh Top 2 / Nhắc nhở Bottom 2, ma trận 16 khu vực xưởng sản xuất, báo cáo tuần / tháng, ScoreBadge và bảng điểm chi tiết đều hiển thị chuẩn 1 chữ số thập phân (`95,3%`, `95,0%`, `100,0%`).
+  - Hỗ trợ bản địa hóa định dạng số: Tiếng Việt dùng dấu phẩy `,` (`95,3%`), Tiếng Anh dùng dấu chấm `.` (`95.3%`).
+  - Hiển thị biến động điểm số tuần (`formatDelta`) trực quan kèm ký hiệu mũi tên: `▲ +1,5%` / `▼ -2,3%`.
+  - Bộ tiện ích `src/lib/format.ts` tập trung xử lý biên an toàn tuyệt đối (`null`, `undefined`, `NaN` fallback thành `"-"`).
+
+### 🚀 Tự động Hóa Cập nhật Hệ thống & Triển khai Đa Nhà máy (`v2.5.7`)
+- **Zero-Manual-Secret Cloudflare Auto-Deploy**: Tự động chuyển giao Cloudflare API Token từ Web Settings sang GitHub Actions Workflow, triển khai hệ thống mượt mà mà không cần tạo secret thủ công.
+- **Bộ Cài Đặt Độc Lập Windows (`Crystal_5S_Setup.exe`)**: Tự động tạo và phát hành bộ cài đặt EXE kèm GitHub Releases cho phép cài đặt và chạy trên mạng LAN chỉ với 1 cú click.
 
 ### 📅 Lọc & Chọn Kết quả Đánh giá Theo Tháng trên Dashboard
 - **Xem Dữ liệu Quá khứ & Lịch sử Linh hoạt**:

@@ -17,6 +17,7 @@ import {
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
+import { formatScore } from '../lib/format';
 import { Modal } from '../components/Modal';
 import {
   exportWeeklyReportToExcel,
@@ -32,7 +33,7 @@ import {
 import type { Area } from '../api/types';
 
 export const Reports: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { isAdmin } = useAuth();
   const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -366,7 +367,7 @@ export const Reports: React.FC = () => {
         }`}
         title={source === 'historical' ? t('historical_score_tooltip') : t('weekly_score_tooltip')}
       >
-        <span>{score.toFixed(1)}%</span>
+        <span>{formatScore(score, lang)}</span>
         {source === 'historical' && (
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={t('historical_badge')} />
         )}
@@ -613,10 +614,7 @@ export const Reports: React.FC = () => {
                 </div>
                 <div className="mt-2 flex items-baseline justify-between">
                   <span className="text-2xl font-black font-mono text-emerald-700">
-                    {remediationData.summary?.on_time_rate_pct !== null &&
-                    remediationData.summary?.on_time_rate_pct !== undefined
-                      ? `${remediationData.summary.on_time_rate_pct}%`
-                      : '-'}
+                    {formatScore(remediationData.summary?.on_time_rate_pct, lang)}
                   </span>
                   <span className="text-xs font-semibold text-emerald-700">
                     {remediationData.summary?.on_time_findings || 0} /{' '}
@@ -650,7 +648,7 @@ export const Reports: React.FC = () => {
                 </div>
                 <div className="mt-2 flex items-baseline justify-between">
                   <span className="text-2xl font-black font-mono text-purple-700">
-                    {remediationData.summary?.repeat_rate_pct ?? 0}%
+                    {formatScore(remediationData.summary?.repeat_rate_pct ?? 0, lang)}
                   </span>
                   <span className="text-xs font-semibold text-purple-700">
                     {remediationData.summary?.repeat_findings || 0} /{' '}
@@ -665,10 +663,7 @@ export const Reports: React.FC = () => {
                 </div>
                 <div className="mt-2 flex items-baseline justify-between">
                   <span className="text-2xl font-black font-mono text-slate-900">
-                    {remediationData.summary?.resolution_rate_pct !== null &&
-                    remediationData.summary?.resolution_rate_pct !== undefined
-                      ? `${remediationData.summary.resolution_rate_pct}%`
-                      : '-'}
+                    {formatScore(remediationData.summary?.resolution_rate_pct, lang)}
                   </span>
                   <span className="text-xs font-semibold text-slate-600">
                     {remediationData.summary?.resolved_findings || 0} /{' '}
@@ -723,7 +718,7 @@ export const Reports: React.FC = () => {
                                   : 'bg-rose-100 text-rose-800'
                               }`}
                             >
-                              {onTimePct}% ({row.on_time_findings})
+                              {formatScore(onTimePct, lang)} ({row.on_time_findings})
                             </span>
                           ) : (
                             <span className="text-slate-300">-</span>
@@ -766,7 +761,7 @@ export const Reports: React.FC = () => {
                                   : 'bg-purple-100 text-purple-800'
                               }`}
                             >
-                              {repeatPct}% ({row.repeat_findings})
+                              {formatScore(repeatPct, lang)} ({row.repeat_findings})
                             </span>
                           ) : (
                             <span className="text-slate-300">-</span>

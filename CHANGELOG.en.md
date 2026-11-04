@@ -7,6 +7,21 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.5.8] - 2026-11-04
+
+### Added & Improved (Standardized 1-Decimal-Place Score Formatting & Bilingual Separator Support)
+- **Plant-wide Standardized 1-Decimal-Place Score Formatting (`formatScore`)**:
+  - Integrated centralized formatting utilities in `src/lib/format.ts` (`formatScore`, `formatDelta`).
+  - Standardized all score displays across the system (TV Dashboard KPIs, Top 2 / Bottom 2 leaderboards, 16-area factory matrix cards, remediation on-time/repeat rates, Recharts trend line tooltip, ScoreBadge, audit sheet breakdown table, and 52-week/12-month report matrix cells) to exactly 1 decimal digit (`95,3%`, `95,0%`, `100,0%`).
+  - Automatic locale-sensitive decimal separators: comma `,` for Vietnamese (`95,3%`) and dot `.` for English (`95.3%`).
+  - Safe boundary and fallback handling: gracefully renders `"-"` for `null`, `undefined`, or `NaN` values, preventing UI crashes.
+- **Enhanced Weekly Score Delta Indicator (`formatDelta`)**:
+  - Displays directional change with arrows and explicit sign: `▲ +1,5%` / `▼ -2,3%` (VI) and `▲ +1.5%` / `▼ -2.3%` (EN).
+- **Dedicated Automated Verification Suite (`worker/lib/format.test.ts`)**:
+  - Added unit test suite covering integer scores, floats, arithmetic rounding (`88.88` -> `88.9%`), 0%, 100%, and VI/EN locale options.
+
+---
+
 ## [2.5.7] - 2026-11-02
 
 ### Added & Improved (Auto-Pass Cloudflare Token to GitHub Actions, Interactive Token Guides & 100% English Localization)
