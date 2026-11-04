@@ -110,7 +110,8 @@ export const Dashboard: React.FC = () => {
   }
 
   const {
-    target,
+    target = 95,
+    warning_target: warningTarget = 90,
     current_week,
     month_info,
     kpi,
@@ -195,9 +196,11 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Target Indicator */}
-        <div className="text-[11px] text-slate-400 font-mono hidden sm:flex items-center gap-1 shrink-0">
+        <div className="text-[11px] text-slate-400 font-mono hidden sm:flex items-center gap-1.5 shrink-0">
           <span>{t('target')}:</span>
-          <span className="font-bold text-emerald-400 font-mono">{target}%</span>
+          <span className="font-bold text-emerald-400 font-mono">≥{target}%</span>
+          <span className="text-slate-600">|</span>
+          <span className="text-amber-300 font-mono">{warningTarget}-{target}%</span>
         </div>
       </div>
 
@@ -214,10 +217,16 @@ export const Dashboard: React.FC = () => {
                 className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${
                   kpi.weekly_avg >= target
                     ? 'bg-emerald-500/20 text-emerald-400'
+                    : kpi.weekly_avg >= warningTarget
+                    ? 'bg-amber-500/20 text-amber-300'
                     : 'bg-rose-500/20 text-rose-400'
                 }`}
               >
-                {kpi.weekly_avg >= target ? t('tag_pass') : t('tag_fail')}
+                {kpi.weekly_avg >= target
+                  ? t('tag_pass')
+                  : kpi.weekly_avg >= warningTarget
+                  ? t('tag_warning')
+                  : t('tag_fail')}
               </span>
             ) : (
               <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 shrink-0">
@@ -232,6 +241,8 @@ export const Dashboard: React.FC = () => {
                   ? 'text-slate-400 text-sm'
                   : kpi.weekly_avg >= target
                   ? 'text-emerald-400'
+                  : kpi.weekly_avg >= warningTarget
+                  ? 'text-amber-300'
                   : 'text-rose-400'
               }`}
             >
@@ -304,9 +315,16 @@ export const Dashboard: React.FC = () => {
                 {t('area_count_slash', { n: kpi?.audited_areas_count || 0 })}
               </span>
             </span>
-            <span className="text-xs text-rose-400 font-semibold truncate">
-              {t('areas_failing_target', { n: kpi?.failing_areas_count || 0, target })}
-            </span>
+            <div className="flex items-center gap-1.5 text-xs font-semibold truncate">
+              {(kpi?.warning_areas_count || 0) > 0 && (
+                <span className="text-amber-300">
+                  {kpi?.warning_areas_count} {t('tag_warning')}
+                </span>
+              )}
+              <span className="text-rose-400">
+                {t('areas_failing_target', { n: kpi?.failing_areas_count || 0, target })}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -379,14 +397,22 @@ export const Dashboard: React.FC = () => {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
-            <div className="flex items-center gap-3 text-xs shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 text-xs shrink-0 flex-wrap">
               <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                 <span className="w-2 h-2 rounded-xs bg-emerald-500"></span>
                 {t('areas_pass_count', { target, n: kpi?.passed_areas_count || 0 })}
               </span>
+              <span className="flex items-center gap-1 text-amber-300 font-semibold">
+                <span className="w-2 h-2 rounded-xs bg-amber-500"></span>
+                {t('areas_warning_count', {
+                  min: warningTarget,
+                  max: target,
+                  n: kpi?.warning_areas_count || 0,
+                })}
+              </span>
               <span className="flex items-center gap-1 text-rose-400 font-semibold">
                 <span className="w-2 h-2 rounded-xs bg-rose-500"></span>
-                {t('areas_fail_count', { n: kpi?.failing_areas_count || 0 })}
+                {t('areas_fail_count', { warning: warningTarget, n: kpi?.failing_areas_count || 0 })}
               </span>
               <span className="flex items-center gap-1 text-slate-400 hidden sm:inline-flex">
                 <span className="w-2 h-2 rounded-xs bg-slate-600"></span>
@@ -402,19 +428,24 @@ export const Dashboard: React.FC = () => {
               // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
               const displayScore = isSubmitted ? area.score : area.month_avg;
               const isPass = displayScore !== null && displayScore >= target;
-              const isFail = displayScore !== null && displayScore < target;
+              const isWarning = displayScore !== null && displayScore >= warningTarget && displayScore < target;
+              const isFail = displayScore !== null && displayScore < warningTarget;
               const isOverdue = area.overdue_count > 0;
 
               const boxCls = isOverdue
                 ? 'border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
                 : isPass
                 ? 'border-emerald-500/35 bg-emerald-950/20'
+                : isWarning
+                ? 'border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
                 : isFail
                 ? 'border-rose-500/70 bg-rose-950/30'
                 : 'border-slate-700 bg-slate-800/40 opacity-75';
 
               const scoreCls = isPass
                 ? 'text-emerald-400'
+                : isWarning
+                ? 'text-amber-300'
                 : isFail
                 ? 'text-rose-400'
                 : 'text-slate-400 text-xs font-normal';
@@ -438,20 +469,18 @@ export const Dashboard: React.FC = () => {
                       <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-bold shrink-0">
                         {t('tag_overdue', { n: area.overdue_count })}
                       </span>
-                    ) : isSubmitted ? (
+                    ) : (isSubmitted || displayScore !== null) ? (
                       isPass ? (
                         <span className="text-xs font-bold text-emerald-400 shrink-0">{t('tag_pass')}</span>
+                      ) : isWarning ? (
+                        <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold shrink-0">
+                          {t('tag_warning')}
+                        </span>
                       ) : (
                         <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold shrink-0">
                           {t('tag_fail')}
                         </span>
                       )
-                    ) : isPass ? (
-                      <span className="text-xs font-bold text-emerald-400 shrink-0">{t('tag_pass')}</span>
-                    ) : isFail ? (
-                      <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold shrink-0">
-                        {t('tag_fail')}
-                      </span>
                     ) : (
                       <span className="text-[10px] text-amber-300/90 font-medium shrink-0">
                         {t('tag_pending')}
@@ -656,9 +685,14 @@ export const Dashboard: React.FC = () => {
             <span className="font-bold text-xs text-white uppercase truncate">
               {t('trend_title')}
             </span>
-            <span className="text-[11px] font-mono text-rose-400 font-semibold shrink-0">
-              {t('target_reference_label', { target: `${target}.0` })}
-            </span>
+            <div className="flex items-center gap-2 text-[11px] font-mono shrink-0">
+              <span className="text-emerald-400 font-semibold">
+                {t('target_reference_label', { target: `${target}.0` })}
+              </span>
+              <span className="text-amber-400 font-semibold">
+                {t('warning_reference_label', { target: `${warningTarget}.0` })}
+              </span>
+            </div>
           </div>
 
           <div className="h-56 sm:h-64 lg:h-full lg:flex-1 min-h-0 pt-1">
@@ -687,7 +721,8 @@ export const Dashboard: React.FC = () => {
                     fontSize: '11px',
                   }}
                 />
-                <ReferenceLine y={target} stroke="#ef4444" strokeDasharray="5 4" strokeWidth={1.5} />
+                <ReferenceLine y={target} stroke="#10b981" strokeDasharray="5 4" strokeWidth={1.5} />
+                <ReferenceLine y={warningTarget} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1.2} />
                 <Line
                   type="monotone"
                   dataKey="avg_score"

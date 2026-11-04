@@ -166,10 +166,11 @@ auditsRouter.get('/:id', async (c) => {
 
   // Target for audit year
   const targetRow = await c.env.DB
-    .prepare('SELECT target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
+    .prepare('SELECT target, COALESCE(warning_target, 90) as warning_target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
     .bind(audit.iso_year)
-    .first<{ target: number }>();
+    .first<{ target: number; warning_target?: number }>();
   const target = targetRow ? targetRow.target : 95;
+  const warningTarget = targetRow ? (targetRow.warning_target ?? 90) : 90;
 
   // Area scores for active areas
   const areaScoresRes = await c.env.DB
@@ -281,6 +282,7 @@ auditsRouter.get('/:id', async (c) => {
   return c.json({
     audit,
     target,
+    warning_target: warningTarget,
     area_scores: areaScoresRes.results || [],
     checklist_items: checklistRes.results || [],
     na_matrix: naRes.results || [],

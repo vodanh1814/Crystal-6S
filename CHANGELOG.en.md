@@ -7,6 +7,25 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.6.0] - 2026-11-04
+
+### Added & Improved (3-Tier Color Classification Red - Yellow - Green & Admin Warning Target Configuration)
+- **Industrial-Standard 3-Tier Color Classification (Red - Yellow - Green)**:
+  - 🔴 **Red (Fail)**: Score is below the warning threshold (`score < warning_target`, default `< 90.0%`).
+  - 🟡 **Yellow (Warning)**: Score falls between warning threshold and target (`warning_target <= score < target`, default `90.0% <= score < 95.0%`).
+  - 🟢 **Green (Pass)**: Score meets or exceeds target (`score >= target`, default `>= 95.0%`).
+- **Admin Configuration for Warning Target (`warning_target`) by Year**:
+  - Upgraded `yearly_targets` database table with `warning_target REAL NOT NULL DEFAULT 90`.
+  - Admin Targets Management UI (`/admin/targets`) provides interactive 3-color rule indicators, editable Yellow Warning threshold inputs, and real-time color pill preview.
+  - Strict validation: $0 \le \text{warning\_target} \le \text{target} \le 100$.
+- **Plant-wide UI Alignment with 3-Tier Classification**:
+  - **TV Andon Dashboard**: 16 area cards highlight with amber borders and badges when in warning status; 3-color summary counters (Green / Yellow / Red); Recharts 12-week trend chart with dual reference lines (green solid line for target, amber dashed line for warning target).
+  - **Weekly & Monthly Reports (`/reports`)**: Matrix score cells and summary status columns display PASS / WARNING / FAIL.
+  - **Audit Inspection Details (`/audits/:id`)**: Plant-wide score badges and 16-area score breakdown tables align with the 3 tiers.
+  - **Full Bilingual Localization (VI / EN)**: Added complete set of localized labels and warning messages.
+
+---
+
 ## [2.5.9] - 2026-11-04
 
 ### Added & Improved (Updated 150 2026 Historical Monthly Scores with 1-Decimal Precision & Seed Script)

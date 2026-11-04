@@ -3,7 +3,7 @@ import type { Env, Variables, Area } from '../types';
 import { authMiddleware, optionalAuthMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { getISOWeek, getVietnamToday, addDays, daysRemaining } from '../lib/week';
-import { calculateMonthlyScore, isScorePassing, cleanHistoricalScore } from '../lib/scoring';
+import { calculateMonthlyScore, isScorePassing, cleanHistoricalScore, getScoreStatus } from '../lib/scoring';
 
 export const reportsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -166,10 +166,11 @@ reportsRouter.get('/weekly', async (c) => {
 
   // Target for year
   const targetRow = await c.env.DB
-    .prepare('SELECT target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
+    .prepare('SELECT target, COALESCE(warning_target, 90) as warning_target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
     .bind(year)
-    .first<{ target: number }>();
+    .first<{ target: number; warning_target?: number }>();
   const target = targetRow ? targetRow.target : 95;
+  const warningTarget = targetRow ? (targetRow.warning_target ?? 90) : 90;
 
   // Active areas
   const areasRes = await c.env.DB
@@ -240,6 +241,7 @@ reportsRouter.get('/weekly', async (c) => {
   return c.json({
     month,
     target,
+    warning_target: warningTarget,
     weeks: weeks.map((w) => ({
       iso_year: w.isoYear,
       iso_week: w.isoWeek,
@@ -259,10 +261,11 @@ reportsRouter.get('/monthly', async (c) => {
 
   // Target for year
   const targetRow = await c.env.DB
-    .prepare('SELECT target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
+    .prepare('SELECT target, COALESCE(warning_target, 90) as warning_target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
     .bind(year)
-    .first<{ target: number }>();
+    .first<{ target: number; warning_target?: number }>();
   const target = targetRow ? targetRow.target : 95;
+  const warningTarget = targetRow ? (targetRow.warning_target ?? 90) : 90;
 
   // Active areas
   const areasRes = await c.env.DB
@@ -355,6 +358,7 @@ reportsRouter.get('/monthly', async (c) => {
   return c.json({
     year,
     target,
+    warning_target: warningTarget,
     months,
     matrix,
     historical_scores: historicalEntries,
@@ -475,10 +479,11 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
 
   // 1. Target for effective year
   const targetRow = await c.env.DB
-    .prepare('SELECT target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
+    .prepare('SELECT target, COALESCE(warning_target, 90) as warning_target FROM yearly_targets WHERE year <= ? ORDER BY year DESC LIMIT 1')
     .bind(effectiveYear)
-    .first<{ target: number }>();
+    .first<{ target: number; warning_target?: number }>();
   const target = targetRow ? targetRow.target : 95;
+  const warningTarget = targetRow ? (targetRow.warning_target ?? 90) : 90;
 
   // 2. Active areas
   const areasRes = await c.env.DB
@@ -932,6 +937,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   // If not submitted yet, fallback to displayMonth scores!
   let passedAreasCount = 0;
   let auditedAreasCount = 0;
+  let warningAreasCount = 0;
   let failingAreasCount = 0;
   let pendingAuditsCount = 0;
 
@@ -939,13 +945,15 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     const validScores = (currentWeekAreaScores.results || []).filter((a: any) => a.score !== null);
     auditedAreasCount = validScores.length;
     passedAreasCount = validScores.filter((a: any) => a.score >= target).length;
-    failingAreasCount = validScores.filter((a: any) => a.score < target).length;
+    warningAreasCount = validScores.filter((a: any) => a.score >= warningTarget && a.score < target).length;
+    failingAreasCount = validScores.filter((a: any) => a.score < warningTarget).length;
     pendingAuditsCount = areas.length - auditedAreasCount;
   } else {
     // Fallback to displayMonth scores
     auditedAreasCount = rankedValid.length;
     passedAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg >= target).length;
-    failingAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg < target).length;
+    warningAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg >= warningTarget && r.month_avg < target).length;
+    failingAreasCount = rankedValid.filter((r) => r.month_avg !== null && r.month_avg < warningTarget).length;
     pendingAuditsCount = areas.length - auditedAreasCount;
   }
 
@@ -1063,6 +1071,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
         : ((auditedForDisplayMonth?.size || 0) > 0 ? 'audited' : (historicalForDisplayMonth && historicalForDisplayMonth.size > 0 ? 'historical' : 'none')),
     },
     target,
+    warning_target: warningTarget,
     kpi: {
       weekly_avg: weeklyAvg,
       weekly_delta: weeklyDelta,
@@ -1074,6 +1083,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       is_fallback_month: isFallbackMonth,
       is_current_week_submitted: isCurrentWeekSubmitted,
       passed_areas_count: passedAreasCount,
+      warning_areas_count: warningAreasCount,
       audited_areas_count: auditedAreasCount,
       failing_areas_count: failingAreasCount,
       pending_audits_count: pendingAuditsCount,

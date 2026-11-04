@@ -7,6 +7,25 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.6.0] - 2026-11-04
+
+### Added & Improved (Hỗ trợ 3 Mức Xếp loại Màu Đỏ - Vàng - Xanh & Cho Phép Admin Cấu hình Ngưỡng Cảnh báo Theo Năm)
+- **Hệ thống Xếp loại Điểm số 3 Tầng Màu Sắc Chuẩn Công nghiệp (Đỏ - Vàng - Xanh)**:
+  - 🔴 **Đỏ (Không đạt)**: Điểm số dưới mức Cảnh báo (`score < warning_target`, mặc định `< 90,0%`).
+  - 🟡 **Vàng (Cảnh báo)**: Điểm số nằm giữa mức Cảnh báo và Mục tiêu Đạt (`warning_target <= score < target`, mặc định `90,0% <= score < 95,0%`).
+  - 🟢 **Xanh (Đạt chuẩn)**: Điểm số đạt hoặc vượt mục tiêu (`score >= target`, mặc định `>= 95,0%`).
+- **Cho Phép Quản trị viên (Admin) Tùy Chỉnh Ngưỡng Điểm Cảnh báo (`warning_target`)**:
+  - Nâng cấp bảng `yearly_targets` với cột `warning_target REAL NOT NULL DEFAULT 90`.
+  - Giao diện Quản trị Mục tiêu Năm (`/admin/targets`) hiển thị bảng quy tắc 3 màu trực quan và Modal chỉnh sửa cho phép nhập cả 2 mức điểm (Đạt Xanh và Cảnh báo Vàng) kèm thanh xem trước màu sắc tức thì.
+  - Kiểm tra hợp lệ chặt chẽ: $0 \le \text{warning\_target} \le \text{target} \le 100$.
+- **Đồng bộ Giao diện Toàn Hệ thống theo Chuẩn 3 Màu**:
+  - **TV Andon Dashboard**: 16 thẻ khu vực hiển thị viền và nhãn Amber khi rơi vào mức Cảnh báo; dải đếm trạng thái phân loại 3 màu (Xanh / Vàng / Đỏ); Biểu đồ xu hướng Recharts hiển thị đường chuẩn nét liền xanh lá và đường cảnh báo nét đứt màu vàng.
+  - **Báo cáo Matrix Tuần & Tháng (`/reports`)**: Các ô điểm cảnh báo hiển thị nền màu Amber, cột trạng thái phân loại ĐẠT / CẢNH BÁO / K.ĐẠT.
+  - **Chi tiết Phiếu Chấm (`/audits/:id`)**: Huy hiệu điểm toàn xưởng và bảng điểm 16 khu vực áp dụng chuẩn 3 màu.
+  - **Bản địa hóa Song ngữ (VI / EN)**: Bổ sung đầy đủ nhãn và thông báo cảnh báo đa ngôn ngữ.
+
+---
+
 ## [2.5.9] - 2026-11-04
 
 ### Added & Improved (Cập nhật 150 Điểm số Lịch sử Năm 2026 Chuẩn 1 Số Thập phân & File Seed Dữ liệu)

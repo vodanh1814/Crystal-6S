@@ -48,6 +48,7 @@ export interface AreaItemNA {
 export interface YearlyTarget {
   year: number;
   target: number;
+  warning_target?: number;
 }
 
 export interface AppSetting {

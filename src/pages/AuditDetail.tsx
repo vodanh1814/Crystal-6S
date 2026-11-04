@@ -97,7 +97,8 @@ export const AuditDetail: React.FC = () => {
 
   const {
     audit,
-    target,
+    target = 95,
+    warning_target: warningTarget = 90,
     area_scores = [],
     checklist_items = [],
     na_matrix = [],
@@ -380,7 +381,7 @@ export const AuditDetail: React.FC = () => {
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {t('plant_score_label')}
               </div>
-              <ScoreBadge score={currentPlantScore} target={target} size="lg" showStatusText />
+              <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="lg" showStatusText />
             </div>
             <div className="pl-3.5 border-l border-slate-200 text-right">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -556,8 +557,10 @@ export const AuditDetail: React.FC = () => {
                     <td className="py-3 px-4 text-center">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-black text-xs ${
-                          isPassing
+                          as.score >= target
                             ? 'bg-emerald-100 text-emerald-800'
+                            : as.score >= warningTarget
+                            ? 'bg-amber-100 text-amber-800'
                             : 'bg-rose-100 text-rose-800'
                         }`}
                       >
@@ -778,7 +781,7 @@ export const AuditDetail: React.FC = () => {
           <span className="text-xs text-slate-500 font-medium">
             {isDraft ? t('live_score') : t('score')}:
           </span>
-          <ScoreBadge score={currentPlantScore} target={target} size="md" showStatusText />
+          <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="md" showStatusText />
           <span className="hidden sm:inline text-xs font-bold text-rose-600">
             (-{currentPlantPenalty || 0}{t('pts_unit')})
           </span>

@@ -322,6 +322,7 @@ export const AdminTargets: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [year, setYear] = useState(new Date().getFullYear());
   const [targetScore, setTargetScore] = useState(95);
+  const [warningScore, setWarningScore] = useState(90);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -341,9 +342,10 @@ export const AdminTargets: React.FC = () => {
     fetchTargets();
   }, []);
 
-  const openModal = (initialYear?: number, initialTarget?: number) => {
+  const openModal = (initialYear?: number, initialTarget?: number, initialWarning?: number) => {
     setYear(initialYear || new Date().getFullYear());
     setTargetScore(initialTarget !== undefined ? initialTarget : 95);
+    setWarningScore(initialWarning !== undefined ? initialWarning : 90);
     setError(null);
     setModalOpen(true);
   };
@@ -351,10 +353,19 @@ export const AdminTargets: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (warningScore > targetScore) {
+      setError(t('warning_target_error') || 'Mức điểm Vàng không được lớn hơn Mức điểm Xanh');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await api.put(`/targets/${year}`, { target: targetScore });
+      await api.put(`/targets/${year}`, {
+        target: targetScore,
+        warning_target: warningScore,
+      });
       setModalOpen(false);
       await fetchTargets();
     } catch (err: any) {
@@ -1556,28 +1567,50 @@ export const AdminTargets: React.FC = () => {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                   <th className="py-3.5 px-4">{t('year')}</th>
-                  <th className="py-3.5 px-4">{t('target_score')}</th>
+                  <th className="py-3.5 px-4">{t('target_green_label')}</th>
+                  <th className="py-3.5 px-4">{t('target_yellow_label')}</th>
+                  <th className="py-3.5 px-4">{t('color_rules_label')}</th>
                   <th className="py-3.5 px-4 text-right">{t('action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {targets.map((tgt) => (
-                  <tr key={tgt.year} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-black text-slate-900">{tgt.year}</td>
-                    <td className="py-3.5 px-4 font-bold text-emerald-600 text-base">
-                      {tgt.target}%
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => openModal(tgt.year, tgt.target)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>{t('edit')}</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {targets.map((tgt) => {
+                  const greenTgt = tgt.target;
+                  const yellowTgt = tgt.warning_target !== undefined ? tgt.warning_target : 90;
+                  return (
+                    <tr key={tgt.year} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-4 font-black text-slate-900">{tgt.year}</td>
+                      <td className="py-3.5 px-4 font-bold text-emerald-600 text-base">
+                        ≥ {greenTgt}%
+                      </td>
+                      <td className="py-3.5 px-4 font-bold text-amber-600 text-base">
+                        {yellowTgt}% - &lt; {greenTgt}%
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                            🔴 &lt; {yellowTgt}%
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            🟡 {yellowTgt} - {greenTgt}%
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            🟢 ≥ {greenTgt}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => openModal(tgt.year, tgt.target, tgt.warning_target)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>{t('edit')}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -1736,20 +1769,62 @@ export const AdminTargets: React.FC = () => {
             />
           </div>
 
+          {/* Mức Xanh: Đạt chuẩn */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('target_score')} (%)
+            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+              🟢 {t('target_green_label')} (%)
             </label>
             <input
               type="number"
-              step="0.5"
+              step="0.1"
               min={0}
               max={100}
               required
               value={targetScore}
               onChange={(e) => setTargetScore(parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 font-bold"
             />
+            <p className="text-[11px] text-slate-500 mt-1">
+              {t('legend_green_desc', { target: targetScore })}
+            </p>
+          </div>
+
+          {/* Mức Vàng: Cảnh báo */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">
+              🟡 {t('target_yellow_label')} (%)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              min={0}
+              max={100}
+              required
+              value={warningScore}
+              onChange={(e) => setWarningScore(parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 font-bold"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              {t('legend_yellow_desc', { min: warningScore, max: targetScore })}
+            </p>
+          </div>
+
+          {/* Live Preview of 3 Tiers */}
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <span className="text-[11px] font-bold uppercase text-slate-500 block">
+              {t('color_rules_label')}
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                🔴 &lt; {warningScore}%
+              </span>
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                🟡 {warningScore}% - {targetScore}%
+              </span>
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                🟢 ≥ {targetScore}%
+              </span>
+            </div>
           </div>
 
           <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">

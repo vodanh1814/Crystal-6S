@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.5.9`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.6.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,21 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.5.8`
+## 1. Highlights of Version `v2.6.0`
 
-### 🎯 Plant-wide Standardized 1-Decimal-Place Score Formatting (`formatScore`)
+### 🎨 3-Tier Color Classification (Red - Yellow - Green) & Admin Warning Target Configuration
+- **Industrial-Grade 3-Tier Color System**:
+  - 🔴 **Red (Fail)**: Score $< \text{warning\_target}$ (default $< 90.0\%$).
+  - 🟡 **Yellow (Warning)**: Score $\ge \text{warning\_target}$ and $< \text{target}$ (default $90.0\% \to < 95.0\%$).
+  - 🟢 **Green (Pass)**: Score $\ge \text{target}$ (default $\ge 95.0\%$).
+- **Admin Configuration for Warning Thresholds (`warning_target`)**:
+  - Yearly Targets Management (`/admin/targets`) allows administrators to configure both Green Pass and Yellow Warning target thresholds.
+  - Interactive live color preview and strict boundary validation.
+- **Plant-wide UI Alignment**:
+  - **TV Andon Dashboard**: 16 area cards with amber borders and tags; Recharts 12-week trend chart with dual reference lines.
+  - **Weekly / Monthly Reports & Audit Sheets**: Full support for PASS / WARNING / FAIL classification.
+
+### 🎯 Plant-wide Standardized 1-Decimal-Place Score Formatting (`v2.5.8`)
 - **Consistent & Professional Score Precision**:
   - All scores across TV Dashboard, Top 2 / Bottom 2 rankings, 16 factory area cards, reports, ScoreBadge, and audit details are consistently displayed with 1 decimal digit (`95,3%`, `95,0%`, `100,0%`).
   - Locale-aware separators: Comma `,` for Vietnamese (`95,3%`), Dot `.` for English (`95.3%`).

@@ -5,6 +5,7 @@ import {
   calculateWeeklyScore,
   calculateMonthlyScore,
   isScorePassing,
+  getScoreStatus,
   getEscalatedRepeatLevel,
   cleanHistoricalScore,
 } from './scoring.ts';
@@ -61,6 +62,29 @@ test('calculateMonthlyScore computes average correctly and ignores empty', () =>
   assert.equal(calculateMonthlyScore([95, 96, 97]), 96);
   assert.equal(calculateMonthlyScore([90, 95]), 92.5);
   assert.equal(calculateMonthlyScore([91.33, 94.67]), 93);
+});
+
+test('getScoreStatus categorizes into pass (green), warning (yellow), fail (red)', () => {
+  // Target: 95, Warning: 90
+  // Pass (green): >= 95
+  assert.equal(getScoreStatus(95, 95, 90), 'pass');
+  assert.equal(getScoreStatus(98.5, 95, 90), 'pass');
+  assert.equal(getScoreStatus(100, 95, 90), 'pass');
+
+  // Warning (yellow): 90 <= score < 95
+  assert.equal(getScoreStatus(90, 95, 90), 'warning');
+  assert.equal(getScoreStatus(92.3, 95, 90), 'warning');
+  assert.equal(getScoreStatus(94.99, 95, 90), 'warning');
+
+  // Fail (red): < 90
+  assert.equal(getScoreStatus(89.9, 95, 90), 'fail');
+  assert.equal(getScoreStatus(80, 95, 90), 'fail');
+  assert.equal(getScoreStatus(0, 95, 90), 'fail');
+
+  // Edge cases
+  assert.equal(getScoreStatus(null, 95, 90), 'none');
+  assert.equal(getScoreStatus(undefined, 95, 90), 'none');
+  assert.equal(getScoreStatus(NaN, 95, 90), 'none');
 });
 
 test('isScorePassing tests against target', () => {

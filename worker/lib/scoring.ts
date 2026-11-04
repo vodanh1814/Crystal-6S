@@ -42,6 +42,25 @@ export function calculateMonthlyScore(submittedScores: number[]): number | null 
   return Number(avg.toFixed(2));
 }
 
+export type ScoreTier = 'pass' | 'warning' | 'fail' | 'none';
+
+export function getScoreStatus(
+  score: number | null | undefined,
+  target: number,
+  warningTarget: number = 90
+): ScoreTier {
+  if (score === null || score === undefined || isNaN(score)) {
+    return 'none';
+  }
+  if (score >= target) {
+    return 'pass';
+  }
+  if (score >= warningTarget) {
+    return 'warning';
+  }
+  return 'fail';
+}
+
 export function isScorePassing(score: number, target: number): boolean {
   return score >= target;
 }

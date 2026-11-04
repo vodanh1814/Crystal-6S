@@ -354,17 +354,23 @@ export const Reports: React.FC = () => {
   const renderCell = (
     score: number | null | undefined,
     target: number,
-    source?: 'audited' | 'historical' | null
+    source?: 'audited' | 'historical' | null,
+    warningTarget: number = 90
   ) => {
     if (score === null || score === undefined) {
       return <span className="text-slate-300">-</span>;
     }
     const isPass = score >= target;
+    const isWarning = score >= warningTarget && score < target;
+    const badgeColor = isPass
+      ? 'bg-emerald-100 text-emerald-800'
+      : isWarning
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-rose-100 text-rose-800';
+
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
-          isPass ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-        }`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${badgeColor}`}
         title={source === 'historical' ? t('historical_score_tooltip') : t('weekly_score_tooltip')}
       >
         <span>{formatScore(score, lang)}</span>
@@ -530,21 +536,27 @@ export const Reports: React.FC = () => {
                     </td>
                     {weeklyData.weeks.map((w: any) => (
                       <td key={w.label} className="py-3 px-3 text-center whitespace-nowrap">
-                        {renderCell(row.weeks[w.label]?.score, weeklyData.target)}
+                        {renderCell(row.weeks[w.label]?.score, weeklyData.target, null, weeklyData.warning_target || 90)}
                       </td>
                     ))}
                     <td className="py-3 px-4 text-center bg-slate-50 font-black whitespace-nowrap">
-                      {renderCell(row.month_avg, weeklyData.target)}
+                      {renderCell(row.month_avg, weeklyData.target, null, weeklyData.warning_target || 90)}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {row.passed === true ? (
-                        <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
-                          {t('pass')}
-                        </span>
-                      ) : row.passed === false ? (
-                        <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
-                          {t('fail')}
-                        </span>
+                      {row.month_avg !== null && row.month_avg !== undefined ? (
+                        row.month_avg >= weeklyData.target ? (
+                          <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
+                            {t('pass')}
+                          </span>
+                        ) : row.month_avg >= (weeklyData.warning_target || 90) ? (
+                          <span className="text-xs font-bold text-amber-600 px-2 py-0.5 rounded bg-amber-50">
+                            {t('tag_warning')}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
+                            {t('fail')}
+                          </span>
+                        )
                       ) : (
                         <span className="text-xs text-slate-400">-</span>
                       )}
@@ -580,21 +592,27 @@ export const Reports: React.FC = () => {
                     </td>
                     {monthlyData.months.map((m: string) => (
                       <td key={m} className="py-3 px-2 text-center whitespace-nowrap">
-                        {renderCell(row.months[m], monthlyData.target, row.sources?.[m])}
+                        {renderCell(row.months[m], monthlyData.target, row.sources?.[m], monthlyData.warning_target || 90)}
                       </td>
                     ))}
                     <td className="py-3 px-4 text-center bg-slate-50 font-black whitespace-nowrap">
-                      {renderCell(row.year_avg, monthlyData.target)}
+                      {renderCell(row.year_avg, monthlyData.target, null, monthlyData.warning_target || 90)}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {row.passed === true ? (
-                        <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
-                          {t('pass')}
-                        </span>
-                      ) : row.passed === false ? (
-                        <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
-                          {t('fail')}
-                        </span>
+                      {row.year_avg !== null && row.year_avg !== undefined ? (
+                        row.year_avg >= monthlyData.target ? (
+                          <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
+                            {t('pass')}
+                          </span>
+                        ) : row.year_avg >= (monthlyData.warning_target || 90) ? (
+                          <span className="text-xs font-bold text-amber-600 px-2 py-0.5 rounded bg-amber-50">
+                            {t('tag_warning')}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
+                            {t('fail')}
+                          </span>
+                        )
                       ) : (
                         <span className="text-xs text-slate-400">-</span>
                       )}

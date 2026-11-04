@@ -55,7 +55,8 @@ CREATE TABLE area_item_na (
 
 CREATE TABLE yearly_targets (
   year INTEGER PRIMARY KEY,
-  target REAL NOT NULL CHECK (target BETWEEN 0 AND 100)
+  target REAL NOT NULL CHECK (target BETWEEN 0 AND 100),
+  warning_target REAL NOT NULL DEFAULT 90 CHECK (warning_target BETWEEN 0 AND 100)
 );
 
 CREATE TABLE audits (
@@ -150,7 +151,7 @@ CREATE TABLE IF NOT EXISTS historical_monthly_scores (
 );
 CREATE INDEX IF NOT EXISTS idx_historical_scores_year_month ON historical_monthly_scores(year, month);
 
-INSERT INTO yearly_targets (year, target) VALUES (2026, 95);
+INSERT INTO yearly_targets (year, target, warning_target) VALUES (2026, 95, 90);
 
 CREATE TABLE IF NOT EXISTS app_settings (
   key TEXT PRIMARY KEY,

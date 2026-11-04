@@ -80,3 +80,25 @@ export function formatDelta(
   }
   return `▼ -${localized}%`;
 }
+
+export type ScoreTier = 'pass' | 'warning' | 'fail' | 'none';
+
+/**
+ * Determines score tier according to the 3-tier rules:
+ * - Green ('pass'): score >= target (default: 95)
+ * - Yellow ('warning'): warningTarget <= score < target (default: 90 <= score < 95)
+ * - Red ('fail'): score < warningTarget (default: score < 90)
+ * - 'none': null, undefined, or NaN
+ */
+export function getScoreTier(
+  score: number | null | undefined,
+  target: number = 95,
+  warningTarget: number = 90
+): ScoreTier {
+  if (score === null || score === undefined) return 'none';
+  const num = typeof score === 'number' ? score : Number(score);
+  if (isNaN(num)) return 'none';
+  if (num >= target) return 'pass';
+  if (num >= warningTarget) return 'warning';
+  return 'fail';
+}

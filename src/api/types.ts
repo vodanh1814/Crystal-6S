@@ -139,6 +139,7 @@ export interface Audit {
 export interface YearlyTarget {
   year: number;
   target: number;
+  warning_target?: number;
 }
 
 export interface AppSettings {

@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.5.9`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.6.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,21 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.5.8`
+## 1. Điểm nổi bật của phiên bản `v2.6.0`
 
-### 🎯 Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân Toàn Hệ thống (`formatScore`)
+### 🎨 Phân loại Điểm số 3 Mức Màu (Đỏ - Vàng - Xanh) & Tùy chỉnh Ngưỡng Cảnh báo Admin
+- **Hệ Thống Đánh Giá 3 Tầng Màu Sắc Chuẩn Công Nghiệp**:
+  - 🔴 **Đỏ (Không đạt)**: Điểm $< \text{warning\_target}$ (mặc định $< 90,0\%$).
+  - 🟡 **Vàng (Cảnh báo)**: Điểm $\ge \text{warning\_target}$ và $< \text{target}$ (mặc định $90,0\% \to < 95,0\%$).
+  - 🟢 **Xanh (Đạt chuẩn)**: Điểm $\ge \text{target}$ (mặc định $\ge 95,0\%$).
+- **Admin Chủ Động Thiết Lập Ngưỡng Điểm Cảnh Báo (`warning_target`)**:
+  - Giao diện Quản trị Mục tiêu Năm (`/admin/targets`) cho phép quản trị viên nhập điểm Cảnh báo Vàng và điểm Chuẩn Xanh theo từng năm.
+  - Tích hợp thanh xem trước màu sắc trực quan theo thời gian thực và kiểm tra tính hợp lệ chặt chẽ.
+- **Đồng Bộ Trực Quan Trên Mọi Giao Diện**:
+  - **TV Andon Dashboard**: 16 thẻ khu vực xưởng hiển thị viền và nhãn Amber khi rơi vào mức Cảnh báo; Biểu đồ Recharts hiển thị đường chuẩn nét liền xanh lá và đường nét đứt màu vàng tham chiếu.
+  - **Báo cáo Tuần / Tháng & Chi tiết Phiếu Chấm**: Bổ sung đầy đủ trạng thái ĐẠT / CẢNH BÁO / K.ĐẠT.
+
+### 🎯 Chuẩn hóa Hiển thị Điểm số Có 1 Chữ số Thập phân Toàn Hệ thống (`v2.5.8`)
 - **Hiển thị Chính xác & Chuyên nghiệp**:
   - Mọi điểm số trên TV Dashboard, bảng vinh danh Top 2 / Nhắc nhở Bottom 2, ma trận 16 khu vực xưởng sản xuất, báo cáo tuần / tháng, ScoreBadge và bảng điểm chi tiết đều hiển thị chuẩn 1 chữ số thập phân (`95,3%`, `95,0%`, `100,0%`).
   - Hỗ trợ bản địa hóa định dạng số: Tiếng Việt dùng dấu phẩy `,` (`95,3%`), Tiếng Anh dùng dấu chấm `.` (`95.3%`).
