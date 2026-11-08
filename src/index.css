@@ -1,8 +1,80 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light dark;
+  --scrollbar-thumb: rgba(100, 116, 139, 0.45);
+  --scrollbar-track: transparent;
+}
+
+:where(:root:has(> head > meta[name="color-scheme"][content="dark"])) {
+  color-scheme: dark;
+  --scrollbar-thumb: rgba(148, 163, 184, 0.35);
+}
+
+:where(:root:has(> head > meta[name="color-scheme"][content="light"])) {
+  color-scheme: light;
+  --scrollbar-thumb: rgba(100, 116, 139, 0.4);
+}
+
+html[data-color-mode="dark"] {
+  color-scheme: dark;
+  --scrollbar-thumb: rgba(148, 163, 184, 0.35);
+}
+
+html[data-color-mode="light"] {
+  color-scheme: light;
+  --scrollbar-thumb: rgba(100, 116, 139, 0.4);
+}
+
+/* Pre-hydration initial canvas background preventing dark/light FOUC */
+html[data-color-mode="light"] body {
+  background-color: #f4f7fb;
+  color: #0f172a;
+}
+
+html[data-color-mode="dark"] body {
+  background-color: #070b14;
+  color: #f1f5f9;
+}
+
+html[data-ui-theme="classic"][data-color-mode="dark"] body {
+  background-color: #020617;
+}
+
 @layer base {
   body {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth typography & crisp tabular figures for Crystal Glass & Crystal Hybrid themes */
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]):is(html),
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) :is(body, main, .theme-tv-canvas, .theme-workspace, .theme-modal-card, [class*="overflow-"]) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+/* WebKit fallback ONLY where standard scrollbar-color is unsupported */
+@supports not (scrollbar-color: auto) {
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+  :is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
   }
 }
 
@@ -23,4 +95,339 @@
 
 .sidebar-transition {
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .alarm-pulse,
+  .sidebar-transition {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE STICKY REPORT TABLE (Samples 2 & 4)
+   ============================================================================ */
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table th:first-child,
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table td:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  box-shadow: inset -1px 0 0 rgba(148, 163, 184, 0.22);
+}
+
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table thead th:first-child {
+  z-index: 3;
+}
+
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table tbody td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .sticky-matrix-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================================
+   THEME 2: CRYSTAL GLASS ENTERPRISE (crystal-glass)
+   Soft icy translucency, Sapphire Blue (#2563EB) accents, Midnight Crystal TV
+   ============================================================================ */
+[data-ui-theme="crystal-glass"] .theme-tv-canvas {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(37, 99, 235, 0.20), transparent 46%),
+    radial-gradient(circle at 86% 85%, rgba(6, 182, 212, 0.14), transparent 50%),
+    #060c1a;
+  color: #f1f5f9;
+  color-scheme: dark;
+}
+
+[data-ui-theme="crystal-glass"][data-color-mode="light"] .theme-tv-canvas {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(56, 189, 248, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(37, 99, 235, 0.12), transparent 45%),
+    #eef4fb;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+[data-ui-theme="crystal-glass"] .theme-workspace {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(56, 189, 248, 0.14), transparent 42%),
+    radial-gradient(circle at 92% 18%, rgba(37, 99, 235, 0.10), transparent 46%),
+    #f2f6fc;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+[data-ui-theme="crystal-glass"] .theme-workspace .bg-white:not(.logo-well):not(.no-glass) {
+  background-color: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 10px 30px -10px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(203, 213, 225, 0.72);
+}
+
+:is([data-ui-theme="crystal-glass"], [data-ui-theme="crystal-hybrid"]) .theme-workspace .bg-blue-600 {
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.35);
+}
+
+[data-ui-theme="crystal-glass"] .theme-modal-card {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.25);
+}
+
+/* ============================================================================
+   THEME 4: CRYSTAL HYBRID ADAPTIVE (crystal-hybrid)
+   Precision Obsidian Bento + Sapphire-Cyan (#0EA5E9) + Light/Dark Switching
+   ============================================================================ */
+[data-ui-theme="crystal-hybrid"] .theme-tv-canvas {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.12), transparent 48%),
+    radial-gradient(circle at 85% 95%, rgba(37, 99, 235, 0.10), transparent 48%),
+    #070b14;
+  color: #f1f5f9;
+  color-scheme: dark;
+}
+
+[data-ui-theme="crystal-hybrid"][data-color-mode="light"] .theme-tv-canvas {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.10), transparent 45%),
+    #f1f5f9;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+[data-ui-theme="crystal-hybrid"] .theme-workspace {
+  background: #f4f7fb;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+[data-ui-theme="crystal-hybrid"] .theme-workspace .bg-white:not(.logo-well) {
+  box-shadow: 0 4px 20px -6px rgba(15, 23, 42, 0.06);
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+/* ============================================================================
+   DARK MODE WORKSPACE & MODALS (Crystal Hybrid Dark & Crystal Glass Dark)
+   ============================================================================ */
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.09), transparent 45%),
+    #070b14;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace :is(.bg-white, .bg-white\/95, .bg-white\/80):not(.logo-well),
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card,
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card :is(.bg-white, .bg-white\/95, .bg-white\/80):not(.logo-well) {
+  background-color: #0f1624;
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-header {
+  background-color: #141e30;
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace :is(.bg-slate-50, .bg-slate-50\/80, .bg-slate-50\/70, .bg-slate-50\/60, .bg-slate-50\/50),
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card :is(.bg-slate-50, .bg-slate-50\/80, .bg-slate-50\/70, .bg-slate-50\/60, .bg-slate-50\/50) {
+  background-color: #141d2e;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace :is(.bg-slate-100, .bg-slate-100\/60),
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card :is(.bg-slate-100, .bg-slate-100\/60) {
+  background-color: #1b273d;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace :is(.bg-slate-200, .bg-slate-200\/80),
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card :is(.bg-slate-200, .bg-slate-200\/80) {
+  background-color: #24334c;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-slate-900, .text-slate-800) {
+  color: #f1f5f9;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-slate-700, .text-slate-600) {
+  color: #cbd5e1;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-slate-500, .text-slate-400) {
+  color: #94a3b8;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.border-slate-300, .border-slate-200, .border-slate-200\/80, .border-slate-200\/70, .border-slate-200\/60, .border-slate-100) {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.divide-slate-100, .divide-slate-200) > :not(:last-child) {
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+/* Inputs & native form controls inside Dark Mode workspace / modals */
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: #0b111e;
+  color: #f1f5f9;
+  border-color: rgba(148, 163, 184, 0.28);
+  color-scheme: dark;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(input, select, textarea):disabled {
+  background-color: #131c2e;
+  color: #94a3b8;
+}
+
+/* Pastel semantic status pills & banners adapted for crisp Dark Mode contrast */
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.bg-emerald-50, .bg-emerald-50\/60, .bg-emerald-50\/70, .bg-emerald-50\/80, .bg-emerald-50\/90, .bg-emerald-100, .bg-emerald-200\/80) {
+  background-color: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.34);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-emerald-950, .text-emerald-900, .text-emerald-800, .text-emerald-700, .text-emerald-600) {
+  color: #6ee7b7;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.bg-amber-50, .bg-amber-50\/80, .bg-amber-100) {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-amber-900, .text-amber-800, .text-amber-700, .text-amber-600) {
+  color: #fcd34d;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.bg-rose-50, .bg-rose-50\/60, .bg-rose-100) {
+  background-color: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-rose-900, .text-rose-800, .text-rose-700, .text-rose-600) {
+  color: #fda4af;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.bg-sky-50, .bg-sky-50\/70, .bg-sky-50\/80, .bg-sky-100, .bg-blue-50, .bg-blue-50\/40, .bg-blue-50\/60, .bg-blue-50\/70, .bg-blue-100) {
+  background-color: rgba(14, 165, 233, 0.14);
+  border-color: rgba(14, 165, 233, 0.32);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-sky-900, .text-sky-800, .text-sky-700, .text-sky-600, .text-blue-900, .text-blue-800, .text-blue-700, .text-blue-600) {
+  color: #7dd3fc;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.bg-purple-50, .bg-purple-50\/70, .bg-purple-50\/80, .bg-purple-100) {
+  background-color: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.35);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is(.text-purple-900, .text-purple-800, .text-purple-700, .text-indigo-700, .text-indigo-600) {
+  color: #d8b4fe;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace :is(button.bg-slate-900, a.bg-slate-900, span.bg-slate-900) {
+  background-color: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace .sticky-matrix-table thead th:first-child {
+  background-color: #141d2e;
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-workspace .sticky-matrix-table tbody td:first-child {
+  background-color: #0f1624;
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card .sticky-matrix-table thead th:first-child {
+  background-color: #1b273d;
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] .theme-modal-card .sticky-matrix-table tbody td:first-child {
+  background-color: #141d2e;
+}
+:is([data-ui-theme="crystal-hybrid"][data-color-mode="light"], [data-ui-theme="crystal-glass"]:not([data-color-mode="dark"])) .theme-workspace .sticky-matrix-table thead th:first-child {
+  background-color: #f8fafc;
+}
+:is([data-ui-theme="crystal-hybrid"][data-color-mode="light"], [data-ui-theme="crystal-glass"]:not([data-color-mode="dark"])) .theme-workspace .sticky-matrix-table tbody td:first-child {
+  background-color: #ffffff;
+}
+:is([data-ui-theme="crystal-hybrid"][data-color-mode="light"], [data-ui-theme="crystal-glass"]:not([data-color-mode="dark"])) .theme-modal-card .sticky-matrix-table thead th:first-child {
+  background-color: #f1f5f9;
+}
+:is([data-ui-theme="crystal-hybrid"][data-color-mode="light"], [data-ui-theme="crystal-glass"]:not([data-color-mode="dark"])) .theme-modal-card .sticky-matrix-table tbody td:first-child {
+  background-color: #f8fafc;
+}
+
+/* Dark Mode hover background & hover text contrast protection across interactive controls */
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:bg-slate-50"], [class*="hover:bg-slate-100"]):hover {
+  background-color: rgba(30, 41, 59, 0.72);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:bg-slate-200"]:hover {
+  background-color: #293854;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:bg-white"]:hover {
+  background-color: #1c2940;
+  color: #f8fafc;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:bg-blue-50"], [class*="hover:bg-blue-100"]):hover {
+  background-color: rgba(14, 165, 233, 0.24);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:bg-amber-100"]:hover {
+  background-color: rgba(245, 158, 11, 0.28);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:bg-rose-50"], [class*="hover:bg-rose-100"]):hover {
+  background-color: rgba(244, 63, 94, 0.25);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:bg-emerald-100"]:hover {
+  background-color: rgba(16, 185, 129, 0.26);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:text-slate-700"], [class*="hover:text-slate-800"], [class*="hover:text-slate-900"]):hover {
+  color: #f8fafc;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:text-blue-600"], [class*="hover:text-blue-700"], [class*="hover:text-blue-800"], [class*="hover:text-sky-700"], [class*="hover:text-sky-800"]):hover {
+  color: #93c5fd;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) .border-sky-100 {
+  border-color: rgba(14, 165, 233, 0.32);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) .border-emerald-100 {
+  border-color: rgba(16, 185, 129, 0.34);
+}
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) .border-rose-100 {
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:text-emerald-700"]:hover {
+  color: #a7f3d0;
+}
+
+:is([data-ui-theme="crystal-hybrid"], [data-ui-theme="crystal-glass"])[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="hover:text-rose-600"]:hover {
+  color: #fda4af;
+}
+
+/* Dark mode highlight tint on Company Logo wrapper stays visible */
+.logo-well {
+  background-color: rgba(255, 255, 255, 0.96);
+}
+
+/* Forced colors (Windows High Contrast) compliance */
+@media (forced-colors: active) {
+  .theme-workspace .bg-white,
+  .theme-tv-canvas [class*="rounded-"] {
+    border: 1px solid CanvasText;
+  }
 }

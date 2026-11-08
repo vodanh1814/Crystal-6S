@@ -34,7 +34,8 @@ import type { Area } from '../api/types';
 
 export const Reports: React.FC = () => {
   const { t, lang } = useI18n();
-  const { isAdmin } = useAuth();
+  const { isAdmin, activeTheme } = useAuth();
+  const stickyTableCls = activeTheme !== 'classic' ? 'sticky-matrix-table' : '';
   const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'monthly' || params.get('import') === '1') return 'monthly';
@@ -511,8 +512,13 @@ export const Reports: React.FC = () => {
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
           </div>
         ) : tab === 'weekly' && weeklyData ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={t('weekly_report')}
+            className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          >
+            <table className={`w-full text-left text-sm ${stickyTableCls || 'border-collapse'}`}>
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                   <th className="py-3 px-4">{t('area_column')}</th>
@@ -567,8 +573,13 @@ export const Reports: React.FC = () => {
             </table>
           </div>
         ) : tab === 'monthly' && monthlyData ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={t('monthly_report')}
+            className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          >
+            <table className={`w-full text-left text-sm ${stickyTableCls || 'border-collapse'}`}>
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                   <th className="py-3 px-4">{t('area_column')}</th>
@@ -692,8 +703,13 @@ export const Reports: React.FC = () => {
             </div>
 
             {/* Per-Area Remediation Effectiveness Table */}
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-left text-sm border-collapse">
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label={t('remediation_report')}
+              className="overflow-x-auto rounded-xl border border-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+            >
+              <table className={`w-full text-left text-sm ${stickyTableCls || 'border-collapse'}`}>
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                     <th className="py-3 px-4">{t('area_column')}</th>
@@ -929,8 +945,13 @@ export const Reports: React.FC = () => {
           )}
 
           {/* Interactive Matrix Table */}
-          <div className="max-h-[50vh] overflow-auto rounded-2xl border border-slate-200 shadow-2xs">
-            <table className="w-full text-xs text-left border-collapse">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={t('import_historical_title', { year: selectedYear })}
+            className="max-h-[50vh] overflow-auto rounded-2xl border border-slate-200 shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          >
+            <table className={`w-full text-xs text-left ${stickyTableCls || 'border-collapse'}`}>
               <thead className="bg-slate-100 sticky top-0 z-10 border-b border-slate-200 text-slate-700 font-bold">
                 <tr>
                   <th className="py-2.5 px-3 bg-slate-100 whitespace-nowrap">{t('area_col_header')}</th>

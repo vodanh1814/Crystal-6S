@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  TrendingUp,
-  ArrowRight,
   Loader2,
-  ExternalLink,
   Calendar,
   RotateCcw,
 } from 'lucide-react';
@@ -23,9 +16,11 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 import { formatScore, formatDelta } from '../lib/format';
+import { resolveColorMode } from '../lib/theme';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -65,11 +60,18 @@ function getShortCriterionText(itemCode: string, fullText: string, lang: 'vi' | 
 
 export const Dashboard: React.FC = () => {
   const { lang, t } = useI18n();
+  const { activeTheme, colorModeOverride } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedMonth = searchParams.get('month') || '';
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+
+  const isClassic = activeTheme === 'classic';
+  const isGlass = activeTheme === 'crystal-glass';
+  const isHybrid = activeTheme === 'crystal-hybrid';
+  const resolvedMode = resolveColorMode(activeTheme, colorModeOverride, true);
+  const isLightTv = !isClassic && resolvedMode === 'light';
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -104,7 +106,11 @@ export const Dashboard: React.FC = () => {
   if (loading || !data) {
     return (
       <div className="h-full w-full flex items-center justify-center p-12">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <Loader2
+          className={`w-8 h-8 animate-spin ${
+            isClassic ? 'text-emerald-500' : isGlass ? 'text-blue-500' : 'text-sky-500'
+          }`}
+        />
       </div>
     );
   }
@@ -149,28 +155,161 @@ export const Dashboard: React.FC = () => {
     ...(s_group_breakdown || []).map((g: any) => g.count || 0)
   );
 
+  // ── Theme-specific TV Board Tokens (Classic 100% unchanged) ──
+  const panelCls = isClassic
+    ? 'rounded-lg bg-slate-900 border border-slate-800'
+    : isGlass
+    ? isLightTv
+      ? 'rounded-2xl bg-white/82 backdrop-blur-md border border-slate-200/80 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.08)]'
+      : 'rounded-2xl bg-[#0c172e]/76 backdrop-blur-md border border-sky-300/15 shadow-[0_12px_36px_-10px_rgba(2,6,23,0.7)]'
+    : isLightTv
+    ? 'rounded-2xl bg-white border border-slate-200/90 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.07)]'
+    : 'rounded-2xl bg-[#0f1624] border border-white/[0.08] shadow-[0_12px_32px_-12px_rgba(0,0,0,0.6)]';
+
+  const toolbarPillCls = isClassic
+    ? 'bg-slate-900 border-slate-800 text-slate-300'
+    : isGlass
+    ? isLightTv
+      ? 'bg-white/85 backdrop-blur-md border-slate-200/80 text-slate-700 shadow-xs'
+      : 'bg-[#0c172e]/80 backdrop-blur-md border-sky-300/20 text-slate-200'
+    : isLightTv
+    ? 'bg-white border-slate-200 text-slate-700 shadow-xs'
+    : 'bg-[#0f1624] border-white/10 text-slate-200';
+
+  const optionBgCls = isLightTv ? 'bg-white text-slate-900' : 'bg-slate-900 text-slate-200';
+  const accentTextCls = isClassic
+    ? 'text-emerald-400'
+    : isGlass
+    ? isLightTv
+      ? 'text-blue-600'
+      : 'text-sky-400'
+    : isLightTv
+    ? 'text-sky-600'
+    : 'text-sky-400';
+
+  const headingTextCls = isLightTv ? 'text-slate-900' : 'text-white';
+  const subTextCls = isLightTv ? 'text-slate-700' : 'text-slate-200';
+  const mutedTextCls = isLightTv ? 'text-slate-500' : 'text-slate-400';
+  const subtleDividerCls = isClassic
+    ? 'border-slate-800'
+    : isLightTv
+    ? 'border-slate-200/80'
+    : 'border-white/10';
+  const innerRowDividerCls = isLightTv ? 'border-slate-200/70' : 'border-white/5';
+
+  // Status semantic colors adapted safely for Light TV vs Dark TV
+  const passTextCls = isLightTv ? 'text-emerald-700' : 'text-emerald-400';
+  const passBadgeCls = isLightTv
+    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+    : 'bg-emerald-500/20 text-emerald-400';
+  const warnTextCls = isLightTv ? 'text-amber-700' : 'text-amber-300';
+  const warnBadgeCls = isLightTv
+    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+    : 'bg-amber-500/20 text-amber-300';
+  const failTextCls = isLightTv ? 'text-rose-700' : 'text-rose-400';
+  const failBadgeCls = isLightTv
+    ? 'bg-rose-100 text-rose-800 border border-rose-200'
+    : 'bg-rose-500/20 text-rose-400';
+  const blueStatTextCls = isLightTv ? 'text-blue-700' : 'text-blue-400';
+  const purpleTextCls = isLightTv ? 'text-purple-700' : 'text-purple-300';
+  const purpleValTextCls = isLightTv ? 'text-purple-700' : 'text-purple-400';
+
+  const kpiOverdueCardCls = isClassic
+    ? `rounded-lg bg-rose-950/30 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
+        totalOverdue > 0 ? 'border-2 border-rose-500/90 alarm-pulse' : 'border border-slate-800'
+      }`
+    : isLightTv
+    ? `rounded-2xl bg-rose-50/90 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
+        isHybrid ? 'border-l-4 border-l-rose-500 ' : ''
+      }${totalOverdue > 0 ? 'border-2 border-rose-500 alarm-pulse' : 'border border-rose-200'}`
+    : `${isGlass ? 'rounded-2xl bg-rose-950/35 backdrop-blur-md' : 'rounded-2xl bg-rose-950/30'} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
+        isHybrid ? 'border-l-4 border-l-rose-500 ' : ''
+      }${totalOverdue > 0 ? 'border-2 border-rose-500/90 alarm-pulse' : 'border border-white/10'}`;
+
+  const kpiRepeatCardCls = isClassic
+    ? 'rounded-lg bg-slate-900 border border-purple-500/40'
+    : isLightTv
+    ? `rounded-2xl bg-white border border-purple-200 shadow-xs ${
+        isHybrid ? 'border-l-4 border-l-purple-500' : ''
+      }`
+    : `${isGlass ? 'rounded-2xl bg-[#0c172e]/76 backdrop-blur-md' : 'rounded-2xl bg-[#0f1624]'} border border-purple-500/35 ${
+        isHybrid ? 'border-l-4 border-l-purple-500' : ''
+      }`;
+
+  const remedMiniCardCls = isClassic
+    ? 'rounded bg-slate-950/90 border border-slate-800'
+    : isLightTv
+    ? 'rounded-lg bg-slate-100/80 border border-slate-200/80'
+    : isGlass
+    ? 'rounded-lg bg-[#081022]/75 border border-sky-300/15'
+    : 'rounded-lg bg-[#090e18] border border-white/[0.08]';
+
+  const remedBtnCls = isClassic
+    ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300'
+    : isLightTv
+    ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
+    : isGlass
+    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-sky-300 border border-sky-400/25'
+    : 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/25';
+
+  const barTrackCls = isLightTv ? 'bg-slate-200' : 'bg-slate-800';
+  const chartLineStroke = isClassic
+    ? '#10b981'
+    : isGlass
+    ? isLightTv
+      ? '#2563eb'
+      : '#38bdf8'
+    : isLightTv
+    ? '#0284c7'
+    : '#0ea5e9';
+  const chartGridStroke = isLightTv ? '#cbd5e1' : isClassic ? '#334155' : 'rgba(148, 163, 184, 0.16)';
+  const chartTickColor = isLightTv ? '#475569' : '#94a3b8';
+  const chartTooltipStyle = isLightTv
+    ? {
+        backgroundColor: '#ffffff',
+        border: '1px solid #cbd5e1',
+        color: '#0f172a',
+        borderRadius: '10px',
+        fontSize: '11px',
+        boxShadow: '0 8px 24px rgba(15,23,42,0.12)',
+      }
+    : {
+        backgroundColor: isClassic ? '#0f172a' : '#0b111e',
+        border: isClassic ? '1px solid #334155' : '1px solid rgba(56, 189, 248, 0.25)',
+        color: '#fff',
+        borderRadius: '10px',
+        fontSize: '11px',
+      };
+
+  const hybridKpiAccent = (tierColor: string) =>
+    isHybrid ? `border-l-4 ${tierColor}` : '';
+
   return (
-    <div className="flex-1 min-h-0 p-2 sm:p-2.5 flex flex-col gap-3 lg:gap-2.5 lg:overflow-hidden select-none">
+    <div
+      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-3 lg:gap-2.5 lg:overflow-hidden select-none ${
+        isHybrid ? 'pb-20 md:pb-2.5' : 'pb-2 sm:pb-2.5'
+      }`}
+    >
       {/* TOOLBAR: Month Selector & Status */}
       <div className="shrink-0 flex items-center justify-between gap-2 px-1 text-xs">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
-            <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border ${toolbarPillCls}`}>
+            <Calendar className={`w-3.5 h-3.5 shrink-0 ${accentTextCls}`} />
+            <span className={`text-[11px] font-bold uppercase tracking-wider hidden sm:inline ${mutedTextCls}`}>
               {t('dashboard_month_filter')}:
             </span>
             <select
               value={selectedMonth || ''}
               onChange={(e) => handleMonthChange(e.target.value)}
-              className="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer pr-1"
+              className={`bg-transparent font-bold text-xs focus:outline-none cursor-pointer pr-1 ${accentTextCls}`}
             >
-              <option value="" className="bg-slate-900 text-slate-200">
+              <option value="" className={optionBgCls}>
                 {t('current_month_option')} ({formatMonthYear(current_week.month)})
               </option>
               {(month_info?.available_months || [])
                 .filter((m: string) => m !== current_week.month)
                 .map((m: string) => (
-                  <option key={m} value={m} className="bg-slate-900 text-slate-200">
+                  <option key={m} value={m} className={optionBgCls}>
                     {formatMonthYear(m)} ({getMonthShortName(m)})
                   </option>
                 ))}
@@ -180,7 +319,13 @@ export const Dashboard: React.FC = () => {
           {selectedMonth && (
             <button
               onClick={() => handleMonthChange('')}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold transition cursor-pointer"
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
+                isClassic
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
+                  : isLightTv
+                  ? 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700'
+                  : 'bg-sky-500/15 hover:bg-sky-500/25 border-sky-400/30 text-sky-300'
+              }`}
               title={t('back_to_current_month')}
             >
               <RotateCcw className="w-3 h-3" />
@@ -189,26 +334,42 @@ export const Dashboard: React.FC = () => {
           )}
 
           {month_info?.is_custom_selection && (
-            <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+            <span
+              className={`hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                isLightTv
+                  ? 'bg-amber-100 border-amber-300 text-amber-800'
+                  : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+              }`}
+            >
               {t('all_data_for_month', { month: formatMonthYear(month_info.display_month) })}
             </span>
           )}
         </div>
 
         {/* Target Indicator */}
-        <div className="text-[11px] text-slate-400 font-mono hidden sm:flex items-center gap-1.5 shrink-0">
+        <div className={`text-[11px] font-mono hidden sm:flex items-center gap-1.5 shrink-0 ${mutedTextCls}`}>
           <span>{t('target')}:</span>
-          <span className="font-bold text-emerald-400 font-mono">≥{target}%</span>
-          <span className="text-slate-600">|</span>
-          <span className="text-amber-300 font-mono">{warningTarget}-{target}%</span>
+          <span className={`font-bold font-mono ${passTextCls}`}>≥{target}%</span>
+          <span className={isLightTv ? 'text-slate-300' : 'text-slate-600'}>|</span>
+          <span className={`font-mono ${warnTextCls}`}>{warningTarget}-{target}%</span>
         </div>
       </div>
 
-      {/* ROW 1: 6 COMPACT KPI STRIP CARDS (shrink-0, height ~64px-70px) */}
+      {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
       <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
         {/* KPI 1: Weekly Average Score */}
-        <div className="rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]">
-          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 min-w-0">
+        <div
+          className={`${panelCls} ${hybridKpiAccent(
+            kpi?.weekly_avg === null
+              ? 'border-l-amber-400'
+              : kpi.weekly_avg >= target
+              ? 'border-l-emerald-500'
+              : kpi.weekly_avg >= warningTarget
+              ? 'border-l-amber-400'
+              : 'border-l-rose-500'
+          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]`}
+        >
+          <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
               {t('weekly_avg_kpi', { week: `W${current_week.iso_week}` })}
             </span>
@@ -216,10 +377,10 @@ export const Dashboard: React.FC = () => {
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${
                   kpi.weekly_avg >= target
-                    ? 'bg-emerald-500/20 text-emerald-400'
+                    ? passBadgeCls
                     : kpi.weekly_avg >= warningTarget
-                    ? 'bg-amber-500/20 text-amber-300'
-                    : 'bg-rose-500/20 text-rose-400'
+                    ? warnBadgeCls
+                    : failBadgeCls
                 }`}
               >
                 {kpi.weekly_avg >= target
@@ -229,7 +390,7 @@ export const Dashboard: React.FC = () => {
                   : t('tag_fail')}
               </span>
             ) : (
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 shrink-0">
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
                 {t('tag_pending')}
               </span>
             )}
@@ -238,12 +399,12 @@ export const Dashboard: React.FC = () => {
             <span
               className={`text-xl font-black font-mono leading-none ${
                 kpi?.weekly_avg === null
-                  ? 'text-slate-400 text-sm'
+                  ? `${mutedTextCls} text-sm`
                   : kpi.weekly_avg >= target
-                  ? 'text-emerald-400'
+                  ? passTextCls
                   : kpi.weekly_avg >= warningTarget
-                  ? 'text-amber-300'
-                  : 'text-rose-400'
+                  ? warnTextCls
+                  : failTextCls
               }`}
             >
               {kpi?.weekly_avg !== null ? formatScore(kpi.weekly_avg, lang) : t('waiting_audit_badge')}
@@ -251,43 +412,47 @@ export const Dashboard: React.FC = () => {
             {kpi?.weekly_delta !== null ? (
               <span
                 className={`text-xs font-semibold shrink-0 ${
-                  kpi.weekly_delta >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  kpi.weekly_delta >= 0 ? passTextCls : failTextCls
                 }`}
               >
                 {formatDelta(kpi.weekly_delta, lang)}
               </span>
             ) : kpi?.latest_completed_avg !== null ? (
-              <span className="text-[11px] text-slate-400 font-mono truncate">
+              <span className={`text-[11px] font-mono truncate ${mutedTextCls}`}>
                 {kpi.latest_completed_week || getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
-                <strong className="text-slate-200">{formatScore(kpi.latest_completed_avg, lang)}</strong>
+                <strong className={subTextCls}>{formatScore(kpi.latest_completed_avg, lang)}</strong>
               </span>
             ) : null}
           </div>
         </div>
 
         {/* KPI 2: Monthly Average Score */}
-        <div className="rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]">
-          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 min-w-0">
+        <div
+          className={`${panelCls} ${hybridKpiAccent(
+            isHybrid ? 'border-l-sky-500' : ''
+          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]`}
+        >
+          <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
               {t('monthly_avg_kpi', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
             {month_info?.is_fallback ? (
-              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold shrink-0">
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
                 {t('latest_month_badge')}
               </span>
             ) : (
-              <span className="font-mono text-[10px] text-slate-400 shrink-0">
+              <span className={`font-mono text-[10px] shrink-0 ${mutedTextCls}`}>
                 {t('target_standard', { target })}
               </span>
             )}
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
-            <span className="text-xl font-black font-mono text-white leading-none">
+            <span className={`text-xl font-black font-mono leading-none ${headingTextCls}`}>
               {formatScore(kpi?.monthly_avg_overall, lang)}
             </span>
-            <span className="text-xs text-slate-400 font-mono truncate">
+            <span className={`text-xs font-mono truncate ${mutedTextCls}`}>
               {month_info?.is_fallback
                 ? t('historical_data_badge')
                 : `W${current_week.iso_week} (${current_week.iso_year})`}
@@ -296,10 +461,14 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 3: Areas Meeting Target */}
-        <div className="rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]">
-          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 min-w-0">
+        <div
+          className={`${panelCls} ${hybridKpiAccent(
+            isHybrid ? 'border-l-blue-500' : ''
+          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]`}
+        >
+          <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('areas_meeting_target')}</span>
-            <span className="text-blue-400 text-[10px] font-bold shrink-0">
+            <span className={`text-[10px] font-bold shrink-0 ${blueStatTextCls}`}>
               {month_info?.is_fallback
                 ? t('display_month_short', { month: getMonthShortName(month_info.display_month) })
                 : t('audited_areas_status', {
@@ -309,19 +478,19 @@ export const Dashboard: React.FC = () => {
             </span>
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
-            <span className="text-xl font-black font-mono text-blue-400 leading-none">
+            <span className={`text-xl font-black font-mono leading-none ${blueStatTextCls}`}>
               {kpi?.passed_areas_count || 0}{' '}
-              <span className="text-xs font-normal text-slate-400">
+              <span className={`text-xs font-normal ${mutedTextCls}`}>
                 {t('area_count_slash', { n: kpi?.audited_areas_count || 0 })}
               </span>
             </span>
             <div className="flex items-center gap-1.5 text-xs font-semibold truncate">
               {(kpi?.warning_areas_count || 0) > 0 && (
-                <span className="text-amber-300">
+                <span className={warnTextCls}>
                   {kpi?.warning_areas_count} {t('tag_warning')}
                 </span>
               )}
-              <span className="text-rose-400">
+              <span className={failTextCls}>
                 {t('areas_failing_target', { n: kpi?.failing_areas_count || 0, target })}
               </span>
             </div>
@@ -329,28 +498,30 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 4: Open Findings */}
-        <div className="rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]">
-          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 min-w-0">
+        <div
+          className={`${panelCls} ${hybridKpiAccent(
+            isHybrid ? 'border-l-amber-400' : ''
+          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]`}
+        >
+          <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('open_findings_kpi')}</span>
-            <span className="text-amber-400 text-[10px] font-bold shrink-0">{t('waiting_mng')}</span>
+            <span className={`text-[10px] font-bold shrink-0 ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
+              {t('waiting_mng')}
+            </span>
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
-            <span className="text-xl font-black font-mono text-amber-400 leading-none">{counts.open}</span>
-            <span className="text-xs text-slate-400 truncate">
+            <span className={`text-xl font-black font-mono leading-none ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
+              {counts.open}
+            </span>
+            <span className={`text-xs truncate ${mutedTextCls}`}>
               {t('waiting_verify_count', { n: counts.waiting_verify })}
             </span>
           </div>
         </div>
 
         {/* KPI 5: 7-Day Overdue Alarm */}
-        <div
-          className={`rounded-lg bg-rose-950/30 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
-            totalOverdue > 0
-              ? 'border-2 border-rose-500/90 alarm-pulse'
-              : 'border border-slate-800'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-1 text-xs text-rose-400 font-bold min-w-0">
+        <div className={kpiOverdueCardCls}>
+          <div className={`flex items-center justify-between gap-1 text-xs font-bold min-w-0 ${failTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('alarm_7_days')}</span>
             {totalOverdue > 0 && (
               <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-black shrink-0">
@@ -359,38 +530,42 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
-            <span className="text-xl font-black font-mono text-rose-400 leading-none">{totalOverdue}</span>
-            <span className="text-[11px] text-rose-300 font-semibold truncate max-w-[140px]">
+            <span className={`text-xl font-black font-mono leading-none ${failTextCls}`}>{totalOverdue}</span>
+            <span className={`text-[11px] font-semibold truncate max-w-[140px] ${isLightTv ? 'text-rose-700' : 'text-rose-300'}`}>
               {overdueAreasList || t('no_findings_clean')}
             </span>
           </div>
         </div>
 
         {/* KPI 6: Repeat Findings Escalation */}
-        <div className="rounded-lg bg-slate-900 border border-purple-500/40 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]">
-          <div className="flex items-center justify-between gap-1 text-xs text-purple-300 font-semibold min-w-0">
+        <div className={`${kpiRepeatCardCls} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px]`}>
+          <div className={`flex items-center justify-between gap-1 text-xs font-semibold min-w-0 ${purpleTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('repeat_findings_kpi')}</span>
-            <span className="px-1.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold shrink-0">
+            <span
+              className={`px-1.5 rounded text-[10px] font-bold shrink-0 ${
+                isLightTv ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/20 text-purple-300'
+              }`}
+            >
               {t('repeat_step_badge')}
             </span>
           </div>
           <div className="flex items-baseline justify-between gap-1 mt-1 flex-wrap sm:flex-nowrap">
-            <span className="text-xl font-black font-mono text-purple-400 leading-none">
+            <span className={`text-xl font-black font-mono leading-none ${purpleValTextCls}`}>
               {counts.not_improved}
             </span>
-            <span className="text-[11px] text-purple-300 font-semibold truncate max-w-[140px]">
+            <span className={`text-[11px] font-semibold truncate max-w-[140px] ${purpleTextCls}`}>
               {repeatAreasList || t('no_findings_clean')}
             </span>
           </div>
         </div>
       </div>
 
-      {/* ROW 2: MIDDLE MAIN WORKSPACE (flex-none on mobile, flex-[58] on lg screens) */}
+      {/* ROW 2: MIDDLE MAIN WORKSPACE */}
       <div className="flex-none lg:flex-[58] lg:min-h-0 grid grid-cols-12 gap-3 lg:gap-2.5">
-        {/* 16 AREAS 4x4 MATRIX WALL (col-span-12 lg:col-span-8) */}
-        <div className="col-span-12 lg:col-span-8 h-auto lg:h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:p-3 flex flex-col lg:min-h-0">
-          <div className="shrink-0 flex items-center justify-between pb-2 border-b border-slate-800">
-            <span className="font-bold text-xs tracking-wide text-white uppercase truncate">
+        {/* 16 AREAS 4x4 MATRIX WALL */}
+        <div className={`col-span-12 lg:col-span-8 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col lg:min-h-0`}>
+          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+            <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
                 week: `W${current_week.iso_week}`,
@@ -398,11 +573,11 @@ export const Dashboard: React.FC = () => {
               })}
             </span>
             <div className="flex items-center gap-2.5 sm:gap-3 text-xs shrink-0 flex-wrap">
-              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+              <span className={`flex items-center gap-1 font-semibold ${passTextCls}`}>
                 <span className="w-2 h-2 rounded-xs bg-emerald-500"></span>
                 {t('areas_pass_count', { target, n: kpi?.passed_areas_count || 0 })}
               </span>
-              <span className="flex items-center gap-1 text-amber-300 font-semibold">
+              <span className={`flex items-center gap-1 font-semibold ${warnTextCls}`}>
                 <span className="w-2 h-2 rounded-xs bg-amber-500"></span>
                 {t('areas_warning_count', {
                   min: warningTarget,
@@ -410,12 +585,12 @@ export const Dashboard: React.FC = () => {
                   n: kpi?.warning_areas_count || 0,
                 })}
               </span>
-              <span className="flex items-center gap-1 text-rose-400 font-semibold">
+              <span className={`flex items-center gap-1 font-semibold ${failTextCls}`}>
                 <span className="w-2 h-2 rounded-xs bg-rose-500"></span>
                 {t('areas_fail_count', { warning: warningTarget, n: kpi?.failing_areas_count || 0 })}
               </span>
-              <span className="flex items-center gap-1 text-slate-400 hidden sm:inline-flex">
-                <span className="w-2 h-2 rounded-xs bg-slate-600"></span>
+              <span className={`hidden sm:inline-flex items-center gap-1 ${mutedTextCls}`}>
+                <span className={`w-2 h-2 rounded-xs ${isLightTv ? 'bg-slate-400' : 'bg-slate-600'}`}></span>
                 {t('areas_pending_count', { n: kpi?.pending_audits_count || 0 })}
               </span>
             </div>
@@ -432,35 +607,109 @@ export const Dashboard: React.FC = () => {
               const isFail = displayScore !== null && displayScore < warningTarget;
               const isOverdue = area.overdue_count > 0;
 
-              const boxCls = isOverdue
-                ? 'border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
-                : isPass
-                ? 'border-emerald-500/35 bg-emerald-950/20'
-                : isWarning
-                ? 'border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
-                : isFail
-                ? 'border-rose-500/70 bg-rose-950/30'
-                : 'border-slate-700 bg-slate-800/40 opacity-75';
+              let boxCls = '';
+              if (isClassic) {
+                boxCls = isOverdue
+                  ? 'rounded-md border border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
+                  : isPass
+                  ? 'rounded-md border border-emerald-500/35 bg-emerald-950/20'
+                  : isWarning
+                  ? 'rounded-md border border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
+                  : isFail
+                  ? 'rounded-md border border-rose-500/70 bg-rose-950/30'
+                  : 'rounded-md border border-slate-700 bg-slate-800/40 opacity-75';
+              } else if (isLightTv) {
+                const stripeCls = isHybrid
+                  ? isOverdue || isFail
+                    ? 'border-l-4 border-l-rose-500'
+                    : isPass
+                    ? 'border-l-4 border-l-emerald-500'
+                    : isWarning
+                    ? 'border-l-4 border-l-amber-400'
+                    : 'border-l-4 border-l-slate-400'
+                  : '';
+                boxCls = `${isHybrid ? 'rounded-xl' : 'rounded-xl backdrop-blur-sm'} border ${stripeCls} ${
+                  isOverdue
+                    ? 'border-rose-400 bg-rose-50/90 ring-1 ring-rose-300'
+                    : isPass
+                    ? 'border-emerald-200 bg-emerald-50/75'
+                    : isWarning
+                    ? 'border-amber-300 bg-amber-50/80 ring-1 ring-amber-200/70'
+                    : isFail
+                    ? 'border-rose-300 bg-rose-50/80'
+                    : 'border-slate-200 bg-slate-100/70 opacity-85'
+                }`;
+              } else if (isGlass) {
+                boxCls = `rounded-xl backdrop-blur-sm border ${
+                  isOverdue
+                    ? 'border-rose-400/75 bg-rose-950/35 ring-1 ring-rose-500/35'
+                    : isPass
+                    ? 'border-emerald-400/35 bg-emerald-950/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                    : isWarning
+                    ? 'border-amber-400/40 bg-amber-950/25 ring-1 ring-amber-400/20'
+                    : isFail
+                    ? 'border-rose-400/65 bg-rose-950/30'
+                    : 'border-white/15 bg-white/[0.04] opacity-80'
+                }`;
+              } else {
+                // Crystal Hybrid Dark (Sample 4 Obsidian Bento + vertical left status stripe)
+                const stripeCls =
+                  isOverdue || isFail
+                    ? 'border-l-4 border-l-rose-500'
+                    : isPass
+                    ? 'border-l-4 border-l-emerald-500'
+                    : isWarning
+                    ? 'border-l-4 border-l-amber-400'
+                    : 'border-l-4 border-l-slate-600';
+                boxCls = `rounded-xl border ${stripeCls} ${
+                  isOverdue
+                    ? 'border-rose-500/70 bg-rose-950/25 ring-1 ring-rose-500/30'
+                    : isPass
+                    ? 'border-white/10 bg-[#141d2e]/90'
+                    : isWarning
+                    ? 'border-amber-500/35 bg-amber-950/20'
+                    : isFail
+                    ? 'border-rose-500/55 bg-rose-950/25'
+                    : 'border-white/10 bg-[#121a2a]/60 opacity-80'
+                }`;
+              }
 
               const scoreCls = isPass
-                ? 'text-emerald-400'
+                ? passTextCls
                 : isWarning
-                ? 'text-amber-300'
+                ? warnTextCls
                 : isFail
-                ? 'text-rose-400'
-                : 'text-slate-400 text-xs font-normal';
+                ? failTextCls
+                : `${mutedTextCls} text-xs font-normal`;
 
               const scoreTxt = displayScore !== null ? formatScore(displayScore, lang) : t('not_audited_yet');
+              const progressBarColor = isPass
+                ? 'bg-emerald-500'
+                : isWarning
+                ? 'bg-amber-400'
+                : isFail
+                ? 'bg-rose-500'
+                : 'bg-slate-500';
+              const clampedProgress =
+                displayScore !== null ? Math.min(100, Math.max(8, Number(displayScore))) : 0;
 
               return (
                 <Link
                   key={area.area_id}
                   to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
-                  className={`rounded-md border ${boxCls} px-2.5 py-2 sm:py-1.5 flex flex-col justify-between min-h-[88px] sm:min-h-[94px] lg:min-h-0 hover:border-slate-400 transition cursor-pointer group`}
+                  className={`${boxCls} px-2.5 py-2 sm:py-1.5 flex flex-col justify-between min-h-[88px] sm:min-h-[94px] lg:min-h-0 ${
+                    isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
+                  } transition cursor-pointer group`}
                 >
                   <div className="flex items-center justify-between gap-1.5 min-w-0">
                     <span
-                      className="font-black text-xs sm:text-[13px] text-white tracking-wide group-hover:text-emerald-400 transition-colors truncate"
+                      className={`font-black text-xs sm:text-[13px] tracking-wide transition-colors truncate ${headingTextCls} ${
+                        isClassic
+                          ? 'group-hover:text-emerald-400'
+                          : isLightTv
+                          ? 'group-hover:text-blue-600'
+                          : 'group-hover:text-sky-400'
+                      }`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
@@ -471,18 +720,18 @@ export const Dashboard: React.FC = () => {
                       </span>
                     ) : (isSubmitted || displayScore !== null) ? (
                       isPass ? (
-                        <span className="text-xs font-bold text-emerald-400 shrink-0">{t('tag_pass')}</span>
+                        <span className={`text-xs font-bold shrink-0 ${passTextCls}`}>{t('tag_pass')}</span>
                       ) : isWarning ? (
-                        <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold shrink-0">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
                           {t('tag_warning')}
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 text-[10px] font-bold shrink-0">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${failBadgeCls}`}>
                           {t('tag_fail')}
                         </span>
                       )
                     ) : (
-                      <span className="text-[10px] text-amber-300/90 font-medium shrink-0">
+                      <span className={`text-[10px] font-medium shrink-0 ${warnTextCls}`}>
                         {t('tag_pending')}
                       </span>
                     )}
@@ -492,16 +741,16 @@ export const Dashboard: React.FC = () => {
                     <span className={`text-base sm:text-lg font-black font-mono leading-none ${scoreCls}`}>
                       {scoreTxt}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono truncate">
+                    <span className={`text-[10px] font-mono truncate ${mutedTextCls}`}>
                       {isSubmitted ? (
                         <>
                           {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
-                          <strong className="text-slate-200">
+                          <strong className={subTextCls}>
                             {formatScore(area.month_avg, lang)}
                           </strong>
                         </>
                       ) : (
-                        <strong className="text-slate-300">
+                        <strong className={subTextCls}>
                           {area.month_source === 'historical'
                             ? t('source_historical')
                             : getMonthShortName(month_info?.display_month || current_week.month)}
@@ -510,20 +759,40 @@ export const Dashboard: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5 pt-1 sm:pt-0.5">
+                  {/* Signature Sample 4 Slim Progress Bar */}
+                  {isHybrid && (
+                    <div
+                      className={`h-1 w-full rounded-full overflow-hidden mb-1 ${
+                        isLightTv ? 'bg-slate-200/90' : 'bg-white/10'
+                      }`}
+                    >
+                      <div
+                        className={`h-full rounded-full ${progressBarColor}`}
+                        style={{ width: `${clampedProgress}%` }}
+                      />
+                    </div>
+                  )}
+
+                  <div className={`flex items-center justify-between text-[11px] border-t pt-1 sm:pt-0.5 ${mutedTextCls} ${innerRowDividerCls}`}>
                     <span>
                       {t('open_short')}:{' '}
                       <strong
-                        className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}
+                        className={
+                          area.open_count > 0
+                            ? isLightTv
+                              ? 'text-amber-700'
+                              : 'text-amber-400'
+                            : subTextCls
+                        }
                       >
                         {area.open_count}
                       </strong>
                     </span>
                     {area.repeat_count > 0 ? (
-                      <span className="text-purple-400 font-bold">{t('repeat_short')}</span>
+                      <span className={`font-bold ${purpleValTextCls}`}>{t('repeat_short')}</span>
                     ) : (
                       <span>
-                        {t('verify_short')}: <strong>{area.fixed_count}</strong>
+                        {t('verify_short')}: <strong className={subTextCls}>{area.fixed_count}</strong>
                       </span>
                     )}
                   </div>
@@ -533,15 +802,15 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD (col-span-12 lg:col-span-4) */}
-        <div className="col-span-12 lg:col-span-4 h-auto lg:h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:p-3 flex flex-col lg:min-h-0 min-w-0">
-          <div className="shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b border-slate-800 min-w-0">
-            <span className="font-bold text-xs text-rose-400 uppercase truncate">
+        {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
+        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col lg:min-h-0 min-w-0`}>
+          <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
+            <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
             </span>
             <Link
               to="/reports"
-              className="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-bold shrink-0 transition"
+              className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition ${remedBtnCls}`}
             >
               {t('remediation_report')} →
             </Link>
@@ -549,30 +818,30 @@ export const Dashboard: React.FC = () => {
 
           {/* Single-line Compact Remediation Effectiveness Strip */}
           <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1.5 min-w-0">
-            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
-              <span className="text-[10px] text-slate-400 font-semibold truncate">
+            <div className={`${remedMiniCardCls} px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+              <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('on_time')}
               </span>
-              <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
+              <span className={`text-xs font-black font-mono shrink-0 ${passTextCls}`}>
                 {formatScore(remediation?.on_time_rate_pct, lang)}
               </span>
             </div>
-            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
-              <span className="text-[10px] text-slate-400 font-semibold truncate">
+            <div className={`${remedMiniCardCls} px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+              <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('avg_remediation_time')}
               </span>
-              <span className="text-xs font-black font-mono text-sky-400 shrink-0">
+              <span className={`text-xs font-black font-mono shrink-0 ${accentTextCls}`}>
                 {remediation?.avg_remediation_days !== null &&
                 remediation?.avg_remediation_days !== undefined
                   ? `${remediation.avg_remediation_days}${t('remediation_day_unit')}`
                   : '-'}
               </span>
             </div>
-            <div className="rounded bg-slate-950/90 border border-slate-800 px-2 py-1 flex items-center justify-between gap-1 min-w-0">
-              <span className="text-[10px] text-slate-400 font-semibold truncate">
+            <div className={`${remedMiniCardCls} px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+              <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('repeat_findings_label')}
               </span>
-              <span className="text-xs font-black font-mono text-purple-400 shrink-0">
+              <span className={`text-xs font-black font-mono shrink-0 ${purpleValTextCls}`}>
                 {formatScore(remediation?.repeat_rate_pct ?? 0, lang)}
               </span>
             </div>
@@ -585,7 +854,15 @@ export const Dashboard: React.FC = () => {
                 const isFixed = f.status === 'fixed';
                 const isRepeat = f.repeat_level > 1;
 
-                const cardBorder = isOverdue
+                const cardBorder = isLightTv
+                  ? isOverdue
+                    ? 'border-rose-300 bg-rose-50/90'
+                    : isRepeat
+                    ? 'border-purple-300 bg-purple-50/80'
+                    : isFixed
+                    ? 'border-blue-300 bg-blue-50/80'
+                    : 'border-amber-300 bg-amber-50/80'
+                  : isOverdue
                   ? 'border-rose-500/60 bg-rose-950/25'
                   : isRepeat
                   ? 'border-purple-500/40 bg-purple-950/20'
@@ -601,7 +878,9 @@ export const Dashboard: React.FC = () => {
                     key={f.id}
                     to={is_authenticated ? `/findings/${f.id}` : '/login'}
                     title={fullCriterion}
-                    className={`flex-1 min-h-[68px] sm:min-h-[72px] lg:max-h-[82px] w-full min-w-0 overflow-hidden rounded-md border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between hover:border-slate-400 transition cursor-pointer group`}
+                    className={`flex-1 min-h-[68px] sm:min-h-[72px] lg:max-h-[82px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between ${
+                      isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
+                    } transition cursor-pointer group`}
                   >
                     <div className="flex items-center justify-between gap-2 text-xs min-w-0">
                       <div className="flex items-center gap-1.5 min-w-0 truncate">
@@ -611,15 +890,19 @@ export const Dashboard: React.FC = () => {
                         >
                           {f.area_name || f.area_code}
                         </span>
-                        <span className="font-mono font-bold text-white text-[11px] shrink-0">
+                        <span className={`font-mono font-bold text-[11px] shrink-0 ${headingTextCls}`}>
                           {f.item_code}
                         </span>
                         {isRepeat ? (
-                          <span className="px-1.5 rounded bg-purple-500/25 text-purple-300 font-semibold text-[10px] shrink-0">
+                          <span
+                            className={`px-1.5 rounded font-semibold text-[10px] shrink-0 ${
+                              isLightTv ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/25 text-purple-300'
+                            }`}
+                          >
                             {t('repeat_level_pts', { w: f.repeat_level, pts: f.applied_penalty })}
                           </span>
                         ) : (
-                          <span className="text-amber-300 font-mono text-[10px] shrink-0">
+                          <span className={`font-mono text-[10px] shrink-0 ${warnTextCls}`}>
                             -{f.applied_penalty}{t('pts_unit')}
                           </span>
                         )}
@@ -627,9 +910,11 @@ export const Dashboard: React.FC = () => {
                       <span
                         className={`text-[10px] font-bold shrink-0 ${
                           isOverdue
-                            ? 'text-rose-400'
+                            ? failTextCls
                             : isFixed
-                            ? 'text-blue-400'
+                            ? blueStatTextCls
+                            : isLightTv
+                            ? 'text-amber-700'
                             : 'text-amber-400'
                         }`}
                       >
@@ -644,14 +929,14 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="text-xs font-medium text-slate-100 truncate leading-snug min-w-0">
+                    <div className={`text-xs font-medium truncate leading-snug min-w-0 ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
                       {shortCriterion}
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400 border-t border-white/5 pt-0.5 min-w-0">
+                    <div className={`flex items-center justify-between gap-2 text-[10px] border-t pt-0.5 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}>
                       <span className="truncate min-w-0">
                         {isFixed ? 'Auditor:' : 'MNG:'}{' '}
-                        <strong className="text-slate-200">
+                        <strong className={subTextCls}>
                           {isFixed
                             ? f.auditor_name || 'Auditor'
                             : f.manager_name || f.fixer_name || 'Area Manager'}
@@ -659,7 +944,7 @@ export const Dashboard: React.FC = () => {
                       </span>
                       <span
                         className={`font-semibold shrink-0 ${
-                          isFixed ? 'text-blue-400' : 'text-emerald-400'
+                          isFixed ? blueStatTextCls : passTextCls
                         }`}
                       >
                         {isFixed ? t('verify_close_btn') : t('update_after_btn')}
@@ -669,7 +954,7 @@ export const Dashboard: React.FC = () => {
                 );
               })
             ) : (
-              <div className="h-full flex items-center justify-center text-xs text-slate-500 italic">
+              <div className={`h-full flex items-center justify-center text-xs italic ${mutedTextCls}`}>
                 {t('no_alarms')}
               </div>
             )}
@@ -677,19 +962,19 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ROW 3: BOTTOM ANALYTICS STRIP (flex-none on mobile, flex-[42] on lg screens) */}
+      {/* ROW 3: BOTTOM ANALYTICS STRIP */}
       <div className="flex-none lg:flex-[42] lg:min-h-0 grid grid-cols-12 gap-3 lg:gap-2.5">
-        {/* 12-WEEK TREND LINE (col-span-12 lg:col-span-5) */}
-        <div className="col-span-12 lg:col-span-5 h-auto lg:h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:p-3 flex flex-col lg:min-h-0">
-          <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
-            <span className="font-bold text-xs text-white uppercase truncate">
+        {/* 12-WEEK TREND LINE */}
+        <div className={`col-span-12 lg:col-span-5 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col lg:min-h-0`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+            <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
             </span>
             <div className="flex items-center gap-2 text-[11px] font-mono shrink-0">
-              <span className="text-emerald-400 font-semibold">
+              <span className={`font-semibold ${passTextCls}`}>
                 {t('target_reference_label', { target: `${target}.0` })}
               </span>
-              <span className="text-amber-400 font-semibold">
+              <span className={`font-semibold ${warnTextCls}`}>
                 {t('warning_reference_label', { target: `${warningTarget}.0` })}
               </span>
             </div>
@@ -701,9 +986,9 @@ export const Dashboard: React.FC = () => {
                 data={trend_12_weeks}
                 margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                <YAxis domain={[85, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: chartTickColor }} />
+                <YAxis domain={[85, 100]} tick={{ fontSize: 10, fill: chartTickColor }} />
                 <Tooltip
                   formatter={(val: any, _name: any, item: any) => {
                     const payload = item?.payload;
@@ -713,13 +998,7 @@ export const Dashboard: React.FC = () => {
                         : '';
                     return [`${formatScore(val, lang)}${sourceLabel}`, t('score')];
                   }}
-                  contentStyle={{
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
-                    color: '#fff',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                  }}
+                  contentStyle={chartTooltipStyle}
                 />
                 <ReferenceLine y={target} stroke="#10b981" strokeDasharray="5 4" strokeWidth={1.5} />
                 <ReferenceLine y={warningTarget} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1.2} />
@@ -727,9 +1006,9 @@ export const Dashboard: React.FC = () => {
                   type="monotone"
                   dataKey="avg_score"
                   connectNulls
-                  stroke="#10b981"
+                  stroke={chartLineStroke}
                   strokeWidth={2.5}
-                  dot={{ r: 2.5, fill: '#10b981' }}
+                  dot={{ r: 2.5, fill: chartLineStroke }}
                   activeDot={{ r: 4.5 }}
                 />
               </LineChart>
@@ -737,15 +1016,15 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* 5S GROUP BREAKDOWN (col-span-12 lg:col-span-4) */}
-        <div className="col-span-12 lg:col-span-4 h-auto lg:h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:p-3 flex flex-col justify-between lg:min-h-0 gap-2 lg:gap-0">
-          <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
-            <span className="font-bold text-xs text-white uppercase truncate">
+        {/* 5S GROUP BREAKDOWN */}
+        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col justify-between lg:min-h-0 gap-2 lg:gap-0`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+            <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
-            <span className="text-[10px] text-slate-400 shrink-0">
+            <span className={`text-[10px] shrink-0 ${mutedTextCls}`}>
               {t('total_findings_count', { n: totalFindingsInMonth })}
             </span>
           </div>
@@ -774,16 +1053,16 @@ export const Dashboard: React.FC = () => {
 
               return (
                 <div key={group.s_group} className="grid grid-cols-12 items-center gap-2 py-1 lg:py-0">
-                  <span className="col-span-4 font-semibold text-slate-200 truncate text-[11px]">
+                  <span className={`col-span-4 font-semibold truncate text-[11px] ${subTextCls}`}>
                     {sNames[group.s_group] || `S${group.s_group}`}
                   </span>
-                  <div className="col-span-5 h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div className={`col-span-5 h-2 rounded-full overflow-hidden ${barTrackCls}`}>
                     <div
                       className={`h-full ${barColor}`}
                       style={{ width: `${Math.max(4, widthPct)}%` }}
                     ></div>
                   </div>
-                  <span className="col-span-3 text-right font-mono font-bold text-rose-400 text-[10px]">
+                  <span className={`col-span-3 text-right font-mono font-bold text-[10px] ${failTextCls}`}>
                     {group.count} {t('findings_unit')} (-{group.penalty}{t('pts_unit')})
                   </span>
                 </div>
@@ -792,15 +1071,15 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* TOP & BOTTOM MONTHLY LEADERBOARD (col-span-12 lg:col-span-3) */}
-        <div className="col-span-12 lg:col-span-3 h-auto lg:h-full rounded-lg bg-slate-900 border border-slate-800 p-2.5 sm:p-3 flex flex-col justify-between lg:min-h-0 gap-2 lg:gap-0">
-          <div className="shrink-0 flex items-center justify-between pb-1.5 border-b border-slate-800">
-            <span className="font-bold text-xs text-white uppercase truncate">
+        {/* TOP & BOTTOM MONTHLY LEADERBOARD */}
+        <div className={`col-span-12 lg:col-span-3 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col justify-between lg:min-h-0 gap-2 lg:gap-0`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+            <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('leaderboard_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
-            <span className="text-[10px] text-slate-400 shrink-0">{t('top_bottom_label')}</span>
+            <span className={`text-[10px] shrink-0 ${mutedTextCls}`}>{t('top_bottom_label')}</span>
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col justify-around text-xs py-0.5 gap-1.5 lg:gap-0">
@@ -808,36 +1087,48 @@ export const Dashboard: React.FC = () => {
               top_areas.slice(0, 2).map((a: any, idx: number) => (
                 <div
                   key={a.area_id}
-                  className="flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded bg-emerald-500/10 border border-emerald-500/25"
+                  className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border ${
+                    isLightTv
+                      ? 'bg-emerald-50 border-emerald-200'
+                      : 'bg-emerald-500/10 border-emerald-500/25'
+                  }`}
                 >
                   <span
-                    className="font-bold text-emerald-300 truncate text-[11px]"
+                    className={`font-bold truncate text-[11px] ${
+                      isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+                    }`}
                     title={`${a.area_name || a.area_code} (${a.area_code})`}
                   >
                     {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_name || a.area_code}
                   </span>
-                  <span className="font-mono font-black text-emerald-400 text-xs">
+                  <span className={`font-mono font-black text-xs ${passTextCls}`}>
                     {formatScore(a.month_avg, lang)}
                   </span>
                 </div>
               ))
             ) : (
-              <div className="text-slate-500 text-xs italic">{t('noData')}</div>
+              <div className={`text-xs italic ${mutedTextCls}`}>{t('noData')}</div>
             )}
 
             {bottom_areas && bottom_areas.length > 0 ? (
               bottom_areas.slice(0, 2).map((a: any) => (
                 <div
                   key={a.area_id}
-                  className="flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded bg-rose-500/15 border border-rose-500/35"
+                  className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border ${
+                    isLightTv
+                      ? 'bg-rose-50 border-rose-200'
+                      : 'bg-rose-500/15 border-rose-500/35'
+                  }`}
                 >
                   <span
-                    className="font-bold text-rose-300 truncate text-[11px]"
+                    className={`font-bold truncate text-[11px] ${
+                      isLightTv ? 'text-rose-800' : 'text-rose-300'
+                    }`}
                     title={`${a.area_name || a.area_code} (${a.area_code})`}
                   >
                     ⚠️ {a.area_name || a.area_code}
                   </span>
-                  <span className="font-mono font-black text-rose-400 text-xs">
+                  <span className={`font-mono font-black text-xs ${failTextCls}`}>
                     {formatScore(a.month_avg, lang)}
                   </span>
                 </div>

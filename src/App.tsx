@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { I18nProvider } from './i18n/context';
 import { Layout } from './components/Layout';
+import { resolveColorMode } from './lib/theme';
 import { Loader2 } from 'lucide-react';
 
 const Login = React.lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
@@ -29,11 +30,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
   children,
   adminOnly = false,
 }) => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, activeTheme, colorModeOverride } = useAuth();
+  const resolvedMode = resolveColorMode(activeTheme, colorModeOverride, false);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div
+        className={`min-h-screen flex items-center justify-center ${
+          resolvedMode === 'dark' ? 'bg-[#070b14]' : 'bg-slate-50'
+        }`}
+      >
         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
       </div>
     );

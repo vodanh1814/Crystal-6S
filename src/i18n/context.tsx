@@ -3,7 +3,7 @@ import { vi } from './vi';
 import { en } from './en';
 
 type Lang = 'vi' | 'en';
-type TranslationKey = keyof typeof vi;
+export type TranslationKey = keyof typeof vi;
 
 interface I18nContextType {
   lang: Lang;

@@ -113,7 +113,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
               href={APP_AUTHOR_GITHUB}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs border border-slate-700/80 shadow-md transition cursor-pointer"
             >
               <GithubIcon className="w-4 h-4 text-emerald-400" />
               <span>{t('contact_author_github')}</span>

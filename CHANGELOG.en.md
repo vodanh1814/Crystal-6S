@@ -7,6 +7,24 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.7.0] - 2026-11-08
+
+### Added & Changed (Admin Theme Studio & Crystal Glass / Crystal Hybrid UI Themes)
+- **Admin Theme Studio (`/admin/targets`)**:
+  - Preserves **Classic Andon (`classic`)** as the permanent system-wide default via D1 setting `ui_theme` (`migrations/0008_ui_theme_setting.sql`).
+  - Enables Administrators to **Live Preview** and **Save & Apply System-Wide** across 3 themes: **Classic Andon (Default)**, **Crystal Glass Enterprise (Sample 2)**, and **Crystal Hybrid Adaptive (Sample 4)**.
+  - Exposes normalized `ui_theme` on public `GET /api/settings` for Login/TV boards and enforces `isAdmin` validation (HTTP 400 on invalid theme) + `update_ui_theme` audit logging on `PUT /api/settings`.
+- **Two Modern UI Themes with Independent Light / Dark Color Mode**:
+  - **Crystal Glass Enterprise (`crystal-glass`)**: Frosted enterprise glassmorphism cards with crisp tabular typography (`Plus Jakarta Sans` & `JetBrains Mono`).
+  - **Crystal Hybrid Adaptive (`crystal-hybrid`)**: Bento TV dashboard with signature 3-tier left status accents plus mobile bottom navigation bar (`< 768px`) for shop-floor use.
+  - Pre-hydration FOUC prevention (`index.html`), Header/Login/Setup Light/Dark switcher, cross-tab `storage` synchronization, High Contrast (`forced-colors: active`), and complete Dark Mode workspace styling.
+- **Sticky Matrix Tables, Accessibility & Yearly Target Parity**:
+  - Added `.sticky-matrix-table` (`border-collapse: separate` with opaque sticky column-1 headers/cells) and keyboard-scrollable `tabIndex={0} role="region"` wrappers across Reports & Audit Detail tables.
+  - Attached per-year `target` and `warning_target` rules to `GET /api/audits` so `/audits` list badges reflect 3-tier Red/Yellow/Green thresholds accurately.
+  - Preserved author **Simon** attribution and 3-tier 5S scoring integrity across all themes and color modes.
+
+---
+
 ## [2.6.0] - 2026-11-04
 
 ### Added & Improved (3-Tier Color Classification Red - Yellow - Green & Admin Warning Target Configuration)

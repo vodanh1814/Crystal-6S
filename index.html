@@ -4,9 +4,38 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('crystal5s_ui_theme_cache') || 'classic';
+          if (theme !== 'classic' && theme !== 'crystal-glass' && theme !== 'crystal-hybrid') {
+            theme = 'classic';
+          }
+          document.documentElement.dataset.uiTheme = theme;
+          var meta = document.querySelector('meta[name="color-scheme"]');
+          var isDashboard = window.location.pathname === '/';
+          if (theme === 'classic') {
+            document.documentElement.dataset.colorMode = isDashboard ? 'dark' : 'light';
+            if (meta) meta.content = 'light dark';
+          } else {
+            var mode = localStorage.getItem('crystal5s_color_mode');
+            var resolved = mode === 'light' || mode === 'dark' ? mode : isDashboard ? 'dark' : 'light';
+            document.documentElement.dataset.colorMode = resolved;
+            if (meta) meta.content = mode === 'light' || mode === 'dark' ? mode : 'light dark';
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    />
     <title>Crystal 5S Audit — Smart Factory Andon</title>
   </head>
-  <body class="bg-slate-50 text-slate-900 min-h-screen antialiased selection:bg-blue-500 selection:text-white">
+  <body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-blue-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

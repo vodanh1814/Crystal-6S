@@ -133,6 +133,8 @@ export interface Audit {
   area_code?: string;
   area_name?: string;
   auditor_name?: string;
+  target?: number;
+  warning_target?: number;
   area_scores?: AuditAreaScore[];
 }
 
@@ -142,9 +144,13 @@ export interface YearlyTarget {
   warning_target?: number;
 }
 
+export type UiThemeId = 'classic' | 'crystal-glass' | 'crystal-hybrid';
+export type ColorMode = 'light' | 'dark';
+
 export interface AppSettings {
   company_name: string;
   company_logo: string;
+  ui_theme?: UiThemeId;
 }
 
 export interface HistoricalMonthlyScore {

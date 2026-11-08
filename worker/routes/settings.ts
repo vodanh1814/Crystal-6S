@@ -4,6 +4,12 @@ import { authMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { logActivity } from '../lib/activity';
 import { encryptSecret, decryptSecret } from '../lib/crypto';
+import {
+  DEFAULT_UI_THEME,
+  isValidUiTheme,
+  normalizeUiTheme,
+  type UiThemeId,
+} from '../lib/theme';
 import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from '../../src/version';
 import {
   CF_FREE_TIER_LIMITS,
@@ -50,11 +56,16 @@ async function resolveGithubRepo(db: D1Database): Promise<string> {
 // Helper to fetch settings map
 export async function getAppSettings(
   db: D1Database
-): Promise<{ company_name: string; company_logo: string; github_repo: string }> {
+): Promise<{
+  company_name: string;
+  company_logo: string;
+  github_repo: string;
+  ui_theme: UiThemeId;
+}> {
   try {
     const rows = await db
       .prepare(
-        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo', 'github_repo')"
+        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo', 'github_repo', 'ui_theme')"
       )
       .all<AppSetting>();
 
@@ -67,6 +78,7 @@ export async function getAppSettings(
       company_name: map['company_name'] || 'CRYSTAL',
       company_logo: map['company_logo'] || '',
       github_repo: map['github_repo'] || GITHUB_REPO,
+      ui_theme: normalizeUiTheme(map['ui_theme']),
     };
   } catch (err) {
     console.error('Failed to query app_settings:', err);
@@ -74,6 +86,7 @@ export async function getAppSettings(
       company_name: 'CRYSTAL',
       company_logo: '',
       github_repo: GITHUB_REPO,
+      ui_theme: DEFAULT_UI_THEME,
     };
   }
 }
@@ -158,15 +171,43 @@ settingsRouter.put('/', authMiddleware, async (c) => {
       .run();
   }
 
+  let themeUpdated = false;
+  if (body.ui_theme !== undefined) {
+    const rawTheme = typeof body.ui_theme === 'string' ? body.ui_theme.trim() : '';
+    if (!isValidUiTheme(rawTheme)) {
+      return c.json({ error: 'Invalid ui_theme. Must be classic, crystal-glass, or crystal-hybrid' }, 400);
+    }
+    await c.env.DB
+      .prepare(`
+        INSERT INTO app_settings (key, value, updated_at) VALUES ('ui_theme', ?, datetime('now'))
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `)
+      .bind(rawTheme)
+      .run();
+    themeUpdated = true;
+  }
+
   const updated = await getAppSettings(c.env.DB);
-  await logActivity(
-    c.env.DB,
-    user.id,
-    'update_branding',
-    'settings',
-    null,
-    `name=${updated.company_name}`
-  );
+  if (body.company_name !== undefined || body.company_logo !== undefined || body.github_repo !== undefined || body.github_token !== undefined) {
+    await logActivity(
+      c.env.DB,
+      user.id,
+      'update_branding',
+      'settings',
+      null,
+      `name=${updated.company_name}`
+    );
+  }
+  if (themeUpdated) {
+    await logActivity(
+      c.env.DB,
+      user.id,
+      'update_ui_theme',
+      'settings',
+      null,
+      `ui_theme=${updated.ui_theme}`
+    );
+  }
 
   return c.json({ ok: true, settings: updated });
 });

@@ -14,14 +14,18 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { StatusBadge } from '../components/StatusBadge';
 import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import type { Finding, Area, Photo } from '../api/types';
 
 export const FindingsList: React.FC = () => {
+  const { activeTheme } = useAuth();
   const { lang, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isHybrid = activeTheme === 'crystal-hybrid';
+  const mobilePillCls = isHybrid ? 'min-h-[40px] sm:min-h-0' : '';
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -160,7 +164,7 @@ export const FindingsList: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => updateFilter('area_id', '')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
               !areaFilter
                 ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -175,7 +179,7 @@ export const FindingsList: React.FC = () => {
               <button
                 key={a.id}
                 onClick={() => updateFilter('area_id', isSelected ? '' : String(a.id))}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -216,7 +220,7 @@ export const FindingsList: React.FC = () => {
 
         <button
           onClick={() => updateFilter('overdue', overdueFilter ? '' : '1')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
             overdueFilter
               ? 'bg-rose-600 text-white shadow-2xs'
               : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -227,7 +231,7 @@ export const FindingsList: React.FC = () => {
 
         <button
           onClick={() => updateFilter('repeat', repeatFilter ? '' : '1')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
             repeatFilter
               ? 'bg-purple-600 text-white shadow-2xs'
               : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'

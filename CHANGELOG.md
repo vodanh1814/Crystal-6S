@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.7.0] - 2026-11-08
+
+### Added & Changed (Theme Studio cho Admin & Tích hợp Giao diện Crystal Glass / Crystal Hybrid)
+- **Khu vực Quản trị Giao diện (**Theme Studio**) cho Admin (`/admin/targets`)**:
+  - Giữ nguyên **Classic Andon (`classic`)** làm giao diện mặc định toàn hệ thống qua D1 setting `ui_theme` (`migrations/0008_ui_theme_setting.sql`).
+  - Cho phép Admin **Xem thử tức thì** và **Lưu & Áp dụng toàn hệ thống** giữa 3 giao diện: **Classic Andon (Mặc định)**, **Crystal Glass Enterprise (Mẫu 2)** và **Crystal Hybrid Adaptive (Mẫu 4)**.
+  - Bổ sung API công khai `ui_theme` trong `GET /api/settings` và xác thực quyền Admin + ghi activity log `update_ui_theme` trong `PUT /api/settings` (HTTP 400 nếu sai theme).
+- **2 Giao diện Hiện đại Mới với Chế độ Sáng / Tối Độc lập (`Light / Dark Mode`)**:
+  - **Crystal Glass Enterprise (`crystal-glass`)**: Hiệu ứng kính mờ tinh thể (`backdrop-blur`), độ sâu nổi bật, ánh sáng xanh dương doanh nghiệp.
+  - **Crystal Hybrid Adaptive (`crystal-hybrid`)**: Giao diện Bento tối ưu cả Smart TV Andon lẫn thao tác di động, nổi bật dải màu trạng thái cạnh trái và thanh điều hướng đáy màn hình trên thiết bị di động (`< 768px`).
+  - Hỗ trợ chuyển đổi Sáng / Tối tức thì trên Header, trang Đăng nhập (`/login`) và Thiết lập (`/setup`), lưu cấu hình từng trình duyệt và đồng bộ đa tab không nháy sáng/tối trước khi hydrate (`index.html`).
+- **Tối ưu Hóa Trải nghiệm Bảng Ma trận, Khả năng Tiếp cận & Đồng bộ Ngưỡng 3 Màu**:
+  - Bổ sung `.sticky-matrix-table` cố định cột đầu nền đục khi cuộn ngang bảng Báo cáo (`/reports`) & Phiếu chấm (`/audits/:id`), hỗ trợ điều hướng cuộn bằng bàn phím (`tabIndex={0} role="region"`).
+  - Đồng bộ ngưỡng mục tiêu năm (`target` & `warning_target`) vào API `GET /api/audits` và danh sách phiếu chấm (`/audits`).
+  - Bảo toàn 100% quy tắc xếp loại 3 màu (Đỏ / Vàng / Xanh) và bản quyền tác giả **Simon** trên mọi giao diện.
+
+---
+
 ## [2.6.0] - 2026-11-04
 
 ### Added & Improved (Hỗ trợ 3 Mức Xếp loại Màu Đỏ - Vàng - Xanh & Cho Phép Admin Cấu hình Ngưỡng Cảnh báo Theo Năm)

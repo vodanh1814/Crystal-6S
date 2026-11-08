@@ -11,9 +11,10 @@ import { getVietnamToday, formatMonthYear } from '../lib/date';
 import type { Audit, Area } from '../api/types';
 
 export const AuditsList: React.FC = () => {
-  const { user, isAdmin, canAudit } = useAuth();
+  const { user, isAdmin, canAudit, activeTheme } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const isHybrid = activeTheme === 'crystal-hybrid';
 
   const [audits, setAudits] = useState<Audit[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -81,7 +82,7 @@ export const AuditsList: React.FC = () => {
   const canCreateNewAudit = isAdmin || auditableAreas.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isHybrid ? 'pb-16 md:pb-4' : ''}`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -99,7 +100,9 @@ export const AuditsList: React.FC = () => {
               setModalError(null);
               setIsModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-sm shadow-blue-600/20 transition-colors cursor-pointer"
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-sm shadow-blue-600/20 transition-colors cursor-pointer ${
+              isHybrid ? 'min-h-[44px] sm:min-h-0 justify-center' : ''
+            }`}
           >
             <Plus className="w-4 h-4" />
             <span>{t('new_audit')}</span>
@@ -197,7 +200,12 @@ export const AuditsList: React.FC = () => {
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {t('plant_score_label')}
                   </div>
-                  <ScoreBadge score={audit.score} showStatusText />
+                  <ScoreBadge
+                    score={audit.score}
+                    target={audit.target ?? 95}
+                    warningTarget={audit.warning_target ?? 90}
+                    showStatusText
+                  />
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">

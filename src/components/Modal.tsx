@@ -39,9 +39,9 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className={`bg-white text-slate-900 rounded-2xl shadow-2xl w-full ${maxWidthClasses[maxWidth]} overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col`}
+        className={`theme-modal-card bg-white text-slate-900 rounded-2xl shadow-2xl w-full ${maxWidthClasses[maxWidth]} overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col`}
       >
-        <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="theme-modal-header px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900">{title}</h3>
           <button
             onClick={onClose}

@@ -41,8 +41,26 @@ auditsRouter.get('/', async (c) => {
 
   query += ' ORDER BY a.iso_year DESC, a.iso_week DESC, a.week_start DESC';
 
-  const res = await c.env.DB.prepare(query).bind(...params).all<any>();
-  return c.json({ audits: res.results || [] });
+  const [res, targetsRes] = await Promise.all([
+    c.env.DB.prepare(query).bind(...params).all<any>(),
+    c.env.DB
+      .prepare(
+        'SELECT year, target, COALESCE(warning_target, 90) as warning_target FROM yearly_targets ORDER BY year DESC'
+      )
+      .all<{ year: number; target: number; warning_target: number }>(),
+  ]);
+
+  const targets = targetsRes.results || [];
+  const audits = (res.results || []).map((audit: any) => {
+    const matched = targets.find((t) => t.year <= audit.iso_year);
+    return {
+      ...audit,
+      target: matched ? matched.target : 95,
+      warning_target: matched ? matched.warning_target ?? 90 : 90,
+    };
+  });
+
+  return c.json({ audits });
 });
 
 // POST /api/audits - Create new draft weekly audit (1 audit for entire factory)

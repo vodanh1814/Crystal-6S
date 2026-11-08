@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.6.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.7.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,18 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.6.0`
+## 1. Highlights of Version `v2.7.0`
 
-### 🎨 3-Tier Color Classification (Red - Yellow - Green) & Admin Warning Target Configuration
+### ✨ Admin Theme Studio & Multi-Theme Engine (Classic Default · Crystal Glass · Crystal Hybrid)
+- **Administrator-Exclusive Theme Studio (`/admin/targets`)**:
+  - Preserves **Classic Andon (`classic`)** as the permanent system-wide default via Cloudflare D1 `ui_theme`.
+  - Administrators can **Live Preview** or **Save & Apply System-Wide** two modern themes: **Crystal Glass Enterprise (Sample 2)** and **Crystal Hybrid Adaptive (Sample 4)**.
+- **Independent Light / Dark Mode & Pre-Hydration FOUC Prevention**:
+  - Header/Login/Setup Light/Dark switcher works on both `crystal-glass` and `crystal-hybrid` with cross-tab `storage` synchronization and pre-hydration `<meta name="color-scheme">` syncing.
+- **Shop-Floor Mobile UX & Sticky Matrix Tables**:
+  - Adds a mobile bottom navigation bar in `crystal-hybrid`, opaque sticky-first-column matrix tables (`.sticky-matrix-table`), keyboard scrolling (`tabIndex={0}`), and 3-tier threshold consistency across all themes.
+
+### 🎨 3-Tier Color Classification (Red - Yellow - Green) & Admin Warning Target Configuration (`v2.6.0`)
 - **Industrial-Grade 3-Tier Color System**:
   - 🔴 **Red (Fail)**: Score $< \text{warning\_target}$ (default $< 90.0\%$).
   - 🟡 **Yellow (Warning)**: Score $\ge \text{warning\_target}$ and $< \text{target}$ (default $90.0\% \to < 95.0\%$).

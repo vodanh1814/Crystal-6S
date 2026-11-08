@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.6.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.7.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,18 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.6.0`
+## 1. Điểm nổi bật của phiên bản `v2.7.0`
 
-### 🎨 Phân loại Điểm số 3 Mức Màu (Đỏ - Vàng - Xanh) & Tùy chỉnh Ngưỡng Cảnh báo Admin
+### ✨ Admin Theme Studio & Bộ Giao diện Đa Phong cách (Classic Default · Crystal Glass · Crystal Hybrid)
+- **Theme Studio dành riêng cho Quản trị viên (`/admin/targets`)**:
+  - Giữ nguyên **Classic Andon (`classic`)** làm giao diện mặc định toàn hệ thống qua cài đặt D1 (`ui_theme`).
+  - Admin có thể **Xem thử tức thì (Live Preview)** hoặc **Lưu & Áp dụng toàn hệ thống** 2 giao diện mới: **Crystal Glass Enterprise (Mẫu 2)** và **Crystal Hybrid Adaptive (Mẫu 4)**.
+- **Chế độ Sáng / Tối Độc lập (`Light / Dark Mode`) & Khử nháy FOUC**:
+  - Hỗ trợ chuyển đổi Sáng / Tối ngay trên Header, trang Đăng nhập và Thiết lập cho cả `crystal-glass` và `crystal-hybrid`, tự động đồng bộ đa tab.
+- **Tối ưu Di động & Bảng Ma trận Cố định Cột đầu**:
+  - Bổ sung thanh điều hướng dưới cùng trên mobile cho `crystal-hybrid`, bảng cuộn mượt có cột đầu cố định `.sticky-matrix-table`, hỗ trợ cuộn bàn phím (`tabIndex={0}`) và đồng bộ ngưỡng 3 màu trên mọi giao diện.
+
+### 🎨 Phân loại Điểm số 3 Mức Màu (Đỏ - Vàng - Xanh) & Tùy chỉnh Ngưỡng Cảnh báo Admin (`v2.6.0`)
 - **Hệ Thống Đánh Giá 3 Tầng Màu Sắc Chuẩn Công Nghiệp**:
   - 🔴 **Đỏ (Không đạt)**: Điểm $< \text{warning\_target}$ (mặc định $< 90,0\%$).
   - 🟡 **Vàng (Cảnh báo)**: Điểm $\ge \text{warning\_target}$ và $< \text{target}$ (mặc định $90,0\% \to < 95,0\%$).

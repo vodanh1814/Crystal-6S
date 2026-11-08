@@ -34,9 +34,11 @@ import type { Audit, Finding, ChecklistItem, AuditAreaScore } from '../api/types
 
 export const AuditDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, canAudit } = useAuth();
+  const { user, isAdmin, canAudit, activeTheme } = useAuth();
   const { lang, t } = useI18n();
   const navigate = useNavigate();
+  const isHybrid = activeTheme === 'crystal-hybrid';
+  const stickyTableCls = activeTheme !== 'classic' ? 'sticky-matrix-table' : '';
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
@@ -336,7 +338,7 @@ export const AuditDetail: React.FC = () => {
   const currentPlantPenalty = isDraft ? live_score.totalPenalty : audit.total_penalty;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className={`space-y-6 ${isHybrid ? 'pb-36 md:pb-24' : 'pb-24'}`}>
       {/* Top Header Card */}
       <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
@@ -415,7 +417,9 @@ export const AuditDetail: React.FC = () => {
           {isDraft && canEdit && (
             <button
               onClick={() => openAddFindingModal()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm shadow-blue-600/20 transition-all cursor-pointer shrink-0"
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm shadow-blue-600/20 transition-all cursor-pointer shrink-0 ${
+                isHybrid ? 'min-h-[44px] sm:min-h-0' : ''
+              }`}
             >
               <Plus className="w-4 h-4" />
               <span>{t('add_5s_finding')}</span>
@@ -423,8 +427,13 @@ export const AuditDetail: React.FC = () => {
           )}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={t('external_audit_summary_table')}
+          className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+        >
+          <table className={`w-full text-left text-xs ${stickyTableCls}`}>
             <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th className="py-3 px-4">{t('area_column')}</th>
@@ -441,7 +450,6 @@ export const AuditDetail: React.FC = () => {
               {area_scores.map((as: AuditAreaScore) => {
                 const isAuditable = canAudit(as.area_id);
                 const areaFindings = findings.filter((f: Finding) => f.area_id === as.area_id);
-                const isPassing = as.score >= target;
                 const isSaving = savingExternalAreaId === as.area_id;
 
                 return (
@@ -775,8 +783,12 @@ export const AuditDetail: React.FC = () => {
         />
       </div>
 
-      {/* Floating Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 max-w-7xl mx-auto shadow-lg flex items-center justify-between">
+      {/* Floating Action Bar (Lifts above Mobile Bottom Nav in Crystal Hybrid theme) */}
+      <div
+        className={`fixed left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 max-w-7xl mx-auto shadow-lg flex items-center justify-between ${
+          isHybrid ? 'bottom-16 md:bottom-0' : 'bottom-0'
+        }`}
+      >
         <div className="flex items-center gap-2.5">
           <span className="text-xs text-slate-500 font-medium">
             {isDraft ? t('live_score') : t('score')}:
@@ -792,7 +804,9 @@ export const AuditDetail: React.FC = () => {
             <button
               onClick={handleSubmitAudit}
               disabled={actionLoading}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className={`px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 ${
+                isHybrid ? 'min-h-[44px] sm:min-h-0' : ''
+              }`}
             >
               {actionLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -807,7 +821,9 @@ export const AuditDetail: React.FC = () => {
             <button
               onClick={handleReopenAudit}
               disabled={actionLoading}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 font-bold text-xs text-white shadow-md shadow-amber-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className={`px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 font-bold text-xs text-white shadow-md shadow-amber-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                isHybrid ? 'min-h-[44px] sm:min-h-0' : ''
+              }`}
             >
               <Unlock className="w-4 h-4" />
               <span>{t('reopen')}</span>
