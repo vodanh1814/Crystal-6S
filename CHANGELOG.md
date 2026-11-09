@@ -7,6 +7,25 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.9.0] - 2026-11-09
+
+### Added (Hệ Thống 3 Mẫu Bố Cục Trình Bày Dashboard & Nút Chuyển Đổi Nhanh)
+- **Bộ Nút Chọn 3 Mẫu Dashboard Trực Tiếp Trên Thanh Công Cụ (`/`)**:
+  - Tích hợp 3 nút chuyển đổi bố cục trực quan trên toolbar Dashboard:
+    - **⊞ Mẫu 1: Ma trận Andon (Classic 3-Row Matrix)**: Bố cục kinh điển gồm 6 thẻ KPI strip, ma trận 16 ô khu vực 4x4, bảng báo động 7 ngày, biểu đồ xu hướng 12 tuần và phân tích nhóm 5S.
+    - **☷ Mẫu 2: Phân cụm Phân xưởng (`DashboardZoneFocus.tsx`)**: Cột chỉ số điều hành Hero Gauge (điểm toàn xưởng lớn dạng vòng tròn LED, thanh S1-S5, xếp hạng Top/Bottom, widget báo động nóng) kết hợp 4 cụm xưởng sản xuất (*Dệt & Nhuộm, Hoàn tất & Cơ điện, Kiểm phẩm & Kho, Văn phòng & Phụ trợ*) có điểm số riêng và biểu đồ so sánh xu hướng.
+    - **▦ Mẫu 3: Bản đồ nhiệt 5S & Tác nghiệp (`DashboardHeatmapAction.tsx`)**: Bản đồ nhiệt ma trận 16 khu vực $\times$ 5 trụ cột S1-S5 chỉ rõ điểm yếu từng xưởng bằng màu sắc trực quan (Xanh/Vàng/Đỏ), kết hợp trung tâm tác nghiệp 3 cột feed (*🚨 Quá hạn >7 ngày, ⚠️ Tái lặp tuần này, ✅ Chờ Auditor xác minh*).
+  - Tự động lưu lựa chọn vào `localStorage` (`crystal_5s_dashboard_layout`) cho phép chuyển đổi tức thì không cần tải lại trang.
+- **Dashboard Layout Studio trong Trang Quản trị (`/admin/targets`)**:
+  - Cho phép Admin xem trước hình ảnh sơ đồ và thiết lập mẫu bố cục Dashboard mặc định cho toàn bộ màn hình TV Andon của nhà máy thông qua `PUT /api/settings` (`dashboard_layout`).
+- **Truy vấn Ma trận Nhiệt 5S tại Backend (`GET /api/reports/dashboard`)**:
+  - Truy vấn nhóm lỗi theo từng khu vực và từng trụ cột `ci.s_group` (`area_s_matrix`), mở rộng danh sách cảnh báo khẩn cấp lên 15 items.
+
+### Removed (Dọn dẹp Theme Hệ thống Cũ)
+- Loại bỏ hoàn toàn 2 theme toàn hệ thống cũ (`crystal-glass` và `crystal-hybrid`), trả hệ thống về giao diện chuẩn công nghiệp duy nhất **Classic Emerald Andon** (`classic`) với màn hình TV tối và giao diện quản trị sáng phẳng.
+
+---
+
 ## [2.8.1] - 2026-11-09
 
 ### Fixed & Improved (Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14")

@@ -861,6 +861,27 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     penalty: sGroupMap.get(g)?.total_penalty || 0,
   }));
 
+  // 8.1 Findings matrix per area and per S group this month for Heatmap layout
+  const areaSGroupRes = await c.env.DB
+    .prepare(`
+      SELECT f.area_id, ci.s_group, COUNT(f.id) as count, SUM(f.applied_penalty) as total_penalty
+      FROM findings f
+      JOIN audits a ON a.id = f.audit_id
+      JOIN checklist_items ci ON ci.id = f.item_id
+      WHERE a.month = ? AND a.status = 'submitted'
+      GROUP BY f.area_id, ci.s_group
+    `)
+    .bind(displayMonth)
+    .all<{ area_id: number; s_group: number; count: number; total_penalty: number }>();
+
+  const areaSGroupMap: Record<string, { count: number; penalty: number }> = {};
+  for (const row of areaSGroupRes.results || []) {
+    areaSGroupMap[`${row.area_id}_${row.s_group}`] = {
+      count: row.count,
+      penalty: Number((row.total_penalty || 0).toFixed(2)),
+    };
+  }
+
   // 9. Alarm and finding count summary
   const openCountRes = await c.env.DB
     .prepare(`
@@ -991,7 +1012,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
         END ASC,
         f.due_date ASC,
         f.id DESC
-      LIMIT 6
+      LIMIT 15
     `)
     .bind(today)
     .all<any>();
@@ -1096,6 +1117,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     bottom_areas: bottomAreas,
     trend_12_weeks: trendData,
     s_group_breakdown: sGroups,
+    area_s_matrix: areaSGroupMap,
     urgent_alarms: urgentAlarms,
     counts: {
       open: openCountRes?.cnt || 0,

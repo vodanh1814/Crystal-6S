@@ -21,6 +21,9 @@ import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 import { formatScore, formatDelta } from '../lib/format';
 import { resolveColorMode } from '../lib/theme';
+import type { DashboardLayoutId } from '../api/types';
+import { DashboardZoneFocus } from '../components/dashboard/DashboardZoneFocus';
+import { DashboardHeatmapAction } from '../components/dashboard/DashboardHeatmapAction';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -66,12 +69,26 @@ export const Dashboard: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [activeLayout, setActiveLayout] = useState<DashboardLayoutId>(() => {
+    try {
+      const saved = localStorage.getItem('crystal_5s_dashboard_layout');
+      if (saved === 'matrix' || saved === 'zone' || saved === 'heatmap') return saved;
+    } catch {}
+    return 'matrix';
+  });
 
-  const isClassic = activeTheme === 'classic';
-  const isGlass = activeTheme === 'crystal-glass';
-  const isHybrid = activeTheme === 'crystal-hybrid';
-  const resolvedMode = resolveColorMode(activeTheme, colorModeOverride, true);
-  const isLightTv = !isClassic && resolvedMode === 'light';
+  const handleLayoutChange = (layoutId: DashboardLayoutId) => {
+    setActiveLayout(layoutId);
+    try {
+      localStorage.setItem('crystal_5s_dashboard_layout', layoutId);
+    } catch {}
+  };
+
+  const isClassic = true;
+  const isGlass = false;
+  const isHybrid = false;
+  const resolvedMode = 'dark';
+  const isLightTv = false;
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -344,6 +361,52 @@ export const Dashboard: React.FC = () => {
               {t('all_data_for_month', { month: formatMonthYear(month_info.display_month) })}
             </span>
           )}
+
+          {/* DASHBOARD PRESENTATION LAYOUT SELECTOR */}
+          <div className="flex items-center rounded-lg border border-slate-700/80 bg-slate-800/80 p-0.5 text-xs font-semibold shrink-0">
+            <button
+              type="button"
+              onClick={() => handleLayoutChange('matrix')}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
+                activeLayout === 'matrix'
+                  ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+              title={t('dashboard_layout_matrix_name')}
+            >
+              <span>⊞</span>
+              <span className="hidden lg:inline">{t('dashboard_layout_matrix_name')}</span>
+              <span className="lg:hidden">M1</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLayoutChange('zone')}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
+                activeLayout === 'zone'
+                  ? 'bg-sky-500 text-slate-950 shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+              title={t('dashboard_layout_zone_name')}
+            >
+              <span>☷</span>
+              <span className="hidden lg:inline">{t('dashboard_layout_zone_name')}</span>
+              <span className="lg:hidden">M2</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLayoutChange('heatmap')}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
+                activeLayout === 'heatmap'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+              }`}
+              title={t('dashboard_layout_heatmap_name')}
+            >
+              <span>▦</span>
+              <span className="hidden lg:inline">{t('dashboard_layout_heatmap_name')}</span>
+              <span className="lg:hidden">M3</span>
+            </button>
+          </div>
         </div>
 
         {/* Target Indicator */}
@@ -355,8 +418,38 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
-      <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
+      {/* RENDER LAYOUT 2: WORKSHOP ZONE FOCUS */}
+      {activeLayout === 'zone' && (
+        <DashboardZoneFocus
+          data={data}
+          lang={lang}
+          t={t}
+          is_authenticated={is_authenticated}
+          target={target}
+          warningTarget={warningTarget}
+          formatMonthYear={formatMonthYear}
+          getMonthShortName={getMonthShortName}
+        />
+      )}
+
+      {/* RENDER LAYOUT 3: 5S HEATMAP & ACTION COMMAND CENTER */}
+      {activeLayout === 'heatmap' && (
+        <DashboardHeatmapAction
+          data={data}
+          lang={lang}
+          t={t}
+          is_authenticated={is_authenticated}
+          target={target}
+          warningTarget={warningTarget}
+          formatMonthYear={formatMonthYear}
+        />
+      )}
+
+      {/* RENDER LAYOUT 1: CLASSIC 3-ROW MATRIX (DEFAULT) */}
+      {activeLayout === 'matrix' && (
+        <>
+          {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
+          <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
         {/* KPI 1: Weekly Average Score */}
         <div
           className={`${panelCls} ${hybridKpiAccent(
@@ -1137,6 +1230,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.8.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.9.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,21 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.8.1`
+## 1. Điểm nổi bật của phiên bản `v2.9.0`
 
-### 💻 Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14"
+### 📊 Hệ Thống 3 Mẫu Bố Cục Trình Bày Dashboard & Nút Chuyển Đổi Nhanh
+- **Chuyển Đổi Bố Cục Trực Tiếp Trên Dashboard (`/`)**:
+  - Tích hợp 3 nút chuyển đổi tiện lợi ngay trên thanh công cụ:
+    - **⊞ Mẫu 1: Ma trận Andon (Classic 3-Row Matrix)**: Bố cục 3 tầng quen thuộc gồm 6 thẻ KPI, ma trận 16 ô khu vực, cảnh báo 7 ngày, xu hướng 12 tuần và phân rã 5S.
+    - **☷ Mẫu 2: Phân cụm Phân xưởng (Workshop Zone Focus)**: Cột chỉ số điều hành Hero Gauge (điểm toàn xưởng lớn dạng vòng tròn LED, thanh S1-S5, xếp hạng Top/Bottom) kết hợp 4 cụm xưởng sản xuất (*Dệt & Nhuộm, Hoàn tất & Cơ điện, Kiểm phẩm & Kho, Văn phòng & Phụ trợ*) có điểm số riêng và biểu đồ so sánh xu hướng.
+    - **▦ Mẫu 3: Bản đồ nhiệt 5S & Tác nghiệp (5S Heatmap & Action Feed)**: Bản đồ nhiệt ma trận 16 khu vực $\times$ 5 trụ cột S1-S5 chỉ rõ điểm yếu từng xưởng bằng màu sắc trực quan (Xanh/Vàng/Đỏ), kết hợp trung tâm tác nghiệp 3 cột feed (*🚨 Quá hạn >7 ngày, ⚠️ Tái lặp tuần này, ✅ Chờ Auditor xác minh*).
+  - Tự động lưu lựa chọn vào `localStorage` cho phép chuyển đổi tức thì không cần tải lại trang.
+- **Dashboard Layout Studio trong Trang Quản trị (`/admin/targets`)**:
+  - Cho phép Admin xem trước hình ảnh sơ đồ và thiết lập mẫu bố cục Dashboard mặc định cho toàn bộ màn hình TV Andon của nhà máy.
+- **Loại bỏ 2 Theme Cũ, Giữ Vững Chuẩn Classic**:
+  - Gỡ bỏ hoàn toàn `crystal-glass` và `crystal-hybrid`, đưa hệ thống về chuẩn công nghiệp duy nhất **Classic Emerald Andon** (`classic`).
+
+### 💻 Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14" (`v2.8.1`)
 - **Thích ứng Hoàn hảo Mọi Độ phân giải**:
   - Gỡ bỏ giới hạn tĩnh khiến các ô ma trận khu vực bị bẹp xuống dưới 46px trên laptop màn hình 14" (độ phân giải 1366x768 hoặc Windows scale 125%/150%).
   - Lớp `.theme-tv-canvas` tự động kích hoạt cuộn trang êm ái trên laptop/màn hình nhỏ và tự động khóa cứng 100vh không cuộn khi hiển thị trên TV Wall Andon Board hoặc Fullscreen.

@@ -14,7 +14,7 @@ export const AuditsList: React.FC = () => {
   const { user, isAdmin, canAudit, activeTheme } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const isHybrid = activeTheme === 'crystal-hybrid';
+  const isHybrid = false;
 
   const [audits, setAudits] = useState<Audit[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);

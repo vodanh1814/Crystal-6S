@@ -23,8 +23,8 @@ export const Setup: React.FC = () => {
   const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
 
-  const isClassic = activeTheme === 'classic';
-  const isGlass = activeTheme === 'crystal-glass';
+  const isClassic = true;
+  const isGlass = false;
 
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);

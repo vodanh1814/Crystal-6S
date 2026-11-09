@@ -7,6 +7,25 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.9.0] - 2026-11-09
+
+### Added (Multi-Layout Dashboard Presentation System & Direct Toolbar Switcher)
+- **Direct 3-Layout Switcher Buttons on Dashboard Toolbar (`/`)**:
+  - Integrated 3 intuitive presentation layout switches directly on the Dashboard header:
+    - **⊞ Sample 1: 3-Row Matrix (Classic Andon)**: Classic balanced layout with 6 KPI cards, 16-area matrix wall, 7-day alarms panel, 12-week trend line, and 5S group breakdown.
+    - **☷ Sample 2: Workshop Zone Focus (`DashboardZoneFocus.tsx`)**: Executive command column (large Hero LED circular score gauge, S1-S5 bars, Top/Bottom leaderboard, hot alarms widget) combined with 4 workshop cluster groups (*Dyeing & Knitting, Finishing & Utility, Inspection & Logistics, Plant Office*) with cluster average scores and multi-line comparison trend chart.
+    - **▦ Sample 3: 5S Heatmap & Action Feed (`DashboardHeatmapAction.tsx`)**: 16 areas $\times$ 5S pillars compliance heatmap matrix with color-coded severity tiles, combined with a 3-column operational action feed (*🚨 7-day overdue, ⚠️ week repeat violations, ✅ ready for auditor verification*).
+  - Automatically persists layout selection to `localStorage` (`crystal_5s_dashboard_layout`) for instant switching without full page reload.
+- **Dashboard Layout Studio in System Admin (`/admin/targets`)**:
+  - Replaced the previous theme studio with a Dashboard Layout Studio, allowing Admins to preview schematics and save the plant-wide default dashboard layout via `PUT /api/settings` (`dashboard_layout`).
+- **Backend 5S Matrix Aggregation (`GET /api/reports/dashboard`)**:
+  - Aggregates area findings by `s_group` (`area_s_matrix`) and expands urgent alarms limit to 15 items for comprehensive operational feed rendering.
+
+### Removed (Legacy System Themes Cleanup)
+- Completely removed legacy whole-system themes (`crystal-glass` and `crystal-hybrid`), reverting to the clean industry-standard **Classic Emerald Andon** theme (`classic`).
+
+---
+
 ## [2.8.1] - 2026-11-09
 
 ### Fixed & Improved (Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix)

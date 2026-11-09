@@ -24,7 +24,7 @@ export const FindingsList: React.FC = () => {
   const { activeTheme } = useAuth();
   const { lang, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isHybrid = activeTheme === 'crystal-hybrid';
+  const isHybrid = false;
   const mobilePillCls = isHybrid ? 'min-h-[40px] sm:min-h-0' : '';
 
   const [findings, setFindings] = useState<Finding[]>([]);

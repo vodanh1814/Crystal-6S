@@ -19,8 +19,8 @@ export const Login: React.FC = () => {
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
 
-  const isClassic = activeTheme === 'classic';
-  const isGlass = activeTheme === 'crystal-glass';
+  const isClassic = true;
+  const isGlass = false;
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

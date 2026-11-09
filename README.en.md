@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.8.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.9.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,21 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.8.1`
+## 1. Highlights of Version `v2.9.0`
 
-### 💻 Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix
+### 📊 Multi-Layout Dashboard Presentation System & Direct Toolbar Switcher
+- **Instant Layout Switching Directly on Dashboard Toolbar (`/`)**:
+  - Integrated 3 intuitive layout switcher buttons on the top toolbar:
+    - **⊞ Sample 1: 3-Row Matrix (Classic Andon)**: Familiar 3-row layout with 6 KPI cards, 16-area matrix wall, 7-day alarms panel, 12-week trend line, and 5S group breakdown.
+    - **☷ Sample 2: Workshop Zone Focus**: Executive command column (large circular LED score gauge, S1-S5 bars, Top/Bottom leaderboard) combined with 4 workshop cluster groups (*Dyeing & Knitting, Finishing & Utility, Inspection & Logistics, Plant Office*) with cluster average scores and multi-line comparison trend chart.
+    - **▦ Sample 3: 5S Heatmap & Action Feed**: 16 areas $\times$ 5S pillars compliance heatmap matrix with color-coded severity tiles, combined with a 3-column operational action feed (*🚨 7-day overdue, ⚠️ week repeat violations, ✅ ready for auditor verification*).
+  - Automatically persists layout selection to `localStorage` for instant switching without full page reload.
+- **Dashboard Layout Studio in System Admin (`/admin/targets`)**:
+  - Replaced the previous theme studio with a Dashboard Layout Studio, allowing Admins to preview schematics and save the plant-wide default dashboard layout.
+- **Reverted to Clean Industry-Standard Classic Theme**:
+  - Cleaned up legacy whole-system themes (`crystal-glass` and `crystal-hybrid`), preserving the rock-solid **Classic Emerald Andon** theme (`classic`).
+
+### 💻 Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix (`v2.8.1`)
 - **Flawless Fit Across All Aspect Ratios and Screen Sizes**:
   - Eliminated squashed area cards (< 46px) on 14" laptop viewports (1366x768 or standard 125%/150% Windows scaling).
   - Adaptive `.theme-tv-canvas` enables smooth vertical scrolling on compact laptop screens while maintaining zero-scroll 100vh lock on Smart TV walls and Fullscreen mode.

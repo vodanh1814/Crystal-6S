@@ -3,8 +3,7 @@ import { api } from '../api/client';
 import type { User, UserAreaAssignment, UiThemeId, ColorMode } from '../api/types';
 import { useI18n } from '../i18n/context';
 
-function normalizeThemeValue(val: unknown): UiThemeId {
-  if (val === 'crystal-glass' || val === 'crystal-hybrid') return val;
+function normalizeThemeValue(_val: unknown): UiThemeId {
   return 'classic';
 }
 

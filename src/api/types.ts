@@ -144,13 +144,15 @@ export interface YearlyTarget {
   warning_target?: number;
 }
 
-export type UiThemeId = 'classic' | 'crystal-glass' | 'crystal-hybrid';
+export type UiThemeId = 'classic';
+export type DashboardLayoutId = 'matrix' | 'zone' | 'heatmap';
 export type ColorMode = 'light' | 'dark';
 
 export interface AppSettings {
   company_name: string;
   company_logo: string;
   ui_theme?: UiThemeId;
+  dashboard_layout?: DashboardLayoutId;
 }
 
 export interface HistoricalMonthlyScore {

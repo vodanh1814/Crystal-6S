@@ -9,6 +9,10 @@ import {
   isValidUiTheme,
   normalizeUiTheme,
   type UiThemeId,
+  DEFAULT_DASHBOARD_LAYOUT,
+  isValidDashboardLayout,
+  normalizeDashboardLayout,
+  type DashboardLayoutId,
 } from '../lib/theme';
 import { APP_VERSION, APP_RELEASE_DATE, GITHUB_REPO, GITHUB_REPO_URL, compareSemver } from '../../src/version';
 import {
@@ -61,11 +65,12 @@ export async function getAppSettings(
   company_logo: string;
   github_repo: string;
   ui_theme: UiThemeId;
+  dashboard_layout: DashboardLayoutId;
 }> {
   try {
     const rows = await db
       .prepare(
-        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo', 'github_repo', 'ui_theme')"
+        "SELECT key, value FROM app_settings WHERE key IN ('company_name', 'company_logo', 'github_repo', 'ui_theme', 'dashboard_layout')"
       )
       .all<AppSetting>();
 
@@ -79,6 +84,7 @@ export async function getAppSettings(
       company_logo: map['company_logo'] || '',
       github_repo: map['github_repo'] || GITHUB_REPO,
       ui_theme: normalizeUiTheme(map['ui_theme']),
+      dashboard_layout: normalizeDashboardLayout(map['dashboard_layout']),
     };
   } catch (err) {
     console.error('Failed to query app_settings:', err);
@@ -87,6 +93,7 @@ export async function getAppSettings(
       company_logo: '',
       github_repo: GITHUB_REPO,
       ui_theme: DEFAULT_UI_THEME,
+      dashboard_layout: DEFAULT_DASHBOARD_LAYOUT,
     };
   }
 }
@@ -174,17 +181,31 @@ settingsRouter.put('/', authMiddleware, async (c) => {
   let themeUpdated = false;
   if (body.ui_theme !== undefined) {
     const rawTheme = typeof body.ui_theme === 'string' ? body.ui_theme.trim() : '';
-    if (!isValidUiTheme(rawTheme)) {
-      return c.json({ error: 'Invalid ui_theme. Must be classic, crystal-glass, or crystal-hybrid' }, 400);
-    }
+    const safeTheme = normalizeUiTheme(rawTheme);
     await c.env.DB
       .prepare(`
         INSERT INTO app_settings (key, value, updated_at) VALUES ('ui_theme', ?, datetime('now'))
         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
       `)
-      .bind(rawTheme)
+      .bind(safeTheme)
       .run();
     themeUpdated = true;
+  }
+
+  let layoutUpdated = false;
+  if (body.dashboard_layout !== undefined) {
+    const rawLayout = typeof body.dashboard_layout === 'string' ? body.dashboard_layout.trim() : '';
+    if (!isValidDashboardLayout(rawLayout)) {
+      return c.json({ error: 'Invalid dashboard_layout. Must be matrix, zone, or heatmap' }, 400);
+    }
+    await c.env.DB
+      .prepare(`
+        INSERT INTO app_settings (key, value, updated_at) VALUES ('dashboard_layout', ?, datetime('now'))
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `)
+      .bind(rawLayout)
+      .run();
+    layoutUpdated = true;
   }
 
   const updated = await getAppSettings(c.env.DB);
@@ -206,6 +227,16 @@ settingsRouter.put('/', authMiddleware, async (c) => {
       'settings',
       null,
       `ui_theme=${updated.ui_theme}`
+    );
+  }
+  if (layoutUpdated) {
+    await logActivity(
+      c.env.DB,
+      user.id,
+      'update_dashboard_layout',
+      'settings',
+      null,
+      `dashboard_layout=${updated.dashboard_layout}`
     );
   }
 

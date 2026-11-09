@@ -34,14 +34,15 @@ import {
   Palette,
   Eye,
   RotateCcw,
+  LayoutTemplate,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { Modal } from '../components/Modal';
 import { fileToLogoDataUrl } from '../lib/imageCompression';
-import { UI_THEME_CATALOG } from '../lib/theme';
-import type { UiThemeId, YearlyTarget } from '../api/types';
+import { DASHBOARD_LAYOUT_CATALOG } from '../lib/theme';
+import type { DashboardLayoutId, YearlyTarget } from '../api/types';
 import {
   APP_VERSION,
   APP_RELEASE_DATE,
@@ -145,29 +146,32 @@ export const AdminTargets: React.FC = () => {
     setColorModeOverride,
   } = useAuth();
 
-  // ── 0. UI Theme Studio State (Admin-Only Global Switcher) ──
-  const [selectedThemeDraft, setSelectedThemeDraft] = useState<UiThemeId>(uiTheme);
-  const [savingTheme, setSavingTheme] = useState(false);
-  const [themeSuccess, setThemeSuccess] = useState<string | null>(null);
-  const [themeError, setThemeError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSelectedThemeDraft(uiTheme);
-  }, [uiTheme]);
-
-  const handleSaveUiTheme = async (targetTheme: UiThemeId) => {
-    if (!isAdmin) return;
-    setSavingTheme(true);
-    setThemeSuccess(null);
-    setThemeError(null);
+  // ── 0. Dashboard Layout Studio State ──
+  const [selectedLayoutDraft, setSelectedLayoutDraft] = useState<DashboardLayoutId>(() => {
     try {
-      await updateUiTheme(targetTheme);
-      setThemeSuccess(t('theme_saved_success'));
-      setTimeout(() => setThemeSuccess(null), 5000);
+      const saved = localStorage.getItem('crystal_5s_dashboard_layout');
+      if (saved === 'matrix' || saved === 'zone' || saved === 'heatmap') return saved;
+    } catch {}
+    return 'matrix';
+  });
+  const [savingLayout, setSavingLayout] = useState(false);
+  const [layoutSuccess, setLayoutSuccess] = useState<string | null>(null);
+  const [layoutError, setLayoutError] = useState<string | null>(null);
+
+  const handleSaveDashboardLayout = async (targetLayout: DashboardLayoutId) => {
+    if (!isAdmin) return;
+    setSavingLayout(true);
+    setLayoutSuccess(null);
+    setLayoutError(null);
+    try {
+      await api.put('/settings', { dashboard_layout: targetLayout });
+      localStorage.setItem('crystal_5s_dashboard_layout', targetLayout);
+      setLayoutSuccess(t('dashboard_layout_saved_success'));
+      setTimeout(() => setLayoutSuccess(null), 5000);
     } catch (err: any) {
-      setThemeError(err.message || t('theme_save_error'));
+      setLayoutError(err.message || t('dashboard_layout_save_error'));
     } finally {
-      setSavingTheme(false);
+      setSavingLayout(false);
     }
   };
 
@@ -625,74 +629,48 @@ export const AdminTargets: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      {/* SECTION 0: APP INTERFACE & THEME STUDIO (ADMIN ONLY) */}
+      {/* SECTION 0: DASHBOARD PRESENTATION LAYOUT STUDIO (ADMIN ONLY) */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-              <Palette className="w-6 h-6" />
+              <LayoutTemplate className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                  {t('theme_studio_title')}
+                  {t('dashboard_layout_studio_title')}
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold">
-                  {UI_THEME_CATALOG.find((item) => item.id === uiTheme)
-                    ? t(UI_THEME_CATALOG.find((item) => item.id === uiTheme)!.badgeKey)
-                    : uiTheme}
+                  {DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)
+                    ? t(DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)!.nameKey)
+                    : selectedLayoutDraft}
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {t('theme_studio_desc')}
+                {t('dashboard_layout_studio_desc')}
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {previewTheme && (
-              <button
-                type="button"
-                onClick={() => setPreviewTheme(null)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t('theme_exit_preview_btn')}</span>
-              </button>
-            )}
-
-            {activeTheme !== 'classic' && colorModeOverride !== null && (
-              <button
-                type="button"
-                onClick={() => setColorModeOverride(null)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-sky-600" />
-                <span>{t('color_mode_auto_reset')}</span>
-              </button>
-            )}
-          </div>
         </div>
 
-        {themeSuccess && (
+        {layoutSuccess && (
           <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-            <span>{themeSuccess}</span>
+            <span>{layoutSuccess}</span>
           </div>
         )}
 
-        {themeError && (
+        {layoutError && (
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-            {themeError}
+            {layoutError}
           </div>
         )}
 
-        {/* 3 Theme Selector Cards */}
+        {/* 3 Dashboard Layout Selector Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {UI_THEME_CATALOG.map((item) => {
-            const isDraftSelected = selectedThemeDraft === item.id;
-            const isGlobalActive = uiTheme === item.id;
-            const isCurrentlyPreviewed = previewTheme === item.id;
+          {DASHBOARD_LAYOUT_CATALOG.map((item) => {
+            const isDraftSelected = selectedLayoutDraft === item.id;
 
             return (
               <div
@@ -705,98 +683,93 @@ export const AdminTargets: React.FC = () => {
               >
                 <button
                   type="button"
-                  onClick={() => setSelectedThemeDraft(item.id)}
+                  onClick={() => setSelectedLayoutDraft(item.id)}
                   aria-pressed={isDraftSelected}
                   className="space-y-3 text-left w-full cursor-pointer rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
-                  {/* Visual Miniature Mockup Frame (Preserves fixed dark/glass/hybrid illustration colors) */}
+                  {/* Miniature Mockup Illustration */}
                   <div
                     aria-hidden="true"
-                    className={`h-24 rounded-xl border overflow-hidden p-2 flex flex-col justify-between ${
-                      item.id === 'classic'
-                        ? 'bg-slate-900 border-slate-700'
-                        : item.id === 'crystal-glass'
-                        ? 'bg-linear-to-br from-[#dbeafe] via-[#eff6ff] to-[#e0f2fe] border-blue-200/80'
-                        : 'bg-[#070b14] border-sky-500/30'
-                    }`}
+                    className="h-28 rounded-xl border border-slate-700 bg-slate-900 p-2 flex flex-col justify-between overflow-hidden"
                   >
-                    <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-800">
                       <div className="flex items-center gap-1">
-                        <span
-                          className="w-2.5 h-2.5 rounded-sm"
-                          style={{ backgroundColor: item.accentHex }}
-                        />
-                        <span
-                          className={`text-[9px] font-bold font-mono tracking-tight ${
-                            item.id === 'crystal-glass' ? 'text-[#1e293b]' : 'text-[#e2e8f0]'
-                          }`}
-                        >
-                          5S BOARD
+                        <span className="text-xs font-mono">{item.icon}</span>
+                        <span className="text-[9px] font-bold font-mono tracking-tight text-slate-200">
+                          {item.id === 'matrix' ? '3-ROW MATRIX' : item.id === 'zone' ? 'ZONE FOCUS' : '5S HEATMAP'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {item.id === 'classic' && (
-                        <>
-                          <div className="col-span-1 h-11 rounded bg-slate-800 border border-slate-700" />
-                          <div className="col-span-3 h-11 rounded bg-slate-950/90 border border-emerald-500/30 p-1 grid grid-cols-3 gap-1">
-                            <div className="rounded-xs bg-emerald-500/25 border border-emerald-500/40" />
-                            <div className="rounded-xs bg-amber-500/25 border border-amber-500/40" />
-                            <div className="rounded-xs bg-rose-500/25 border border-rose-500/40" />
+                    {/* Miniature Layout Representation */}
+                    {item.id === 'matrix' && (
+                      <div className="space-y-1 py-1">
+                        <div className="grid grid-cols-6 gap-0.5 h-3">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <div key={i} className="rounded-2xs bg-slate-800 border border-slate-700" />
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-12 gap-1 h-7">
+                          <div className="col-span-8 rounded-xs bg-slate-950 border border-emerald-500/30 p-0.5 grid grid-cols-4 gap-0.5">
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
+                              <div key={k} className="rounded-2xs bg-emerald-500/20" />
+                            ))}
                           </div>
-                        </>
-                      )}
-                      {item.id === 'crystal-glass' && (
-                        <>
-                          <div className="col-span-1 h-11 rounded-lg bg-[#ffffffd4] backdrop-blur-sm border border-[#ffffff] shadow-2xs" />
-                          <div className="col-span-3 h-11 rounded-lg bg-[#ffffffc7] backdrop-blur-sm border border-blue-200/60 p-1 grid grid-cols-3 gap-1 shadow-2xs">
-                            <div className="rounded bg-blue-600/15 border border-blue-400/40" />
-                            <div className="rounded bg-emerald-500/20 border border-emerald-400/50" />
-                            <div className="rounded bg-amber-500/20 border border-amber-400/50" />
+                          <div className="col-span-4 rounded-xs bg-slate-950 border border-rose-500/30" />
+                        </div>
+                        <div className="grid grid-cols-12 gap-1 h-4">
+                          <div className="col-span-5 rounded-xs bg-slate-800" />
+                          <div className="col-span-4 rounded-xs bg-slate-800" />
+                          <div className="col-span-3 rounded-xs bg-slate-800" />
+                        </div>
+                      </div>
+                    )}
+
+                    {item.id === 'zone' && (
+                      <div className="grid grid-cols-12 gap-1 py-1 h-16">
+                        <div className="col-span-4 rounded-xs bg-slate-950 border border-sky-400/30 p-1 flex flex-col items-center justify-center">
+                          <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center text-[7px] text-white font-mono font-bold">
+                            92%
                           </div>
-                        </>
-                      )}
-                      {item.id === 'crystal-hybrid' && (
-                        <>
-                          <div className="col-span-1 h-11 rounded-lg bg-[#0f1624] border border-white/10" />
-                          <div className="col-span-3 h-11 rounded-lg bg-[#0f1624] border border-sky-400/25 p-1 grid grid-cols-3 gap-1">
-                            <div className="rounded-xs bg-[#141d2e] border-l-2 border-l-emerald-500" />
-                            <div className="rounded-xs bg-[#141d2e] border-l-2 border-l-amber-400" />
-                            <div className="rounded-xs bg-[#141d2e] border-l-2 border-l-rose-500" />
-                          </div>
-                        </>
-                      )}
-                    </div>
+                        </div>
+                        <div className="col-span-8 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-2 gap-0.5">
+                          {[1, 2, 3, 4].map((z) => (
+                            <div key={z} className="rounded-2xs bg-slate-800 border-l border-sky-400" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {item.id === 'heatmap' && (
+                      <div className="space-y-1 py-1">
+                        <div className="h-9 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-8 gap-0.5">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((h) => (
+                            <div
+                              key={h}
+                              className={`rounded-2xs ${
+                                h % 5 === 0 ? 'bg-rose-500/60' : h % 3 === 0 ? 'bg-amber-500/60' : 'bg-emerald-500/40'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-3 gap-0.5 h-5">
+                          <div className="rounded-2xs bg-rose-950/60 border border-rose-500/30" />
+                          <div className="rounded-2xs bg-purple-950/60 border border-purple-500/30" />
+                          <div className="rounded-2xs bg-sky-950/60 border border-sky-500/30" />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Theme Meta Info */}
+                  {/* Layout Meta Info */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700">
-                        {t(item.badgeKey)}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {isCurrentlyPreviewed && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold">
-                            {t('theme_previewing_badge')}
-                          </span>
-                        )}
-                        {isGlobalActive && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold">
-                            {t('theme_active_badge')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
                     <h3 className="text-sm font-black text-slate-900 pt-0.5">
-                      {t(item.titleKey)}
+                      {t(item.nameKey)}
                     </h3>
                     <p className="text-xs text-slate-500 leading-relaxed">
                       {t(item.descKey)}
@@ -809,23 +782,13 @@ export const AdminTargets: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      if (isCurrentlyPreviewed) {
-                        setPreviewTheme(null);
-                      } else {
-                        setSelectedThemeDraft(item.id);
-                        setPreviewTheme(item.id);
-                      }
+                      localStorage.setItem('crystal_5s_dashboard_layout', item.id);
+                      window.location.href = '/';
                     }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                      isCurrentlyPreviewed
-                        ? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100'
-                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                    }`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>
-                      {isCurrentlyPreviewed ? t('theme_exit_preview_btn') : t('theme_preview_btn')}
-                    </span>
+                    <span>{t('theme_preview_btn')}</span>
                   </button>
 
                   {isDraftSelected && (
@@ -840,27 +803,27 @@ export const AdminTargets: React.FC = () => {
           })}
         </div>
 
-        {/* Apply System-Wide Bar */}
+        {/* Apply Default Layout Bar */}
         <div className="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-slate-500 font-medium">
-            {lang === 'en' ? 'Global Active Theme:' : 'Giao diện toàn hệ thống hiện tại:'}{' '}
+            {lang === 'en' ? 'Selected Default Layout:' : 'Mẫu bố cục Dashboard đã chọn:'}{' '}
             <strong className="text-slate-900 font-bold">
-              {t(UI_THEME_CATALOG.find((item) => item.id === uiTheme)?.titleKey || 'theme_classic_title')}
+              {t(DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)?.nameKey || 'dashboard_layout_matrix_name')}
             </strong>
           </div>
 
           <button
             type="button"
-            disabled={savingTheme || selectedThemeDraft === uiTheme}
-            onClick={() => handleSaveUiTheme(selectedThemeDraft)}
+            disabled={savingLayout}
+            onClick={() => handleSaveDashboardLayout(selectedLayoutDraft)}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm shadow-blue-600/25 transition cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
           >
-            {savingTheme ? (
+            {savingLayout ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Save className="w-4 h-4" />
             )}
-            <span>{savingTheme ? t('theme_saving') : t('theme_save_apply_btn')}</span>
+            <span>{savingLayout ? t('theme_saving') : t('theme_save_apply_btn')}</span>
           </button>
         </div>
       </div>

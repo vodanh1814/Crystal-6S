@@ -53,10 +53,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const isDashboard = location.pathname === '/';
   const resolvedMode = resolveColorMode(activeTheme, colorModeOverride, isDashboard);
-  const isClassic = activeTheme === 'classic';
-  const isGlass = activeTheme === 'crystal-glass';
-  const isHybrid = activeTheme === 'crystal-hybrid';
-  const isLightChrome = !isClassic && resolvedMode === 'light';
+  const isClassic = true;
+  const isGlass = false;
+  const isHybrid = false;
+  const isLightChrome = false;
 
   // Sync resolved data-color-mode & <meta name="color-scheme"> for CSS theme selectors
   useEffect(() => {

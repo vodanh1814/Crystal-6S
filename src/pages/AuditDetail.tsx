@@ -38,7 +38,7 @@ export const AuditDetail: React.FC = () => {
   const { user, isAdmin, canAudit, activeTheme } = useAuth();
   const { lang, t } = useI18n();
   const navigate = useNavigate();
-  const isHybrid = activeTheme === 'crystal-hybrid';
+  const isHybrid = false;
   const stickyTableCls = activeTheme !== 'classic' ? 'sticky-matrix-table' : '';
 
   const [loading, setLoading] = useState(true);
