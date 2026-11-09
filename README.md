@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.9.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.10.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,29 +9,26 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.9.0`
+## 1. Điểm nổi bật của phiên bản `v2.10.0`
 
-### 📊 Hệ Thống 3 Mẫu Bố Cục Trình Bày Dashboard & Nút Chuyển Đổi Nhanh
-- **Chuyển Đổi Bố Cục Trực Tiếp Trên Dashboard (`/`)**:
-  - Tích hợp 3 nút chuyển đổi tiện lợi ngay trên thanh công cụ:
-    - **⊞ Mẫu 1: Ma trận Andon (Classic 3-Row Matrix)**: Bố cục 3 tầng quen thuộc gồm 6 thẻ KPI, ma trận 16 ô khu vực, cảnh báo 7 ngày, xu hướng 12 tuần và phân rã 5S.
-    - **☷ Mẫu 2: Phân cụm Phân xưởng (Workshop Zone Focus)**: Cột chỉ số điều hành Hero Gauge (điểm toàn xưởng lớn dạng vòng tròn LED, thanh S1-S5, xếp hạng Top/Bottom) kết hợp 4 cụm xưởng sản xuất (*Dệt & Nhuộm, Hoàn tất & Cơ điện, Kiểm phẩm & Kho, Văn phòng & Phụ trợ*) có điểm số riêng và biểu đồ so sánh xu hướng.
-    - **▦ Mẫu 3: Bản đồ nhiệt 5S & Tác nghiệp (5S Heatmap & Action Feed)**: Bản đồ nhiệt ma trận 16 khu vực $\times$ 5 trụ cột S1-S5 chỉ rõ điểm yếu từng xưởng bằng màu sắc trực quan (Xanh/Vàng/Đỏ), kết hợp trung tâm tác nghiệp 3 cột feed (*🚨 Quá hạn >7 ngày, ⚠️ Tái lặp tuần này, ✅ Chờ Auditor xác minh*).
-  - Tự động lưu lựa chọn vào `localStorage` cho phép chuyển đổi tức thì không cần tải lại trang.
-- **Dashboard Layout Studio trong Trang Quản trị (`/admin/targets`)**:
-  - Cho phép Admin xem trước hình ảnh sơ đồ và thiết lập mẫu bố cục Dashboard mặc định cho toàn bộ màn hình TV Andon của nhà máy.
-- **Loại bỏ 2 Theme Cũ, Giữ Vững Chuẩn Classic**:
-  - Gỡ bỏ hoàn toàn `crystal-glass` và `crystal-hybrid`, đưa hệ thống về chuẩn công nghiệp duy nhất **Classic Emerald Andon** (`classic`).
+### 📈 Theo Dõi Tiến Độ & Cải Thiện Liên Tục 5S MoM (Month-over-Month Kaizen)
+- **Hệ Thống Phân Tích MoM Toàn Diện**:
+  - Tự động tính toán chênh lệch điểm số trung bình tháng hiện tại so với tháng trước (`▲ +X.Xđ` / `▼ X.Xđ` / `▬ 0đ`) cho tất cả 16 khu vực xưởng.
+  - Xử lý mượt mà bước chuyển năm (tháng 1 so với tháng 12 năm trước) nhờ mở rộng truy vấn dữ liệu quá khứ và audit.
+  - Phân loại trực quan: **Top Improvers** (Khu vực có mức độ tiến bộ vượt bậc) và **Stagnant Areas** (Khu vực có điểm dưới mục tiêu hoặc suy giảm cần Kaizen khẩn cấp).
+  - Tích hợp công tắc chuyển đổi góc nhìn **Kaizen / Xếp hạng** tiện dụng trên cả 2 mẫu Dashboard.
 
-### 💻 Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14" (`v2.8.1`)
-- **Thích ứng Hoàn hảo Mọi Độ phân giải**:
-  - Gỡ bỏ giới hạn tĩnh khiến các ô ma trận khu vực bị bẹp xuống dưới 46px trên laptop màn hình 14" (độ phân giải 1366x768 hoặc Windows scale 125%/150%).
-  - Lớp `.theme-tv-canvas` tự động kích hoạt cuộn trang êm ái trên laptop/màn hình nhỏ và tự động khóa cứng 100vh không cuộn khi hiển thị trên TV Wall Andon Board hoặc Fullscreen.
-- **Triệt tiêu Rơi dòng Điểm số & Nhãn Thống kê**:
-  - Bổ sung `whitespace-nowrap`, `flex-nowrap` và `min-h-[68px]` cho thanh KPI, giúp tỷ lệ khu vực đạt chuẩn không bị rớt chữ xuống dòng thứ 2.
-  - Cân đối biểu đồ phân rã 5S với tỉ lệ 4:4:4 để nhãn phạt `(-7pts)` hiển thị chuẩn xác trên một dòng.
-- **Tinh gọn Từ ngữ Song ngữ & Tiêu đề Header Thích ứng**:
-  - Tinh chỉnh các từ khóa `'TB xử lý'` / `'Avg Time'` và `'/{n} KV'` / `'/{n}'` vừa vặn với mọi kích thước thẻ.
+### 🏭 Tái Cấu Trúc Bố Cục Dashboard Mẫu 2: Chuẩn Hóa 2 Khối Sản Xuất & Phụ Trợ
+- **Tập Trung Hóa 2 Khối Vận Hành**:
+  - Gộp các cụm phân tán thành đúng 2 khối: **Khối Sản Xuất** (10 xưởng: Dệt, Nhuộm, Định lượng, Căng, Hấp, Kiểm Greige, Kiểm Final, Lab Dip, Lab Test, UNT) và **Khối Phụ Trợ & Dịch Vụ** (6 xưởng: Kho bãi, Cơ điện, Năng lượng, Kỹ thuật, Hành chính, FM/CFD).
+  - Thống kê độc lập từng khối: Điểm trung bình, biến động MoM, số khu vực Đạt/Cảnh báo/Chưa đạt, và tổng lỗi quá hạn.
+  - Command Bar với 3 tab: Cải thiện 5S MoM, Phân rã 5 trụ cột S1-S5, và Xếp hạng Top/Bottom.
+
+### 🖥️ Tinh Gọn 2 Mẫu Bố Cục Trực Tiếp & Khắc Phục Tràn Viền Trên Laptop 14"
+- **Loại Bỏ Mẫu Heatmap, Giữ 2 Mẫu Andon Tinh Gọn**:
+  - Gỡ bỏ hoàn toàn Mẫu 3 Heatmap, tập trung trải nghiệm vào 2 mẫu thiết kế hiệu quả nhất: **Mẫu 1 (Ma trận Andon 3 Tầng)** và **Mẫu 2 (Phân nhóm SX & Phụ trợ)** kèm nút chuyển đổi tức thì trên toolbar.
+- **Tối Ưu Trải Nghiệm Laptop 14"**:
+  - Bổ sung `overflow-y-auto` trên container TV Canvas, cho phép cuộn êm ái trên laptop màn hình nhỏ (1366x768 hoặc scaling 125%/150%), triệt tiêu hoàn toàn hiện tượng tràn bảng báo động 7 ngày sang Hàng 3.
 
 ### ✏️ Tính năng Chỉnh sửa Lỗi 5S Đã Nhập (Edit Finding) Trong Phiếu Chấm (`v2.8.0`)
 - **Bổ sung Nút Chỉnh sửa (Edit) tại Section 2 Phiếu Chấm (`/audits/:id`)**:

@@ -7,6 +7,39 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.10.0] - 2026-11-09
+
+### Added (Month-over-Month Continuous Improvement & Kaizen Tracking)
+- **Month-over-Month (MoM) Continuous Improvement Analytics Engine**:
+  - **Backend (`worker/routes/reports.ts`)**:
+    - Queries monthly averages and submitted audit data for current year, effective year, and prior year (`effectiveYear - 1`), ensuring seamless delta calculations during the January year-turn boundary (comparing Jan to previous year's Dec).
+    - Computes area score deltas (`delta_prev_month` = current month average minus previous month average, rounded to 1 decimal place) across all 16 plant areas.
+    - Classifies Kaizen trends into semantic statuses: `improved`, `declined`, `stagnant`, `stable`.
+    - Returns structured `improvement_analysis` with **Top Improvers** (areas with highest positive score surge) and **Stagnant Areas** (areas below target or persistently lagging requiring Kaizen interventions).
+  - **Frontend (`Dashboard.tsx` & `DashboardZoneFocus.tsx`)**:
+    - Renders dynamic MoM delta badges on all area cards: `▲ +X.Xđ` (emerald for progress), `▼ X.Xđ` (rose for regression), `▬ 0đ` (muted for steady state).
+    - Added an interactive **Kaizen / Leaderboard** toggle switch in Row 3 (Sample 1) and the Command Column (Sample 2), empowering leadership and plant managers to track continuous improvement momentum alongside static rankings.
+
+### Changed & Refactored (Restructured Sample 2 Dashboard into 2 Divisions)
+- **Sample 2 Dashboard Restructuring (`DashboardZoneFocus.tsx`)**:
+  - Consolidated scattered workshop clusters into exactly **2 Standardized Plant Divisions**:
+    - 🏭 **Production Division** (10 areas): Knitting, Dyeing, Batching, Setting, VAP, Greige QC, Final QC, Lab Dip, Lab Test, UNT.
+    - 🛠️ **Support & Utilities Division** (6 areas): Warehouse, Maintenance (MTN), Utility, TSC, ADM, FM/CFD.
+  - Each division features a dedicated summary header: Division average score, MoM score delta, PASS/WARN/FAIL status badges, and open/overdue finding tallies.
+  - Upgraded left command column with a 3-tab switcher: **5S Continuous Improvement**, **5S Pillars Breakdown (S1-S5)**, and **Top/Bottom Leaderboard**.
+
+### Removed (Streamlined Dashboard Presentation Catalog)
+- **Completely Removed Sample 3 Heatmap (`DashboardHeatmapAction.tsx`)**:
+  - Eliminated the heatmap component and all `heatmap` layout types across backend and frontend, refining the layout options to the two most effective formats: **Sample 1 (3-Row Matrix)** and **Sample 2 (Workshop Zone Focus)**.
+  - Updated Plant Targets Admin page (`/admin/targets`) to a streamlined 2-column layout preview grid.
+
+### Fixed (Screen Overflow & Clipping Prevention on 14" Laptops)
+- **Resolved Overflow and Layout Clipping on Compact Screens**:
+  - Added `overflow-y-auto` to `theme-tv-canvas` in `Layout.tsx`, enabling smooth vertical scrolling on 14" laptop displays (1366x768 or 125%/150% Windows scaling) and eliminating 7-day alarm bleed into Row 3.
+  - Adjusted minimum card heights (`min-h-[58px]`) with text line clamping and `truncate min-w-0` to protect title and badge boundaries.
+
+---
+
 ## [2.9.0] - 2026-11-09
 
 ### Added (Multi-Layout Dashboard Presentation System & Direct Toolbar Switcher)

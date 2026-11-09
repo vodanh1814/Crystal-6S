@@ -7,6 +7,39 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.10.0] - 2026-11-09
+
+### Added (Theo Dõi Tiến Bộ & Cải Thiện Liên Tục 5S MoM)
+- **Hệ Thống Phân Tích Cải Thiện Liên Tục MoM (Month-over-Month Continuous Improvement)**:
+  - **Backend (`worker/routes/reports.ts`)**:
+    - Truy vấn dữ liệu điểm trung bình tháng và audit của cả năm hiện tại, năm hiệu lực và năm liền trước (`effectiveYear - 1`), đảm bảo tính toán chênh lệch MoM chính xác ngay cả trong tháng 1 (so sánh với tháng 12 năm trước).
+    - Tính toán $\Delta$ điểm tháng (`delta_prev_month` = điểm tháng này trừ điểm tháng trước, làm tròn 1 chữ số thập phân) cho tất cả 16 khu vực xưởng.
+    - Phân loại trạng thái xu hướng Kaizen tự động: `improved` (tiến bộ), `declined` (suy giảm), `stagnant` (dậm chân / chưa cải thiện), `stable` (ổn định).
+    - Trả về cấu trúc `improvement_analysis` tổng hợp danh sách **Top Improvers** (Top khu vực bứt phá cải thiện điểm số mạnh nhất) và **Stagnant Areas** (Khu vực có điểm dưới mục tiêu hoặc suy giảm cần Kaizen khẩn cấp).
+  - **Frontend (`Dashboard.tsx` & `DashboardZoneFocus.tsx`)**:
+    - Hiển thị badge MoM delta trực quan trên từng ô khu vực: `▲ +X.Xđ` (xanh ngọc khi tiến bộ), `▼ X.Xđ` (đỏ khi sụt giảm), `▬ 0đ` (xám khi duy trì).
+    - Tích hợp công tắc chuyển đổi góc nhìn **Kaizen / Xếp hạng** tại thẻ phân tích Hàng 3 (Mẫu 1) và Command Column (Mẫu 2), cho phép Ban Giám đốc và Trưởng bộ phận theo dõi sát sao tiến độ cải tiến liên tục thay vì chỉ xem bảng xếp hạng tĩnh.
+
+### Changed & Refactored (Tái Cấu Trúc Bố Cục Dashboard Mẫu 2 - Phân Nhóm 2 Khối)
+- **Tái Cấu Trúc Dashboard Mẫu 2 (`DashboardZoneFocus.tsx`)**:
+  - Gộp 4 cụm phân tán thành đúng **2 Khối Nhà Xưởng chuẩn hóa**:
+    - 🏭 **Khối Sản Xuất** (*Production Division* - 10 khu vực): Dệt (Knitting), Nhuộm (Dyeing), Định lượng (Batching), Căng (Setting), Hấp (VAP), Kiểm Greige, Kiểm Final, Lab Dip, Lab Test, UNT.
+    - 🛠️ **Khối Phụ Trợ & Dịch Vụ** (*Support Division* - 6 khu vực): Kho bãi (Warehouse), Cơ điện (MTN), Năng lượng (Utility), Kỹ thuật (TSC), Hành chính (ADM), FM/CFD.
+  - Mỗi khối có Header thống kê chuyên biệt: Điểm số trung bình toàn khối, Biến động MoM của khối, Huy hiệu PASS/WARN/FAIL, và Tổng số lỗi mở / quá hạn.
+  - Nâng cấp cột điều hành bên trái với thanh điều hướng 3 tab: **Cải thiện 5S MoM**, **Phân rã 5 Trụ cột (S1-S5)**, và **Top/Bottom Leaderboard**.
+
+### Removed (Tinh Gọn Hệ Thống Bố Cục Dashboard)
+- **Gỡ Bỏ Hoàn Toàn Dashboard Mẫu 3 Heatmap (`DashboardHeatmapAction.tsx`)**:
+  - Loại bỏ hoàn toàn mã nguồn và kiểu dữ liệu `heatmap` khỏi hệ thống, đưa bộ sưu tập bố cục về 2 mẫu Andon tinh giản, tập trung và trực quan nhất: **Mẫu 1 (Ma trận Andon 3 Tầng)** và **Mẫu 2 (Phân nhóm SX & Phụ trợ)**.
+  - Cập nhật trang Quản trị Mục tiêu (`/admin/targets`) với lưới 2 cột xem trước sơ đồ bố cục chuẩn.
+
+### Fixed (Khắc Phục Lỗi Hiển Thị & Chống Cắt Chữ Trên Laptop 14")
+- **Tối Ưu Không Gian & Khắc Phục Tràn Khung Trên Màn Hình Nhỏ**:
+  - Thêm `overflow-y-auto` vào `theme-tv-canvas` trong `Layout.tsx`, đảm bảo giao diện có thể cuộn linh hoạt trên laptop 14" (độ phân giải 1366x768 hoặc scaling 125%/150%), loại bỏ hiện tượng nội dung bảng báo động 7 ngày bị ép tràn đè lên ranh giới Hàng 3.
+  - Tối ưu hóa kích thước tối thiểu các thẻ báo động khẩn cấp (`min-h-[58px]`), kết hợp line clamping tiêu đề và chống tràn văn bản `truncate min-w-0`.
+
+---
+
 ## [2.9.0] - 2026-11-09
 
 ### Added (Hệ Thống 3 Mẫu Bố Cục Trình Bày Dashboard & Nút Chuyển Đổi Nhanh)

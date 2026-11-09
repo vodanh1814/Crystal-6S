@@ -150,7 +150,7 @@ export const AdminTargets: React.FC = () => {
   const [selectedLayoutDraft, setSelectedLayoutDraft] = useState<DashboardLayoutId>(() => {
     try {
       const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone' || saved === 'heatmap') return saved;
+      if (saved === 'matrix' || saved === 'zone') return saved;
     } catch {}
     return 'matrix';
   });
@@ -667,8 +667,8 @@ export const AdminTargets: React.FC = () => {
           </div>
         )}
 
-        {/* 3 Dashboard Layout Selector Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 2 Dashboard Layout Selector Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {DASHBOARD_LAYOUT_CATALOG.map((item) => {
             const isDraftSelected = selectedLayoutDraft === item.id;
 
@@ -696,7 +696,7 @@ export const AdminTargets: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-mono">{item.icon}</span>
                         <span className="text-[9px] font-bold font-mono tracking-tight text-slate-200">
-                          {item.id === 'matrix' ? '3-ROW MATRIX' : item.id === 'zone' ? 'ZONE FOCUS' : '5S HEATMAP'}
+                          {item.id === 'matrix' ? '3-ROW MATRIX' : 'PRODUCTION & SUPPORT'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -737,30 +737,15 @@ export const AdminTargets: React.FC = () => {
                             92%
                           </div>
                         </div>
-                        <div className="col-span-8 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-2 gap-0.5">
-                          {[1, 2, 3, 4].map((z) => (
-                            <div key={z} className="rounded-2xs bg-slate-800 border-l border-sky-400" />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {item.id === 'heatmap' && (
-                      <div className="space-y-1 py-1">
-                        <div className="h-9 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-8 gap-0.5">
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((h) => (
-                            <div
-                              key={h}
-                              className={`rounded-2xs ${
-                                h % 5 === 0 ? 'bg-rose-500/60' : h % 3 === 0 ? 'bg-amber-500/60' : 'bg-emerald-500/40'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-3 gap-0.5 h-5">
-                          <div className="rounded-2xs bg-rose-950/60 border border-rose-500/30" />
-                          <div className="rounded-2xs bg-purple-950/60 border border-purple-500/30" />
-                          <div className="rounded-2xs bg-sky-950/60 border border-sky-500/30" />
+                        <div className="col-span-8 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-2 gap-1">
+                          <div className="rounded-2xs bg-slate-800 border-l-2 border-sky-400 p-0.5 flex flex-col justify-around">
+                            <span className="text-[6px] text-sky-300 font-bold">PROD</span>
+                            <div className="h-1 bg-emerald-500/40 rounded-full" />
+                          </div>
+                          <div className="rounded-2xs bg-slate-800 border-l-2 border-amber-400 p-0.5 flex flex-col justify-around">
+                            <span className="text-[6px] text-amber-300 font-bold">SUPP</span>
+                            <div className="h-1 bg-amber-500/40 rounded-full" />
+                          </div>
                         </div>
                       </div>
                     )}

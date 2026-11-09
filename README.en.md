@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.9.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.10.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,29 +9,26 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.9.0`
+## 1. Highlights of Version `v2.10.0`
 
-### 📊 Multi-Layout Dashboard Presentation System & Direct Toolbar Switcher
-- **Instant Layout Switching Directly on Dashboard Toolbar (`/`)**:
-  - Integrated 3 intuitive layout switcher buttons on the top toolbar:
-    - **⊞ Sample 1: 3-Row Matrix (Classic Andon)**: Familiar 3-row layout with 6 KPI cards, 16-area matrix wall, 7-day alarms panel, 12-week trend line, and 5S group breakdown.
-    - **☷ Sample 2: Workshop Zone Focus**: Executive command column (large circular LED score gauge, S1-S5 bars, Top/Bottom leaderboard) combined with 4 workshop cluster groups (*Dyeing & Knitting, Finishing & Utility, Inspection & Logistics, Plant Office*) with cluster average scores and multi-line comparison trend chart.
-    - **▦ Sample 3: 5S Heatmap & Action Feed**: 16 areas $\times$ 5S pillars compliance heatmap matrix with color-coded severity tiles, combined with a 3-column operational action feed (*🚨 7-day overdue, ⚠️ week repeat violations, ✅ ready for auditor verification*).
-  - Automatically persists layout selection to `localStorage` for instant switching without full page reload.
-- **Dashboard Layout Studio in System Admin (`/admin/targets`)**:
-  - Replaced the previous theme studio with a Dashboard Layout Studio, allowing Admins to preview schematics and save the plant-wide default dashboard layout.
-- **Reverted to Clean Industry-Standard Classic Theme**:
-  - Cleaned up legacy whole-system themes (`crystal-glass` and `crystal-hybrid`), preserving the rock-solid **Classic Emerald Andon** theme (`classic`).
+### 📈 Month-over-Month (MoM) Continuous Improvement & Kaizen Tracking
+- **Comprehensive MoM Analytics**:
+  - Automatically calculates current vs prior month average score deltas (`▲ +X.Xđ` / `▼ X.Xđ` / `▬ 0đ`) for all 16 plant areas.
+  - Multi-year database query handles year boundaries smoothly (e.g. comparing January against the prior year's December).
+  - Highlights **Top Improvers** (areas with highest Kaizen score surge) alongside **Stagnant Areas** (areas lagging below target or regressing).
+  - Quick-switch **Kaizen / Leaderboard** toggle on both dashboard layouts.
 
-### 💻 Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix (`v2.8.1`)
-- **Flawless Fit Across All Aspect Ratios and Screen Sizes**:
-  - Eliminated squashed area cards (< 46px) on 14" laptop viewports (1366x768 or standard 125%/150% Windows scaling).
-  - Adaptive `.theme-tv-canvas` enables smooth vertical scrolling on compact laptop screens while maintaining zero-scroll 100vh lock on Smart TV walls and Fullscreen mode.
-- **Zero Text Dropping on KPI & Analytics Strips**:
-  - Added `whitespace-nowrap`, `flex-nowrap`, and robust minimum heights on KPI cards to prevent numbers and labels from wrapping onto multiple lines.
-  - Rebalanced 5S breakdown column ratio to 4:4:4 so penalty tags `(-7pts)` fit cleanly on a single row.
-- **Concise Bilingual Localization & Progressive Truncation**:
-  - Optimized localized terms (`'TB xử lý'` / `'Avg Time'`, `'/{n} KV'` / `'/{n}'`) and progressive header title truncation.
+### 🏭 Restructured Sample 2 Dashboard: 2 Operational Divisions (Production & Support)
+- **Clear Factory Division Grouping**:
+  - Reorganized all 16 areas into exactly two functional divisions: **Production** (10 workshops: Knitting, Dyeing, Batching, Setting, VAP, Greige QC, Final QC, Lab Dip, Lab Test, UNT) and **Support & Utilities** (6 areas: Warehouse, Maintenance, Utility, TSC, ADM, FM/CFD).
+  - Division-specific metrics: Aggregate average score, MoM score delta, PASS/WARN/FAIL status count, and open/overdue finding tallies.
+  - Command Bar featuring a 3-tab switcher: MoM Continuous Improvement, 5S Pillars Breakdown (S1-S5), and Top/Bottom Leaderboard.
+
+### 🖥️ Streamlined 2-Layout Catalog & 14" Laptop Display Fix
+- **Focused 2-Layout System (Heatmap Removed)**:
+  - Removed Sample 3 Heatmap, streamlining the dashboard to the two best-performing layouts: **Sample 1 (3-Row Matrix)** and **Sample 2 (Workshop Zone Focus)** with instant toolbar switching.
+- **Enhanced 14" Laptop Usability**:
+  - Added `overflow-y-auto` to the TV canvas container for smooth vertical scrolling on 14" laptop screens (1366x768 or 125%/150% Windows scaling), permanently resolving 7-day alarm bleed into Row 3.
 
 ### ✏️ Edit 5S Finding Capability in Weekly Audits (`v2.8.0`)
 - **Edit Action on Finding Cards (`/audits/:id`)**:

@@ -538,10 +538,10 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     currentWeekAuditMap.set(a.area_id, a);
   }
 
-  // 4. Query all historical monthly scores for effective year and current year
+  // 4. Query all historical monthly scores for effective year, current year, and previous year
   const historicalRes = await c.env.DB
-    .prepare('SELECT year, month, area_id, score FROM historical_monthly_scores WHERE year = ? OR year = ?')
-    .bind(effectiveYear, currentYear)
+    .prepare('SELECT year, month, area_id, score FROM historical_monthly_scores WHERE year = ? OR year = ? OR year = ?')
+    .bind(effectiveYear, currentYear, effectiveYear - 1)
     .all<{ year: number; month: string; area_id: number; score: number }>();
 
   // Map: year_month ('2026_01'..'2026_12') -> Map<area_id, score>
@@ -567,16 +567,16 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     }
   }
 
-  // 5. Query all submitted audits in effective year and current year
+  // 5. Query all submitted audits in effective year, current year, and previous year
   const yearAuditsRes = await c.env.DB
     .prepare(`
       SELECT a.month, a.iso_year, a.iso_week, aas.area_id, aas.score
       FROM audit_area_scores aas
       JOIN audits a ON a.id = aas.audit_id
       JOIN areas ar ON ar.id = aas.area_id AND ar.active = 1
-      WHERE (a.iso_year = ? OR a.iso_year = ?) AND a.status = 'submitted' AND aas.score IS NOT NULL
+      WHERE (a.iso_year = ? OR a.iso_year = ? OR a.iso_year = ?) AND a.status = 'submitted' AND aas.score IS NOT NULL
     `)
-    .bind(effectiveYear, currentYear)
+    .bind(effectiveYear, currentYear, effectiveYear - 1)
     .all<{ month: string; iso_year: number; iso_week: number; area_id: number; score: number }>();
 
   // Map: ymStr ('2026-01'..'2026-12') -> Map<area_id, number[]>
@@ -634,6 +634,34 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   const [dispY, dispM] = displayMonth.split('-');
   const auditedForDisplayMonth = auditedByYearMonth.get(displayMonth);
   const historicalForDisplayMonth = historicalByYearMonth.get(`${dispY}_${dispM}`);
+
+  // Calculate previous month string for MoM comparison
+  const curY = parseInt(dispY, 10);
+  const curM = parseInt(dispM, 10);
+  let prevY = curY;
+  let prevM = curM - 1;
+  if (prevM === 0) {
+    prevM = 12;
+    prevY = curY - 1;
+  }
+  const prevMonthStr = `${prevY}-${String(prevM).padStart(2, '0')}`;
+  const prevMonthHistKey = `${prevY}_${String(prevM).padStart(2, '0')}`;
+  const auditedForPrevMonth = auditedByYearMonth.get(prevMonthStr);
+  const historicalForPrevMonth = historicalByYearMonth.get(prevMonthHistKey);
+
+  // Map of previous month scores
+  const areaPrevMonthScoresMap = new Map<number, number | null>();
+  for (const area of areas) {
+    const prevAuditedList = auditedForPrevMonth?.get(area.id) || [];
+    const prevHistScore = historicalForPrevMonth?.get(area.id);
+    let prevScore: number | null = null;
+    if (prevAuditedList.length > 0) {
+      prevScore = calculateMonthlyScore(prevAuditedList);
+    } else if (prevHistScore !== undefined && prevHistScore !== null) {
+      prevScore = Math.round(prevHistScore * 100) / 100;
+    }
+    areaPrevMonthScoresMap.set(area.id, prevScore);
+  }
 
   // Compute each area's score for displayMonth (audited takes precedence over historical)
   const areaMonthScoresMap = new Map<
@@ -697,10 +725,26 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     });
   }
 
-  // Area status for current week and matrix wall
+  // Area status for current week and matrix wall with MoM delta & trend
   const currentWeekStatus = areas.map((area) => {
     const audit = currentWeekAuditMap.get(area.id);
     const mInfo = areaMonthScoresMap.get(area.id) || { score: null, source: null, audit_count: 0 };
+    const prevScore = areaPrevMonthScoresMap.get(area.id) ?? null;
+    const currentScore = mInfo.score;
+    const deltaPrevMonth =
+      currentScore !== null && prevScore !== null
+        ? Math.round((currentScore - prevScore) * 10) / 10
+        : null;
+
+    let trendStatus: 'improved' | 'declined' | 'stagnant' | 'stable' | 'unknown' = 'unknown';
+    if (deltaPrevMonth !== null) {
+      if (deltaPrevMonth > 0) trendStatus = 'improved';
+      else if (deltaPrevMonth < 0) trendStatus = (currentScore !== null && currentScore < target) ? 'stagnant' : 'declined';
+      else trendStatus = (currentScore !== null && currentScore < target) ? 'stagnant' : 'stable';
+    } else if (currentScore !== null && currentScore < target) {
+      trendStatus = 'stagnant';
+    }
+
     const fCounts = areaFindingsMap.get(area.id) || {
       open_count: 0,
       fixed_count: 0,
@@ -717,8 +761,11 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       score: audit ? audit.score : null,
       total_penalty: audit ? audit.total_penalty : null,
       passed: audit && audit.score !== null ? isScorePassing(audit.score, target) : null,
-      month_avg: mInfo.score,
+      month_avg: currentScore,
       month_source: mInfo.source,
+      prev_month_avg: prevScore,
+      delta_prev_month: deltaPrevMonth,
+      trend_status: trendStatus,
       open_count: fCounts.open_count,
       fixed_count: fCounts.fixed_count,
       overdue_count: fCounts.overdue_count,
@@ -730,14 +777,33 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   const ranking = areas
     .map((area) => {
       const mInfo = areaMonthScoresMap.get(area.id) || { score: null, source: null, audit_count: 0 };
+      const prevScore = areaPrevMonthScoresMap.get(area.id) ?? null;
+      const currentScore = mInfo.score;
+      const deltaPrevMonth =
+        currentScore !== null && prevScore !== null
+          ? Math.round((currentScore - prevScore) * 10) / 10
+          : null;
+
+      let trendStatus: 'improved' | 'declined' | 'stagnant' | 'stable' | 'unknown' = 'unknown';
+      if (deltaPrevMonth !== null) {
+        if (deltaPrevMonth > 0) trendStatus = 'improved';
+        else if (deltaPrevMonth < 0) trendStatus = (currentScore !== null && currentScore < target) ? 'stagnant' : 'declined';
+        else trendStatus = (currentScore !== null && currentScore < target) ? 'stagnant' : 'stable';
+      } else if (currentScore !== null && currentScore < target) {
+        trendStatus = 'stagnant';
+      }
+
       return {
         area_id: area.id,
         area_code: area.code,
         area_name: area.name,
-        month_avg: mInfo.score,
+        month_avg: currentScore,
         month_source: mInfo.source,
+        prev_month_avg: prevScore,
+        delta_prev_month: deltaPrevMonth,
+        trend_status: trendStatus,
         audit_count: mInfo.audit_count,
-        passed: mInfo.score !== null ? isScorePassing(mInfo.score, target) : null,
+        passed: currentScore !== null ? isScorePassing(currentScore, target) : null,
       };
     })
     .sort((a, b) => {
@@ -750,6 +816,43 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
   const rankedValid = ranking.filter((r) => r.month_avg !== null);
   const topAreas = rankedValid.slice(0, 3);
   const bottomAreas = [...rankedValid].reverse().slice(0, 3);
+
+  // Continuous Improvement Analysis (Top Improvers vs Persistent Lagging / Stagnant Areas)
+  const improvementTracked = ranking.map((r) => ({
+    area_id: r.area_id,
+    area_code: r.area_code,
+    area_name: r.area_name,
+    current_score: r.month_avg,
+    prev_score: r.prev_month_avg,
+    delta: r.delta_prev_month,
+    status: r.trend_status,
+  }));
+
+  const topImprovers = improvementTracked
+    .filter((a) => a.delta !== null && a.delta > 0)
+    .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0))
+    .slice(0, 4);
+
+  const stagnantAreas = improvementTracked
+    .filter((a) => a.status === 'stagnant' || (a.current_score !== null && a.current_score < target))
+    .sort((a, b) => {
+      const dA = a.delta ?? 0;
+      const dB = b.delta ?? 0;
+      if (dA !== dB) return dA - dB;
+      return (a.current_score ?? 0) - (b.current_score ?? 0);
+    })
+    .slice(0, 4);
+
+  const improvementAnalysis = {
+    prev_month: prevMonthStr,
+    current_month: displayMonth,
+    top_improvers: topImprovers,
+    stagnant_areas: stagnantAreas,
+    improved_count: improvementTracked.filter((a) => a.status === 'improved').length,
+    declined_count: improvementTracked.filter((a) => a.status === 'declined').length,
+    stagnant_count: improvementTracked.filter((a) => a.status === 'stagnant').length,
+    total_tracked: improvementTracked.length,
+  };
 
   // 7. 12-week trend of average score (connected with historical monthly data)
   const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string; ymKey: string }[] = [];
@@ -1113,6 +1216,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     remediation: remediationAnalytics.summary,
     current_week_status: currentWeekStatus,
     monthly_ranking: ranking,
+    improvement_analysis: improvementAnalysis,
     top_areas: topAreas,
     bottom_areas: bottomAreas,
     trend_12_weeks: trendData,

@@ -23,7 +23,6 @@ import { formatScore, formatDelta } from '../lib/format';
 import { resolveColorMode } from '../lib/theme';
 import type { DashboardLayoutId } from '../api/types';
 import { DashboardZoneFocus } from '../components/dashboard/DashboardZoneFocus';
-import { DashboardHeatmapAction } from '../components/dashboard/DashboardHeatmapAction';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -72,10 +71,12 @@ export const Dashboard: React.FC = () => {
   const [activeLayout, setActiveLayout] = useState<DashboardLayoutId>(() => {
     try {
       const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone' || saved === 'heatmap') return saved;
+      if (saved === 'matrix' || saved === 'zone') return saved;
     } catch {}
     return 'matrix';
   });
+
+  const [row3Tab, setRow3Tab] = useState<'improvement' | 'leaderboard'>('improvement');
 
   const handleLayoutChange = (layoutId: DashboardLayoutId) => {
     setActiveLayout(layoutId);
@@ -146,6 +147,7 @@ export const Dashboard: React.FC = () => {
     trend_12_weeks,
     s_group_breakdown,
     urgent_alarms,
+    improvement_analysis,
     counts,
   } = data;
 
@@ -303,7 +305,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div
-      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-3 lg:gap-2.5 select-none ${
+      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-3 lg:gap-2.5 select-none overflow-y-auto lg:overflow-visible ${
         isHybrid ? 'pb-20 md:pb-2.5' : 'pb-2 sm:pb-2.5'
       }`}
     >
@@ -367,7 +369,7 @@ export const Dashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => handleLayoutChange('matrix')}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
                 activeLayout === 'matrix'
                   ? 'bg-emerald-500 text-slate-950 shadow-xs'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
@@ -375,13 +377,13 @@ export const Dashboard: React.FC = () => {
               title={t('dashboard_layout_matrix_name')}
             >
               <span>⊞</span>
-              <span className="hidden lg:inline">{t('dashboard_layout_matrix_name')}</span>
-              <span className="lg:hidden">M1</span>
+              <span className="hidden sm:inline">{t('dashboard_layout_matrix_name')}</span>
+              <span className="sm:hidden">M1</span>
             </button>
             <button
               type="button"
               onClick={() => handleLayoutChange('zone')}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
                 activeLayout === 'zone'
                   ? 'bg-sky-500 text-slate-950 shadow-xs'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
@@ -389,22 +391,8 @@ export const Dashboard: React.FC = () => {
               title={t('dashboard_layout_zone_name')}
             >
               <span>☷</span>
-              <span className="hidden lg:inline">{t('dashboard_layout_zone_name')}</span>
-              <span className="lg:hidden">M2</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLayoutChange('heatmap')}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
-                activeLayout === 'heatmap'
-                  ? 'bg-amber-500 text-slate-950 shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-              title={t('dashboard_layout_heatmap_name')}
-            >
-              <span>▦</span>
-              <span className="hidden lg:inline">{t('dashboard_layout_heatmap_name')}</span>
-              <span className="lg:hidden">M3</span>
+              <span className="hidden sm:inline">{t('dashboard_layout_zone_name')}</span>
+              <span className="sm:hidden">M2</span>
             </button>
           </div>
         </div>
@@ -429,19 +417,6 @@ export const Dashboard: React.FC = () => {
           warningTarget={warningTarget}
           formatMonthYear={formatMonthYear}
           getMonthShortName={getMonthShortName}
-        />
-      )}
-
-      {/* RENDER LAYOUT 3: 5S HEATMAP & ACTION COMMAND CENTER */}
-      {activeLayout === 'heatmap' && (
-        <DashboardHeatmapAction
-          data={data}
-          lang={lang}
-          t={t}
-          is_authenticated={is_authenticated}
-          target={target}
-          warningTarget={warningTarget}
-          formatMonthYear={formatMonthYear}
         />
       )}
 
@@ -654,7 +629,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="flex-none min-h-[380px] lg:flex-[58] grid grid-cols-12 gap-3 lg:gap-2.5">
+      <div className="flex-none min-h-0 lg:flex-[58] grid grid-cols-12 gap-3 lg:gap-2.5">
         {/* 16 AREAS 4x4 MATRIX WALL */}
         <div className={`col-span-12 lg:col-span-8 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col`}>
           <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
@@ -834,22 +809,41 @@ export const Dashboard: React.FC = () => {
                     <span className={`text-base sm:text-lg font-black font-mono leading-none ${scoreCls}`}>
                       {scoreTxt}
                     </span>
-                    <span className={`text-[10px] font-mono truncate ${mutedTextCls}`}>
-                      {isSubmitted ? (
-                        <>
-                          {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* MoM Delta Badge */}
+                      <span
+                        className={`text-[10px] font-mono font-bold shrink-0 ${
+                          area.delta_prev_month !== null && area.delta_prev_month > 0
+                            ? passTextCls
+                            : area.delta_prev_month !== null && area.delta_prev_month < 0
+                            ? failTextCls
+                            : mutedTextCls
+                        }`}
+                        title={t('vs_prev_month')}
+                      >
+                        {area.delta_prev_month !== null && area.delta_prev_month > 0
+                          ? `▲+${area.delta_prev_month}đ`
+                          : area.delta_prev_month !== null && area.delta_prev_month < 0
+                          ? `▼${area.delta_prev_month}đ`
+                          : '▬ 0đ'}
+                      </span>
+                      <span className={`text-[10px] font-mono truncate ${mutedTextCls}`}>
+                        {isSubmitted ? (
+                          <>
+                            {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
+                            <strong className={subTextCls}>
+                              {formatScore(area.month_avg, lang)}
+                            </strong>
+                          </>
+                        ) : (
                           <strong className={subTextCls}>
-                            {formatScore(area.month_avg, lang)}
+                            {area.month_source === 'historical'
+                              ? t('source_historical')
+                              : getMonthShortName(month_info?.display_month || current_week.month)}
                           </strong>
-                        </>
-                      ) : (
-                        <strong className={subTextCls}>
-                          {area.month_source === 'historical'
-                            ? t('source_historical')
-                            : getMonthShortName(month_info?.display_month || current_week.month)}
-                        </strong>
-                      )}
-                    </span>
+                        )}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Signature Sample 4 Slim Progress Bar */}
@@ -971,7 +965,7 @@ export const Dashboard: React.FC = () => {
                     key={f.id}
                     to={is_authenticated ? `/findings/${f.id}` : '/login'}
                     title={fullCriterion}
-                    className={`flex-1 min-h-[72px] sm:min-h-[76px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2.5 py-1.5 flex flex-col justify-between ${
+                    className={`flex-1 min-h-[58px] sm:min-h-[62px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2.5 py-1 sm:py-1.5 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
                     } transition cursor-pointer group`}
                   >
@@ -1056,7 +1050,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="flex-none min-h-[220px] lg:flex-[42] grid grid-cols-12 gap-3 lg:gap-2.5">
+      <div className="flex-none min-h-0 lg:flex-[42] grid grid-cols-12 gap-3 lg:gap-2.5">
         {/* 12-WEEK TREND LINE */}
         <div className={`col-span-12 lg:col-span-5 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
@@ -1164,70 +1158,173 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* TOP & BOTTOM MONTHLY LEADERBOARD */}
+        {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
         <div className={`col-span-12 lg:col-span-3 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col justify-between gap-2`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
-              {t('leaderboard_title', {
-                month: formatMonthYear(month_info?.display_month || current_week.month),
-              })}
+              {row3Tab === 'improvement'
+                ? t('continuous_improvement_title')
+                : t('leaderboard_title', {
+                    month: formatMonthYear(month_info?.display_month || current_week.month),
+                  })}
             </span>
-            <span className={`text-[10px] shrink-0 ${mutedTextCls}`}>{t('top_bottom_label')}</span>
+            <div className="flex items-center gap-1 rounded bg-slate-800/80 p-0.5 text-[9px] font-bold shrink-0">
+              <button
+                type="button"
+                onClick={() => setRow3Tab('improvement')}
+                className={`px-1.5 py-0.2 rounded transition cursor-pointer ${
+                  row3Tab === 'improvement'
+                    ? 'bg-sky-500 text-slate-950 font-black'
+                    : `${mutedTextCls} hover:text-white`
+                }`}
+                title={t('switch_to_improvement_view')}
+              >
+                Kaizen
+              </button>
+              <button
+                type="button"
+                onClick={() => setRow3Tab('leaderboard')}
+                className={`px-1.5 py-0.2 rounded transition cursor-pointer ${
+                  row3Tab === 'leaderboard'
+                    ? 'bg-sky-500 text-slate-950 font-black'
+                    : `${mutedTextCls} hover:text-white`
+                }`}
+                title={t('switch_to_leaderboard_view')}
+              >
+                Top
+              </button>
+            </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-around text-xs py-0.5 gap-1.5 lg:gap-1">
-            {top_areas && top_areas.length > 0 ? (
-              top_areas.slice(0, 2).map((a: any, idx: number) => (
-                <div
-                  key={a.area_id}
-                  className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
-                    isLightTv
-                      ? 'bg-emerald-50 border-emerald-200'
-                      : 'bg-emerald-500/10 border-emerald-500/25'
-                  }`}
-                >
-                  <span
-                    className={`font-bold truncate text-[11px] min-w-0 ${
-                      isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+          {row3Tab === 'improvement' ? (
+            <div className="flex-1 flex flex-col justify-around text-xs py-0.5 gap-1.5 lg:gap-1">
+              {/* Top Improvers */}
+              {improvement_analysis?.top_improvers && improvement_analysis.top_improvers.length > 0 ? (
+                improvement_analysis.top_improvers.slice(0, 2).map((a: any) => (
+                  <div
+                    key={a.area_id}
+                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                      isLightTv
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : 'bg-emerald-500/10 border-emerald-500/25'
                     }`}
-                    title={`${a.area_name || a.area_code} (${a.area_code})`}
                   >
-                    {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_name || a.area_code}
-                  </span>
-                  <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${passTextCls}`}>
-                    {formatScore(a.month_avg, lang)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className={`text-xs italic ${mutedTextCls}`}>{t('noData')}</div>
-            )}
+                    <span
+                      className={`font-bold truncate text-[11px] min-w-0 ${
+                        isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+                      }`}
+                      title={`${a.area_name || a.area_code} (${a.area_code})`}
+                    >
+                      🚀 {a.area_name || a.area_code}
+                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                      <span className={`font-mono font-bold text-xs ${passTextCls}`}>
+                        {formatScore(a.current_score, lang)}
+                      </span>
+                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
+                        ▲+{a.delta}đ
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={`text-xs italic ${mutedTextCls}`}>{t('no_improvers')}</div>
+              )}
 
-            {bottom_areas && bottom_areas.length > 0 ? (
-              bottom_areas.slice(0, 2).map((a: any) => (
-                <div
-                  key={a.area_id}
-                  className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
-                    isLightTv
-                      ? 'bg-rose-50 border-rose-200'
-                      : 'bg-rose-500/15 border-rose-500/35'
-                  }`}
-                >
-                  <span
-                    className={`font-bold truncate text-[11px] min-w-0 ${
-                      isLightTv ? 'text-rose-800' : 'text-rose-300'
+              {/* Stagnant / Needs Kaizen Attention */}
+              {improvement_analysis?.stagnant_areas && improvement_analysis.stagnant_areas.length > 0 ? (
+                improvement_analysis.stagnant_areas.slice(0, 2).map((a: any) => (
+                  <div
+                    key={a.area_id}
+                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                      isLightTv
+                        ? 'bg-rose-50 border-rose-200'
+                        : 'bg-rose-500/15 border-rose-500/35'
                     }`}
-                    title={`${a.area_name || a.area_code} (${a.area_code})`}
                   >
-                    ⚠️ {a.area_name || a.area_code}
-                  </span>
-                  <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${failTextCls}`}>
-                    {formatScore(a.month_avg, lang)}
-                  </span>
-                </div>
-              ))
-            ) : null}
-          </div>
+                    <span
+                      className={`font-bold truncate text-[11px] min-w-0 ${
+                        isLightTv ? 'text-rose-800' : 'text-rose-300'
+                      }`}
+                      title={`${a.area_name || a.area_code} (${a.area_code})`}
+                    >
+                      ⚠️ {a.area_name || a.area_code}
+                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                      <span className={`font-mono font-bold text-xs ${failTextCls}`}>
+                        {formatScore(a.current_score, lang)}
+                      </span>
+                      <span className={`px-1.5 py-0.2 rounded font-mono font-bold text-[10px] ${
+                        a.delta !== null && a.delta < 0
+                          ? 'bg-rose-500/25 text-rose-300'
+                          : 'bg-amber-500/20 text-amber-300'
+                      }`}>
+                        {a.delta !== null && a.delta < 0
+                          ? `▼${a.delta}đ`
+                          : a.delta !== null && a.delta > 0
+                          ? `▲+${a.delta}đ`
+                          : '▬ 0đ'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : null}
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-around text-xs py-0.5 gap-1.5 lg:gap-1">
+              {top_areas && top_areas.length > 0 ? (
+                top_areas.slice(0, 2).map((a: any, idx: number) => (
+                  <div
+                    key={a.area_id}
+                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                      isLightTv
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : 'bg-emerald-500/10 border-emerald-500/25'
+                    }`}
+                  >
+                    <span
+                      className={`font-bold truncate text-[11px] min-w-0 ${
+                        isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+                      }`}
+                      title={`${a.area_name || a.area_code} (${a.area_code})`}
+                    >
+                      {idx === 0 ? '🏆 1.' : '🥈 2.'} {a.area_name || a.area_code}
+                    </span>
+                    <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${passTextCls}`}>
+                      {formatScore(a.month_avg, lang)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className={`text-xs italic ${mutedTextCls}`}>{t('noData')}</div>
+              )}
+
+              {bottom_areas && bottom_areas.length > 0 ? (
+                bottom_areas.slice(0, 2).map((a: any) => (
+                  <div
+                    key={a.area_id}
+                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                      isLightTv
+                        ? 'bg-rose-50 border-rose-200'
+                        : 'bg-rose-500/15 border-rose-500/35'
+                    }`}
+                  >
+                    <span
+                      className={`font-bold truncate text-[11px] min-w-0 ${
+                        isLightTv ? 'text-rose-800' : 'text-rose-300'
+                      }`}
+                      title={`${a.area_name || a.area_code} (${a.area_code})`}
+                    >
+                      ⚠️ {a.area_name || a.area_code}
+                    </span>
+                    <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${failTextCls}`}>
+                      {formatScore(a.month_avg, lang)}
+                    </span>
+                  </div>
+                ))
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
         </>

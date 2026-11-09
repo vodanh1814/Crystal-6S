@@ -30,12 +30,6 @@ export const DASHBOARD_LAYOUT_CATALOG: DashboardLayoutMeta[] = [
     nameKey: 'dashboard_layout_zone_name',
     descKey: 'dashboard_layout_zone_desc',
   },
-  {
-    id: 'heatmap',
-    icon: '▦',
-    nameKey: 'dashboard_layout_heatmap_name',
-    descKey: 'dashboard_layout_heatmap_desc',
-  },
 ];
 
 export interface ThemeMeta {

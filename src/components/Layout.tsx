@@ -804,7 +804,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {isDashboard ? (
           // On Dashboard: adaptive viewport fit on tall screens, smooth scroll on laptops
           <main
-            className={`theme-tv-canvas flex-1 min-h-0 flex flex-col ${
+            className={`theme-tv-canvas flex-1 min-h-0 flex flex-col overflow-y-auto ${
               isClassic ? 'bg-slate-950 text-slate-100' : ''
             }`}
           >

@@ -4,12 +4,11 @@ export const VALID_UI_THEMES: readonly UiThemeId[] = ['classic'] as const;
 
 export const DEFAULT_UI_THEME: UiThemeId = 'classic';
 
-export type DashboardLayoutId = 'matrix' | 'zone' | 'heatmap';
+export type DashboardLayoutId = 'matrix' | 'zone';
 
 export const VALID_DASHBOARD_LAYOUTS: readonly DashboardLayoutId[] = [
   'matrix',
   'zone',
-  'heatmap',
 ] as const;
 
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayoutId = 'matrix';

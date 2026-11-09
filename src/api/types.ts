@@ -145,8 +145,29 @@ export interface YearlyTarget {
 }
 
 export type UiThemeId = 'classic';
-export type DashboardLayoutId = 'matrix' | 'zone' | 'heatmap';
+export type DashboardLayoutId = 'matrix' | 'zone';
 export type ColorMode = 'light' | 'dark';
+
+export type ImprovementStatus = 'improved' | 'declined' | 'stagnant' | 'stable' | 'unknown';
+
+export interface AreaImprovementInfo {
+  area_id: number;
+  area_code: string;
+  area_name: string;
+  current_score: number | null;
+  prev_score: number | null;
+  delta: number | null;
+  status: ImprovementStatus;
+}
+
+export interface ImprovementAnalysis {
+  top_improvers: AreaImprovementInfo[];
+  stagnant_areas: AreaImprovementInfo[];
+  improved_count: number;
+  declined_count: number;
+  stagnant_count: number;
+  total_tracked: number;
+}
 
 export interface AppSettings {
   company_name: string;
