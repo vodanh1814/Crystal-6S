@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { Env, Variables, Finding, Photo } from '../types';
+import type { Env, Variables, Finding, Photo, Area, ChecklistItem } from '../types';
 import { authMiddleware, optionalAuthMiddleware } from '../lib/auth';
 import {
   isAdmin,
@@ -11,6 +11,7 @@ import {
 import { getVietnamToday, daysRemaining } from '../lib/week';
 import { recalculateAuditScores } from '../lib/auditScores';
 import { logActivity } from '../lib/activity';
+import { calculateAppliedPenalty } from '../lib/scoring';
 
 export const findingsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -301,7 +302,7 @@ findingsRouter.get('/:id', async (c) => {
   });
 });
 
-// PUT /api/findings/:id - Update draft finding description
+// PUT /api/findings/:id - Update finding (area_id, item_id, description)
 findingsRouter.put('/:id', async (c) => {
   const user = c.get('user');
   const userAreas = c.get('userAreas');
@@ -312,7 +313,7 @@ findingsRouter.put('/:id', async (c) => {
 
   const finding = await c.env.DB
     .prepare(`
-      SELECT f.*, a.status as audit_status
+      SELECT f.*, a.status as audit_status, a.audit_date, a.month, a.iso_year, a.iso_week
       FROM findings f
       JOIN audits a ON a.id = f.audit_id
       WHERE f.id = ?
@@ -323,24 +324,165 @@ findingsRouter.put('/:id', async (c) => {
   if (!finding) {
     return c.json({ error: 'Finding not found' }, 404);
   }
-  if (finding.audit_status !== 'draft') {
-    return c.json({ error: 'Cannot update finding in a submitted audit' }, 400);
+
+  // Can only edit if audit is draft OR if finding is still open in submitted audit
+  if (finding.audit_status !== 'draft' && finding.status !== 'open') {
+    return c.json({ error: 'Cannot edit a finding that has already been fixed or closed' }, 400);
   }
+
+  // Permission check for the current area
   if (!canAuditArea(user, userAreas, finding.area_id)) {
     return c.json({ error: 'Forbidden: You are not authorized to edit this finding' }, 403);
   }
 
   const body = await c.req.json().catch(() => ({}));
-  const description = String(body.description || '').trim();
+  const targetAreaId = body.area_id !== undefined ? parseInt(body.area_id, 10) : finding.area_id;
+  const targetItemId = body.item_id !== undefined ? parseInt(body.item_id, 10) : finding.item_id;
+  const description = body.description !== undefined ? String(body.description || '').trim() : finding.description;
 
-  await c.env.DB
-    .prepare('UPDATE findings SET description = ? WHERE id = ?')
-    .bind(description, id)
-    .run();
+  if (isNaN(targetAreaId) || isNaN(targetItemId)) {
+    return c.json({ error: 'Valid area ID and checklist item ID are required' }, 400);
+  }
 
-  await logActivity(c.env.DB, user.id, 'update_finding', 'finding', id);
+  // If area changed, check permission for new area
+  if (targetAreaId !== finding.area_id && !canAuditArea(user, userAreas, targetAreaId)) {
+    return c.json({ error: 'Forbidden: You are not authorized to assign findings to this area' }, 403);
+  }
 
-  return c.json({ ok: true });
+  const areaOrItemChanged = targetAreaId !== finding.area_id || targetItemId !== finding.item_id;
+
+  if (areaOrItemChanged) {
+    // Validate target area
+    const area = await c.env.DB
+      .prepare('SELECT id, active, code FROM areas WHERE id = ?')
+      .bind(targetAreaId)
+      .first<Area>();
+
+    if (!area || area.active !== 1) {
+      return c.json({ error: 'Area not found or inactive' }, 400);
+    }
+
+    // Validate target checklist item
+    const item = await c.env.DB
+      .prepare('SELECT * FROM checklist_items WHERE id = ? AND active = 1')
+      .bind(targetItemId)
+      .first<ChecklistItem>();
+
+    if (!item) {
+      return c.json({ error: 'Checklist item is invalid or inactive' }, 400);
+    }
+
+    // External items check
+    if (['S5.2-BOD', 'S5.2-CUS', 'S5.3'].includes(item.code)) {
+      return c.json({
+        error: 'External audit items (BOD, Customer, IE) are recorded in the external audit table, not as field findings',
+      }, 400);
+    }
+
+    // NA check
+    const isNA = await c.env.DB
+      .prepare('SELECT 1 FROM area_item_na WHERE area_id = ? AND item_id = ?')
+      .bind(targetAreaId, targetItemId)
+      .first();
+
+    if (isNA) {
+      return c.json({ error: 'This checklist item is Not Applicable (NA) for this area' }, 400);
+    }
+
+    // Recalculate repeat_level, base_penalty, applied_penalty, and prev_finding_id
+    const prevWeeksRes = await c.env.DB
+      .prepare(`
+        SELECT COUNT(DISTINCT a.id) as cnt
+        FROM findings f
+        JOIN audits a ON a.id = f.audit_id
+        WHERE f.area_id = ?
+          AND f.item_id = ?
+          AND a.month = ?
+          AND a.status = 'submitted'
+          AND a.id != ?
+          AND (
+            a.iso_year < ?
+            OR (a.iso_year = ? AND a.iso_week < ?)
+          )
+      `)
+      .bind(targetAreaId, targetItemId, finding.month, finding.audit_id, finding.iso_year, finding.iso_year, finding.iso_week)
+      .first<{ cnt: number }>();
+
+    const prevWeeksCount = prevWeeksRes ? prevWeeksRes.cnt : 0;
+    const repeatLevel = item.escalating === 1 ? 1 + prevWeeksCount : 1;
+    const basePenalty = item.penalty;
+    const appliedPenalty = calculateAppliedPenalty(basePenalty, repeatLevel, item.escalating === 1);
+
+    const latestPrevRow = await c.env.DB
+      .prepare(`
+        SELECT f.id
+        FROM findings f
+        JOIN audits a ON a.id = f.audit_id
+        WHERE f.area_id = ?
+          AND f.item_id = ?
+          AND a.month = ?
+          AND a.status = 'submitted'
+          AND a.id != ?
+          AND (
+            a.iso_year < ?
+            OR (a.iso_year = ? AND a.iso_week < ?)
+          )
+        ORDER BY a.iso_year DESC, a.iso_week DESC, f.id DESC
+        LIMIT 1
+      `)
+      .bind(targetAreaId, targetItemId, finding.month, finding.audit_id, finding.iso_year, finding.iso_year, finding.iso_week)
+      .first<{ id: number }>();
+
+    const prevFindingId = latestPrevRow ? latestPrevRow.id : null;
+
+    await c.env.DB
+      .prepare(`
+        UPDATE findings
+        SET area_id = ?,
+            item_id = ?,
+            description = ?,
+            repeat_level = ?,
+            base_penalty = ?,
+            applied_penalty = ?,
+            prev_finding_id = ?
+        WHERE id = ?
+      `)
+      .bind(targetAreaId, targetItemId, description, repeatLevel, basePenalty, appliedPenalty, prevFindingId, id)
+      .run();
+
+    // Recalculate audit scores after modifying finding's area or penalty
+    await recalculateAuditScores(c.env.DB, finding.audit_id);
+  } else {
+    // Only description changed
+    await c.env.DB
+      .prepare('UPDATE findings SET description = ? WHERE id = ?')
+      .bind(description, id)
+      .run();
+  }
+
+  await logActivity(
+    c.env.DB,
+    user.id,
+    'update_finding',
+    'finding',
+    id,
+    `area_id=${targetAreaId}, item_id=${targetItemId}`
+  );
+
+  const updatedFinding = await c.env.DB
+    .prepare(`
+      SELECT f.*, ci.code as item_code, ci.s_group, ci.location_vi, ci.location_en,
+             ci.content_vi, ci.content_en, ci.escalating,
+             ar.code as area_code, ar.name as area_name
+      FROM findings f
+      JOIN checklist_items ci ON ci.id = f.item_id
+      JOIN areas ar ON ar.id = f.area_id
+      WHERE f.id = ?
+    `)
+    .bind(id)
+    .first<any>();
+
+  return c.json({ ok: true, finding: updatedFinding });
 });
 
 // DELETE /api/findings/:id - Delete draft finding
@@ -572,8 +714,8 @@ findingsRouter.post('/:id/photos', async (c) => {
 
   // Permission rules
   if (kind === 'before') {
-    if (finding.audit_status !== 'draft') {
-      return c.json({ error: 'Before photos can only be added while audit is draft' }, 400);
+    if (finding.audit_status !== 'draft' && finding.status !== 'open') {
+      return c.json({ error: 'Before photos can only be added while audit is draft or finding is open' }, 400);
     }
     if (!canAuditArea(user, userAreas, finding.area_id)) {
       return c.json({ error: 'Forbidden: You cannot upload before photos for this area' }, 403);

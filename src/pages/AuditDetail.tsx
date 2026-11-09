@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Plus,
+  Edit2,
   Trash2,
   Lock,
   Unlock,
@@ -57,6 +58,18 @@ export const AuditDetail: React.FC = () => {
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  // Edit Finding Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingFinding, setEditingFinding] = useState<Finding | null>(null);
+  const [editAreaId, setEditAreaId] = useState<number | ''>('');
+  const [editItemId, setEditItemId] = useState<number | ''>('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editExistingPhotos, setEditExistingPhotos] = useState<any[]>([]);
+  const [editNewPhotos, setEditNewPhotos] = useState<File[]>([]);
+  const [editNewPhotoPreviews, setEditNewPhotoPreviews] = useState<string[]>([]);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // Saving external audit inputs indicator
   const [savingExternalAreaId, setSavingExternalAreaId] = useState<number | null>(null);
@@ -245,6 +258,100 @@ export const AuditDetail: React.FC = () => {
     }
   };
 
+  // Open Edit Finding Modal
+  const handleOpenEditModal = (f: Finding) => {
+    setEditingFinding(f);
+    setEditAreaId(f.area_id);
+    setEditItemId(f.item_id);
+    setEditDescription(f.description || '');
+    setEditExistingPhotos((f.photos || []).filter((p: any) => p.kind === 'before'));
+    setEditNewPhotos([]);
+    setEditNewPhotoPreviews([]);
+    setEditError(null);
+    setEditModalOpen(true);
+  };
+
+  // Edit photo file picker handler
+  const handleEditPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const maxAllowed = Math.max(0, 6 - editExistingPhotos.length);
+    const combined = [...editNewPhotos, ...files].slice(0, maxAllowed);
+    setEditNewPhotos(combined);
+
+    // Create object URLs
+    editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
+    const urls = combined.map((file) => URL.createObjectURL(file));
+    setEditNewPhotoPreviews(urls);
+    e.target.value = '';
+  };
+
+  // Remove newly staged photo in edit modal
+  const handleRemoveEditNewPhoto = (index: number) => {
+    const updated = editNewPhotos.filter((_, i) => i !== index);
+    setEditNewPhotos(updated);
+
+    URL.revokeObjectURL(editNewPhotoPreviews[index]);
+    setEditNewPhotoPreviews(editNewPhotoPreviews.filter((_, i) => i !== index));
+  };
+
+  // Delete existing before photo
+  const handleDeleteExistingPhoto = async (photoId: number) => {
+    if (!window.confirm(t('confirm_delete_photo'))) return;
+    try {
+      await api.delete(`/photos/${photoId}`);
+      setEditExistingPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      await fetchAuditData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete photo');
+    }
+  };
+
+  // Submit Update Finding
+  const handleUpdateFinding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFinding || !editAreaId || !editItemId) {
+      setEditError(t('error_select_area_and_item'));
+      return;
+    }
+
+    setEditError(null);
+    setEditSubmitting(true);
+
+    try {
+      // 1. Upload newly added Before photos
+      if (editNewPhotos.length > 0) {
+        for (const file of editNewPhotos) {
+          try {
+            const compressedBlob = await compressImage(file);
+            const formData = new FormData();
+            formData.append('file', compressedBlob, 'before.jpg');
+            formData.append('kind', 'before');
+            await api.post(`/findings/${editingFinding.id}/photos`, formData);
+          } catch (uploadErr) {
+            console.error('Failed to upload photo for finding:', uploadErr);
+          }
+        }
+      }
+
+      // 2. Update finding details
+      await api.put(`/findings/${editingFinding.id}`, {
+        area_id: Number(editAreaId),
+        item_id: Number(editItemId),
+        description: editDescription,
+      });
+
+      editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
+      setEditModalOpen(false);
+      setEditingFinding(null);
+      await fetchAuditData();
+    } catch (err: any) {
+      setEditError(err.message || 'Failed to update finding');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   // Delete Finding in Draft
   const handleDeleteFinding = async (findingId: number) => {
     if (!window.confirm(t('confirm_delete_finding'))) return;
@@ -332,6 +439,25 @@ export const AuditDetail: React.FC = () => {
   // Available criteria for selected area in modal (filter out NA items)
   const applicableItemsForModal = fieldChecklistItems.filter(
     (item) => !modalAreaId || !naSet.has(`${modalAreaId}_${item.id}`)
+  );
+
+  // Selected item in edit modal for escalation info preview
+  const selectedEditItem = fieldChecklistItems.find((i) => i.id === Number(editItemId));
+  const editPrevCount =
+    editAreaId && editItemId
+      ? prev_weeks_counts[`${editAreaId}_${editItemId}`] || 0
+      : 0;
+
+  const editRepeatLevel = selectedEditItem?.escalating === 1 ? 1 + editPrevCount : 1;
+  const editPenalty = selectedEditItem
+    ? selectedEditItem.escalating === 1
+      ? selectedEditItem.penalty + editPrevCount
+      : selectedEditItem.penalty
+    : 0;
+
+  // Available criteria for selected area in edit modal (filter out NA items)
+  const applicableItemsForEditModal = fieldChecklistItems.filter(
+    (item) => !editAreaId || !naSet.has(`${editAreaId}_${item.id}`)
   );
 
   const currentPlantScore = isDraft ? live_score.score : audit.score;
@@ -674,15 +800,26 @@ export const AuditDetail: React.FC = () => {
                       <StatusBadge status={f.status} type="finding" />
                     </div>
 
-                    {isDraft && isFindingAuditable && (
-                      <button
-                        onClick={() => handleDeleteFinding(f.id)}
-                        className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                        title={t('delete')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {isFindingAuditable && (isDraft || f.status === 'open') && (
+                        <button
+                          onClick={() => handleOpenEditModal(f)}
+                          className="p-1 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
+                          title={t('edit')}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {isDraft && isFindingAuditable && (
+                        <button
+                          onClick={() => handleDeleteFinding(f.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -1003,6 +1140,218 @@ export const AuditDetail: React.FC = () => {
                 </>
               ) : (
                 <span>{t('save')}</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal: Edit 5S Finding */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => {
+          if (!editSubmitting) {
+            editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
+            setEditModalOpen(false);
+            setEditingFinding(null);
+          }
+        }}
+        title={t('edit_5s_finding')}
+      >
+        <form onSubmit={handleUpdateFinding} className="space-y-4">
+          {editError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+              {editError}
+            </div>
+          )}
+
+          {/* 1. Select Area */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              {t('select_area')} <span className="text-rose-500">*</span>
+            </label>
+            <select
+              required
+              value={editAreaId}
+              onChange={(e) => {
+                setEditAreaId(Number(e.target.value));
+                setEditItemId('');
+              }}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold"
+            >
+              <option value="">-- {t('select_area')} --</option>
+              {auditableAreas.map((as: AuditAreaScore) => (
+                <option key={as.area_id} value={as.area_id}>
+                  {as.area_code} - {as.area_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 2. Select 5S Criterion (Filtered by NA for this Area) */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              {t('select_criterion')} <span className="text-rose-500">*</span>
+            </label>
+            <select
+              required
+              disabled={!editAreaId}
+              value={editItemId}
+              onChange={(e) => setEditItemId(Number(e.target.value))}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <option value="">-- {t('select_criterion')} --</option>
+              {[1, 2, 3, 4, 5].map((g) => {
+                const groupItems = applicableItemsForEditModal.filter((i) => i.s_group === g);
+                if (groupItems.length === 0) return null;
+                return (
+                  <optgroup key={g} label={`S${g}`}>
+                    {groupItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.code}: {lang === 'en' ? item.content_en || item.content_vi : item.content_vi} (-{item.penalty}{t('pts_unit')})
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* 3. Live Penalty Escalation Badge Preview */}
+          {selectedEditItem && (
+            <div
+              className={`p-3 rounded-2xl border text-xs space-y-1.5 ${
+                editPrevCount > 0
+                  ? 'bg-purple-50/80 border-purple-200 text-purple-900'
+                  : 'bg-slate-50 border-slate-200 text-slate-800'
+              }`}
+            >
+              <div className="flex items-center justify-between font-bold">
+                <span>{selectedEditItem.code}</span>
+                <span className={editPrevCount > 0 ? 'text-purple-700' : 'text-rose-600'}>
+                  {editPrevCount > 0
+                    ? t('repeat_level_badge', { w: editRepeatLevel, pts: editPenalty })
+                    : t('penalty_pts_badge', { pts: editPenalty })}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                {editPrevCount > 0
+                  ? t('escalation_alert_text', {
+                      n: editPrevCount,
+                      pts: editPenalty,
+                      w: editRepeatLevel,
+                    })
+                  : t('first_time_violation_text', { pts: editPenalty })}
+              </p>
+            </div>
+          )}
+
+          {/* 4. Before Photo Management (Existing & New, up to 6 total) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                {t('before_photos')} ({editExistingPhotos.length + editNewPhotos.length}/6)
+              </label>
+              <span className="text-[11px] text-slate-400">{t('max_6_photos')}</span>
+            </div>
+
+            {/* Existing photos with delete button */}
+            {editExistingPhotos.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[11px] font-semibold text-slate-500 mb-1">{t('existing_photos')}:</p>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {editExistingPhotos.map((p) => (
+                    <div key={p.id} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
+                      <img src={`/api/photos/${p.id}`} alt="existing before" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExistingPhoto(p.id)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center cursor-pointer hover:bg-rose-600 transition-colors"
+                        title={t('delete')}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New staged photos with remove button */}
+            {editNewPhotoPreviews.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[11px] font-semibold text-slate-500 mb-1">{t('add_more_photos')}:</p>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {editNewPhotoPreviews.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
+                      <img src={url} alt={`new-preview-${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEditNewPhoto(idx)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center cursor-pointer hover:bg-rose-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {editExistingPhotos.length + editNewPhotos.length < 6 && (
+              <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/30 text-xs font-bold text-slate-600 hover:text-blue-600 transition-all cursor-pointer">
+                <Camera className="w-4 h-4 text-slate-400" />
+                <span>{t('take_photo_or_upload')}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleEditPhotoSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
+          {/* 5. Description */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              {t('finding_description')}
+            </label>
+            <textarea
+              rows={2}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder={t('finding_description_placeholder')}
+              className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
+            />
+          </div>
+
+          {/* Modal Actions */}
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
+                setEditModalOpen(false);
+                setEditingFinding(null);
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="submit"
+              disabled={editSubmitting || !editAreaId || !editItemId}
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {editSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{editNewPhotos.length > 0 ? t('uploading_photos') : t('saving')}</span>
+                </>
+              ) : (
+                <span>{t('save_changes')}</span>
               )}
             </button>
           </div>

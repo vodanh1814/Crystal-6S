@@ -7,6 +7,25 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.8.0] - 2026-11-09
+
+### Added & Improved (Edit 5S Finding Capability & Audit Detail Edit Controls)
+- **Edit Button on Audit Finding Cards (`/audits/:id`)**:
+  - Added an intuitive `Edit2` action button alongside the Delete button on finding cards in Section 2.
+  - Allows Auditors/Admins to adjust finding details while an audit is in `draft` mode OR when an audit is `submitted` and the finding remains `open`. Prevents editing for fixed/closed findings.
+- **Comprehensive Finding Edit Modal with Automated Scoring Recalculation**:
+  - Supports re-assigning **Area** and **5S Checklist Item** (automatically excludes Not Applicable - NA criteria for the selected area).
+  - Displays real-time **Live Escalation Preview** badge reflecting prior week repetition within the month.
+  - Automatically recalculates `repeat_level`, `base_penalty`, `applied_penalty`, `prev_finding_id`, and triggers `recalculateAuditScores` to update area and plant weekly scores.
+- **Flexible Before Photos Management**:
+  - View existing Before photos with individual delete capability (with confirmation dialog).
+  - Capture or upload new Before photos (up to 6 photos total) with client-side image compression.
+  - Synchronized backend endpoints: `PUT /api/findings/:id`, `POST /api/findings/:id/photos`, and `DELETE /api/photos/:id`.
+- **Bilingual Localization (VI / EN)**:
+  - Added full translation keys across `vi.ts` and `en.ts` for modal actions and alerts.
+
+---
+
 ## [2.7.0] - 2026-11-08
 
 ### Added & Changed (Admin Theme Studio & Crystal Glass / Crystal Hybrid UI Themes)

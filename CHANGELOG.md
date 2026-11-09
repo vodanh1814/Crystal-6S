@@ -7,6 +7,25 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.8.0] - 2026-11-09
+
+### Added & Improved (Tính năng Chỉnh sửa Lỗi 5S Đã Nhập & Nút Edit Trong Phiếu Chấm)
+- **Nút Chỉnh sửa (Edit) Lỗi 5S trong Chi tiết Phiếu Chấm (`/audits/:id`)**:
+  - Bổ sung nút biểu tượng `Edit2` cạnh nút xóa `Trash2` tại danh sách lỗi ghi nhận (Section 2).
+  - Cho phép Auditor/Admin chỉnh sửa lỗi khi đợt chấm đang ở bản nháp (`draft`) hoặc khi đã nộp (`submitted`) mà lỗi vẫn đang mở (`status === 'open'`). Chặn sửa lỗi khi đã khắc phục hoặc đã đóng.
+- **Modal Chỉnh sửa Lỗi Toàn diện & Tự động Tính toán Điểm số**:
+  - Hỗ trợ đổi lại **Khu vực** và **Tiêu chí 5S** (tự động loại trừ các tiêu chí Không áp dụng - NA của khu vực đã chọn).
+  - Xem trước mức phạt leo thang theo thời gian thực (**Live Escalation Badge**) theo chuỗi lịch sử tuần trước trong tháng.
+  - Tự động tính toán lại `repeat_level`, `base_penalty`, `applied_penalty`, `prev_finding_id` và kích hoạt `recalculateAuditScores` cập nhật lại điểm tuần của khu vực và xưởng.
+- **Quản lý Hình ảnh Before Linh hoạt**:
+  - Hiển thị danh sách ảnh Before hiện có kèm nút xóa từng ảnh (hộp thoại xác nhận).
+  - Cho phép chụp hoặc tải thêm ảnh Before mới (tối đa 6 ảnh tổng cộng), tự động nén ảnh chất lượng cao trước khi tải lên.
+  - Đồng bộ cập nhật backend `PUT /api/findings/:id`, `POST /api/findings/:id/photos` và `DELETE /api/photos/:id`.
+- **Bản địa hóa Song ngữ (VI / EN)**:
+  - Bổ sung đầy đủ các nhãn và thông báo cho tính năng chỉnh sửa lỗi trong `vi.ts` và `en.ts`.
+
+---
+
 ## [2.7.0] - 2026-11-08
 
 ### Added & Changed (Theme Studio cho Admin & Tích hợp Giao diện Crystal Glass / Crystal Hybrid)

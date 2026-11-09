@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.7.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.8.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,17 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.7.0`
+## 1. Highlights of Version `v2.8.0`
 
-### ✨ Admin Theme Studio & Multi-Theme Engine (Classic Default · Crystal Glass · Crystal Hybrid)
+### ✏️ Edit 5S Finding Capability in Weekly Audits
+- **Edit Action on Finding Cards (`/audits/:id`)**:
+  - Allows Auditors and Admins to modify finding details even after initial submission (as long as the finding is `open`).
+- **Full-Featured Edit Modal with Dynamic Recalculation**:
+  - Re-select Area or 5S Criterion (with automatic NA filtering for the selected area).
+  - Live Escalation Badge preview and automatic penalty / score recalculation across area and factory summaries.
+  - Comprehensive Before Photo management: remove unwanted photos and add fresh evidence up to 6 photos total.
+
+### ✨ Admin Theme Studio & Multi-Theme Engine (Classic Default · Crystal Glass · Crystal Hybrid - `v2.7.0`)
 - **Administrator-Exclusive Theme Studio (`/admin/targets`)**:
   - Preserves **Classic Andon (`classic`)** as the permanent system-wide default via Cloudflare D1 `ui_theme`.
   - Administrators can **Live Preview** or **Save & Apply System-Wide** two modern themes: **Crystal Glass Enterprise (Sample 2)** and **Crystal Hybrid Adaptive (Sample 4)**.

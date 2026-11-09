@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.7.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.8.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,17 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.7.0`
+## 1. Điểm nổi bật của phiên bản `v2.8.0`
 
-### ✨ Admin Theme Studio & Bộ Giao diện Đa Phong cách (Classic Default · Crystal Glass · Crystal Hybrid)
+### ✏️ Tính năng Chỉnh sửa Lỗi 5S Đã Nhập (Edit Finding) Trong Phiếu Chấm
+- **Bổ sung Nút Chỉnh sửa (Edit) tại Section 2 Phiếu Chấm (`/audits/:id`)**:
+  - Cho phép người chấm (Auditor) hoặc Quản trị viên (Admin) điều chỉnh thông tin lỗi 5S sau khi đã nhập hoặc nộp phiếu chấm (khi lỗi đang ở trạng thái `open`).
+- **Modal Chỉnh sửa Toàn diện & Tự động Tính toán Lại Điểm**:
+  - Hỗ trợ đổi **Khu vực** hoặc **Tiêu chí 5S vi phạm** (tự động loại bỏ tiêu chí NA của khu vực đã chọn).
+  - Tự động tính toán lại mức phạt leo thang theo tuần lặp lại (`repeat_level`, `applied_penalty`) và cập nhật lại điểm tuần toàn xưởng.
+  - Quản lý ảnh Before linh hoạt: xóa ảnh cũ không đạt chuẩn và bổ sung ảnh chụp mới (tối đa 6 ảnh) kèm nén ảnh tự động.
+
+### ✨ Admin Theme Studio & Bộ Giao diện Đa Phong cách (Classic Default · Crystal Glass · Crystal Hybrid - `v2.7.0`)
 - **Theme Studio dành riêng cho Quản trị viên (`/admin/targets`)**:
   - Giữ nguyên **Classic Andon (`classic`)** làm giao diện mặc định toàn hệ thống qua cài đặt D1 (`ui_theme`).
   - Admin có thể **Xem thử tức thì (Live Preview)** hoặc **Lưu & Áp dụng toàn hệ thống** 2 giao diện mới: **Crystal Glass Enterprise (Mẫu 2)** và **Crystal Hybrid Adaptive (Mẫu 4)**.

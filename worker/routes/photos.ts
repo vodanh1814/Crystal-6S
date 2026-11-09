@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, Photo } from '../types';
 import { authMiddleware } from '../lib/auth';
-import { isAdmin } from '../lib/permissions';
+import { isAdmin, canAuditArea, canManageArea } from '../lib/permissions';
 import { logActivity } from '../lib/activity';
 
 export const photosRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -38,6 +38,7 @@ photosRouter.get('/:id', authMiddleware, async (c) => {
 // DELETE /api/photos/:id - Delete photo (auth required)
 photosRouter.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user');
+  const userAreas = c.get('userAreas') || [];
   const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid photo ID' }, 400);
@@ -45,7 +46,7 @@ photosRouter.delete('/:id', authMiddleware, async (c) => {
 
   const photo = await c.env.DB
     .prepare(`
-      SELECT p.*, f.status as finding_status, a.status as audit_status
+      SELECT p.*, f.status as finding_status, f.area_id, a.status as audit_status
       FROM photos p
       JOIN findings f ON f.id = p.finding_id
       JOIN audits a ON a.id = f.audit_id
@@ -58,19 +59,25 @@ photosRouter.delete('/:id', authMiddleware, async (c) => {
     return c.json({ error: 'Photo not found' }, 404);
   }
 
-  // Uploader or admin only
-  if (photo.uploaded_by !== user.id && !isAdmin(user)) {
-    return c.json({ error: 'Forbidden: You cannot delete this photo' }, 403);
-  }
+  const canAudit = canAuditArea(user, userAreas, photo.area_id);
+  const canManage = canManageArea(user, userAreas, photo.area_id);
 
-  // State rules:
-  // Before photo: audit must be draft
-  if (photo.kind === 'before' && photo.audit_status !== 'draft') {
-    return c.json({ error: 'Cannot delete before photos of a submitted audit' }, 400);
-  }
-  // After photo: finding status must be open
-  if (photo.kind === 'after' && photo.finding_status !== 'open') {
-    return c.json({ error: 'Cannot delete after photos of a finding that is not open' }, 400);
+  // State & Permission rules:
+  if (photo.kind === 'before') {
+    if (photo.audit_status !== 'draft' && photo.finding_status !== 'open') {
+      return c.json({ error: 'Cannot delete before photos of a fixed or closed finding' }, 400);
+    }
+    if (!isAdmin(user) && !canAudit && photo.uploaded_by !== user.id) {
+      return c.json({ error: 'Forbidden: You cannot delete this photo' }, 403);
+    }
+  } else {
+    // kind === 'after'
+    if (photo.finding_status !== 'open') {
+      return c.json({ error: 'Cannot delete after photos of a finding that is not open' }, 400);
+    }
+    if (!isAdmin(user) && !canManage && photo.uploaded_by !== user.id) {
+      return c.json({ error: 'Forbidden: You cannot delete this photo' }, 403);
+    }
   }
 
   try {
