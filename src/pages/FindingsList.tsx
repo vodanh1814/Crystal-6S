@@ -6,6 +6,7 @@ import {
   Clock,
   CheckCircle2,
   Loader2,
+  ArrowLeft,
   ArrowRight,
   List,
   LayoutGrid,
@@ -21,7 +22,7 @@ import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import type { Finding, Area, Photo } from '../api/types';
 
 export const FindingsList: React.FC = () => {
-  const { activeTheme } = useAuth();
+  const { activeTheme, user } = useAuth();
   const { lang, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const isHybrid = false;
@@ -104,6 +105,23 @@ export const FindingsList: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-16">
+      {/* Top Bar: Back to Dashboard & Guest Notice */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition hover:text-blue-600"
+        >
+          <ArrowLeft className="w-4 h-4 text-slate-500" />
+          <span>{t('back_to_dashboard')}</span>
+        </Link>
+        {!user && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{t('guest_view_mode')}</span>
+          </div>
+        )}
+      </div>
+
       {/* Page Title & View Mode Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

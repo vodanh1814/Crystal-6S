@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.10.2] - 2026-11-09
+
+### Added & Improved (Tra Cứu Lỗi Từng Khu Vực Cho Khách Mà Không Cần Đăng Nhập)
+- **Cho Phép Khách (Guest) Tra Cứu Lỗi Khu Vực Từ Dashboard Không Cần Sign In**:
+  - **Mẫu 1 & Mẫu 2 Dashboard (`Dashboard.tsx` & `DashboardZoneFocus.tsx`)**:
+    - Gỡ bỏ hoàn toàn điều kiện bắt buộc đăng nhập `is_authenticated ? ... : '/login'`. Khách nhấn vào bất kỳ ô nào trong 16 khu vực (hoặc cụm Production & Support) sẽ được chuyển thẳng đến danh sách lỗi của khu vực đó: `/findings?area_id=X`.
+    - Thẻ trong bảng cảnh báo 7 ngày liên kết trực tiếp tới chi tiết lỗi: `/findings/:id`.
+  - **Mở Quyền Đọc Công Khai (Public Read) An Toàn Cho Backend (`areas.ts` & `photos.ts`)**:
+    - `GET /api/areas` & `GET /api/areas/:id/na`: Cho phép truy cập công khai để trang Findings tải danh mục khu vực và các thanh lọc nhanh (quick area pills). Các thao tác chỉnh sửa (`POST`, `PUT`) tiếp tục được bảo vệ nghiêm ngặt bằng `authMiddleware` và quyền Admin.
+    - `GET /api/photos/:id`: Mở quyền đọc công khai để khách xem được ảnh chứng cứ 5S trước/sau (Before / After) và phóng to qua Lightbox. Route xóa ảnh (`DELETE /api/photos/:id`) duy trì bảo vệ bằng `authMiddleware` và phân quyền.
+  - **Trải Nghiệm Thân Thiện Trên Trang Lỗi 5S (`FindingsList.tsx` & `FindingDetail.tsx`)**:
+    - Thêm nút bấm nổi bật `← Quay lại Dashboard` ở đầu trang danh sách lỗi, giúp người dùng quay về Dashboard tức thì với 1 click.
+    - Hiển thị huy hiệu `Chế độ xem công khai (Không cần đăng nhập)` khi người dùng là khách (`!user`).
+    - Nút quay lại tại trang chi tiết lỗi trỏ chính xác về danh sách khu vực đã chọn (`/findings?area_id=X`).
+
+---
+
 ## [2.10.1] - 2026-11-09
 
 ### Fixed & Improved (Auto-Scale Kích Thước Chữ, Ô & Khắc Phục Tràn Viền Trên Bản Web)

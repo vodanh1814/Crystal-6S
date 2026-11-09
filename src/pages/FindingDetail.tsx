@@ -130,7 +130,7 @@ export const FindingDetail: React.FC = () => {
       {/* Back button */}
       <div>
         <Link
-          to="/findings"
+          to={finding?.area_id ? `/findings?area_id=${finding.area_id}` : "/findings"}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

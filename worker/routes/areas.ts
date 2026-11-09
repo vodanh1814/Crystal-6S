@@ -6,7 +6,7 @@ import { logActivity } from '../lib/activity';
 
 export const areasRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-areasRouter.use('/*', authMiddleware);
+// areasRouter.use('/*', authMiddleware); - GET / and GET /:id/na are public
 
 // GET /api/areas
 areasRouter.get('/', async (c) => {
@@ -22,7 +22,7 @@ areasRouter.get('/', async (c) => {
 });
 
 // POST /api/areas (Admin only)
-areasRouter.post('/', async (c) => {
+areasRouter.post('/', authMiddleware, async (c) => {
   const user = c.get('user');
   if (!isAdmin(user)) {
     return c.json({ error: 'Forbidden: Admin access required' }, 403);
@@ -65,13 +65,13 @@ areasRouter.post('/', async (c) => {
 });
 
 // PUT /api/areas/:id (Admin only)
-areasRouter.put('/:id', async (c) => {
+areasRouter.put('/:id', authMiddleware, async (c) => {
   const user = c.get('user');
   if (!isAdmin(user)) {
     return c.json({ error: 'Forbidden: Admin access required' }, 403);
   }
 
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid area ID' }, 400);
   }
@@ -120,7 +120,7 @@ areasRouter.put('/:id', async (c) => {
 
 // GET /api/areas/:id/na - Get Not Applicable item IDs for area
 areasRouter.get('/:id/na', async (c) => {
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid area ID' }, 400);
   }
@@ -135,13 +135,13 @@ areasRouter.get('/:id/na', async (c) => {
 });
 
 // PUT /api/areas/:id/na - Update Not Applicable item IDs for area (Admin only)
-areasRouter.put('/:id/na', async (c) => {
+areasRouter.put('/:id/na', authMiddleware, async (c) => {
   const user = c.get('user');
   if (!isAdmin(user)) {
     return c.json({ error: 'Forbidden: Admin access required' }, 403);
   }
 
-  const id = parseInt(c.req.param('id'), 10);
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid area ID' }, 400);
   }

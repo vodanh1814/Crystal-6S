@@ -6,8 +6,8 @@ import { logActivity } from '../lib/activity';
 
 export const photosRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// GET /api/photos/:id - Serve photo from R2 (authenticated internal users only)
-photosRouter.get('/:id', authMiddleware, async (c) => {
+// GET /api/photos/:id - Serve photo from R2 (public read for 5S audit photos)
+photosRouter.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) {
     return c.json({ error: 'Invalid photo ID' }, 400);

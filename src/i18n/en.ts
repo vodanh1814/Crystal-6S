@@ -25,6 +25,8 @@ export const en: typeof vi = {
   reopen: 'Reopen Audit',
   close: 'Close',
   back: 'Back',
+  back_to_dashboard: 'Back to Dashboard',
+  guest_view_mode: 'Public Read-Only Mode (No Sign-in Required)',
   search: 'Search',
   filter: 'Filter',
   all: 'All',

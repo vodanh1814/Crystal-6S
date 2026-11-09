@@ -23,6 +23,8 @@ export const vi = {
   reopen: 'Mở lại kiểm tra',
   close: 'Đóng',
   back: 'Quay lại',
+  back_to_dashboard: 'Quay lại Dashboard',
+  guest_view_mode: 'Chế độ xem công khai (Không cần đăng nhập)',
   search: 'Tìm kiếm',
   filter: 'Bộ lọc',
   all: 'Tất cả',

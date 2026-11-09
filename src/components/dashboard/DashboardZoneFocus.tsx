@@ -528,7 +528,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
               return (
                 <Link
                   key={area.area_id}
-                  to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
+                  to={`/findings?area_id=${area.area_id}`}
                   className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-sky-400 transition cursor-pointer group`}
                 >
                   <div className="flex items-center justify-between gap-1 min-w-0">
@@ -665,7 +665,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
               return (
                 <Link
                   key={area.area_id}
-                  to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
+                  to={`/findings?area_id=${area.area_id}`}
                   className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-amber-400 transition cursor-pointer group`}
                 >
                   <div className="flex items-center justify-between gap-1 min-w-0">

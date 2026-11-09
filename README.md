@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.10.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.10.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,12 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.10.1`
+## 1. Điểm nổi bật của phiên bản `v2.10.2`
+
+### 🔓 Tra Cứu Lỗi Khu Vực Dành Cho Khách Không Cần Đăng Nhập
+- **Xem Lỗi Trực Tiếp Từ Dashboard**: Khách (Guest) nhấp vào bất kỳ ô nào trong 16 khu vực trên Dashboard hoặc khối Production/Support sẽ được chuyển thẳng đến danh sách lỗi của khu vực đó (`/findings?area_id=X`) mà không bị chuyển hướng về trang `/login`.
+- **Mở Public Đọc API An Toàn**: `GET /api/areas` và `GET /api/photos/:id` được mở quyền đọc công khai, cho phép xem ảnh bằng chứng 5S và phóng to Lightbox sắc nét trong khi các route sửa/xóa vẫn được bảo vệ nghiêm ngặt.
+- **Điều Hướng & Trải Nghiệm Khách Tiện Lợi**: Nút `← Quay lại Dashboard` giúp quay về màn hình chính tức thì; trang hiển thị huy hiệu `Chế độ xem công khai` trang nhã.
 
 ### 💻 Tự Động Co Giãn (Auto-Scale) Chữ & Ô theo Màn Hình Bản Web
 - **Khắc Phục Hoàn Toàn Lỗi Đè Chữ & Tràn Khung trên Laptop 14"**:

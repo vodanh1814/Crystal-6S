@@ -7,6 +7,23 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.10.2] - 2026-11-09
+
+### Added & Improved (Guest Public Access to Area Findings from Dashboard Without Sign-in)
+- **Direct Area Findings Access for Guests Without Requiring Sign-In**:
+  - **Dashboard Layouts 1 & 2 (`Dashboard.tsx` & `DashboardZoneFocus.tsx`)**:
+    - Removed mandatory sign-in redirects (`is_authenticated ? ... : '/login'`). Clicking any area card in the 16-area status wall or Production & Support divisions directs guests straight to `/findings?area_id=X`.
+    - 7-day alarm cards link directly to finding details at `/findings/:id`.
+  - **Secure Public Read APIs (`areas.ts` & `photos.ts`)**:
+    - `GET /api/areas`: Opened public read access so the Findings page can load active plant areas and quick filter pills. Write operations (`POST`, `PUT`) remain strictly protected by `authMiddleware` and admin permissions.
+    - `GET /api/photos/:id`: Opened public read access for 5S evidence photos (before/after) and Lightbox zoom. Photo deletion (`DELETE`) remains strictly protected.
+  - **Enhanced Navigation & Guest Indicators (`FindingsList.tsx` & `FindingDetail.tsx`)**:
+    - Added a prominent `← Back to Dashboard` navigation button at the top of the Findings page.
+    - Added a subtle `Public Read-Only Mode (No Sign-in Required)` status badge for unauthenticated guests.
+    - Back button on finding details smartly routes back to the filtered area list (`/findings?area_id=X`).
+
+---
+
 ## [2.10.1] - 2026-11-09
 
 ### Fixed & Improved (Fluid Auto-Scaling Typography, Card Sizing & Web Mode Overflow Fix)

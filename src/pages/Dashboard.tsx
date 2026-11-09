@@ -764,7 +764,7 @@ export const Dashboard: React.FC = () => {
               return (
                 <Link
                   key={area.area_id}
-                  to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
+                  to={`/findings?area_id=${area.area_id}`}
                   className={`${boxCls} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px] lg:min-h-[66px] ${
                     isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
                   } transition cursor-pointer group`}
@@ -963,7 +963,7 @@ export const Dashboard: React.FC = () => {
                 return (
                   <Link
                     key={f.id}
-                    to={is_authenticated ? `/findings/${f.id}` : '/login'}
+                    to={`/findings/${f.id}`}
                     title={fullCriterion}
                     className={`flex-1 min-h-[46px] sm:min-h-[50px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2 py-0.5 sm:px-2.5 sm:py-1 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'

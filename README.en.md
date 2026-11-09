@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.10.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.10.2`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,12 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.10.1`
+## 1. Highlights of Version `v2.10.2`
+
+### 🔓 Guest Public Access to Area Findings Without Sign-In
+- **Direct Findings Inspection from Dashboard**: Unauthenticated guests can click any area card on the Dashboard or Production/Support divisions to view the area's findings (`/findings?area_id=X`) without being redirected to `/login`.
+- **Safe Public Read APIs**: `GET /api/areas` and `GET /api/photos/:id` allow public read access for viewing 5S before/after photos and Lightbox zoom, while mutation endpoints remain strictly authenticated.
+- **Seamless Navigation & Guest Badging**: Top `← Back to Dashboard` button enables instant return; displays an elegant `Public Read-Only Mode` badge.
 
 ### 💻 Fluid Auto-Scaling Typography, Card Sizing & Web Mode Overflow Fix
 - **Eliminated Overflow Bleed & Text Overlapping on 14" Laptops**:
