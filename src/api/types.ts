@@ -145,7 +145,7 @@ export interface YearlyTarget {
 }
 
 export type UiThemeId = 'classic';
-export type DashboardLayoutId = 'matrix' | 'zone';
+export type DashboardLayoutId = 'matrix' | 'zone' | 'bento' | 'hud';
 export type ColorMode = 'light' | 'dark';
 
 export type ImprovementStatus = 'improved' | 'declined' | 'stagnant' | 'stable' | 'unknown';

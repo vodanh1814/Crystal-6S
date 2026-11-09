@@ -280,7 +280,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                             {formatScore(item.current_score, lang)}
                           </span>
                           <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
-                            ▲ +{item.delta}đ
+                            ▲ +{item.delta}{t('pts_unit')}
                           </span>
                         </div>
                       </div>
@@ -317,10 +317,10 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                               : 'bg-amber-500/20 text-amber-300'
                           }`}>
                             {item.delta !== null && item.delta < 0
-                              ? `▼ ${item.delta}đ`
+                              ? `▼ ${item.delta}${t('pts_unit')}`
                               : item.delta !== null && item.delta > 0
-                              ? `▲ +${item.delta}đ`
-                              : '▬ 0.0đ'}
+                              ? `▲ +${item.delta}${t('pts_unit')}`
+                              : `▬ 0.0${t('pts_unit')}`}
                           </span>
                         </div>
                       </div>
@@ -486,7 +486,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 </span>
                 {prodStats.groupDelta !== null && (
                   <span className={`text-[10px] font-mono font-bold ${prodStats.groupDelta >= 0 ? passTextCls : failTextCls}`}>
-                    ({prodStats.groupDelta >= 0 ? `▲+${prodStats.groupDelta}` : `▼${prodStats.groupDelta}`}đ)
+                    ({prodStats.groupDelta >= 0 ? `▲+${prodStats.groupDelta}` : `▼${prodStats.groupDelta}`}{t('pts_unit')})
                   </span>
                 )}
               </div>
@@ -569,10 +569,10 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                         : mutedTextCls
                     }`}>
                       {delta !== null && delta > 0
-                        ? `▲+${delta}đ`
+                        ? `▲+${delta}${t('pts_unit')}`
                         : delta !== null && delta < 0
-                        ? `▼${delta}đ`
-                        : '▬ 0đ'}
+                        ? `▼${delta}${t('pts_unit')}`
+                        : `▬ 0${t('pts_unit')}`}
                     </span>
                   </div>
 
@@ -623,7 +623,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 </span>
                 {suppStats.groupDelta !== null && (
                   <span className={`text-[10px] font-mono font-bold ${suppStats.groupDelta >= 0 ? passTextCls : failTextCls}`}>
-                    ({suppStats.groupDelta >= 0 ? `▲+${suppStats.groupDelta}` : `▼${suppStats.groupDelta}`}đ)
+                    ({suppStats.groupDelta >= 0 ? `▲+${suppStats.groupDelta}` : `▼${suppStats.groupDelta}`}{t('pts_unit')})
                   </span>
                 )}
               </div>
@@ -706,10 +706,10 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                         : mutedTextCls
                     }`}>
                       {delta !== null && delta > 0
-                        ? `▲+${delta}đ`
+                        ? `▲+${delta}${t('pts_unit')}`
                         : delta !== null && delta < 0
-                        ? `▼${delta}đ`
-                        : '▬ 0đ'}
+                        ? `▼${delta}${t('pts_unit')}`
+                        : `▬ 0${t('pts_unit')}`}
                     </span>
                   </div>
 

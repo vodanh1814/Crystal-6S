@@ -23,6 +23,8 @@ import { formatScore, formatDelta } from '../lib/format';
 import { resolveColorMode } from '../lib/theme';
 import type { DashboardLayoutId } from '../api/types';
 import { DashboardZoneFocus } from '../components/dashboard/DashboardZoneFocus';
+import { DashboardBento } from '../components/dashboard/DashboardBento';
+import { DashboardHud } from '../components/dashboard/DashboardHud';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -71,19 +73,22 @@ export const Dashboard: React.FC = () => {
   const [activeLayout, setActiveLayout] = useState<DashboardLayoutId>(() => {
     try {
       const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone') return saved;
+      if (saved === 'matrix' || saved === 'zone' || saved === 'bento' || saved === 'hud') return saved;
     } catch {}
     return 'matrix';
   });
 
   const [row3Tab, setRow3Tab] = useState<'improvement' | 'leaderboard'>('improvement');
 
-  const handleLayoutChange = (layoutId: DashboardLayoutId) => {
-    setActiveLayout(layoutId);
-    try {
-      localStorage.setItem('crystal_5s_dashboard_layout', layoutId);
-    } catch {}
-  };
+  // Automatically sync with Admin's plant-wide default dashboard layout from settings
+  useEffect(() => {
+    if (data?.dashboard_layout) {
+      setActiveLayout(data.dashboard_layout);
+      try {
+        localStorage.setItem('crystal_5s_dashboard_layout', data.dashboard_layout);
+      } catch {}
+    }
+  }, [data?.dashboard_layout]);
 
   const isClassic = true;
   const isGlass = false;
@@ -363,38 +368,6 @@ export const Dashboard: React.FC = () => {
               {t('all_data_for_month', { month: formatMonthYear(month_info.display_month) })}
             </span>
           )}
-
-          {/* DASHBOARD PRESENTATION LAYOUT SELECTOR */}
-          <div className="flex items-center rounded-lg border border-slate-700/80 bg-slate-800/80 p-0.5 text-xs font-semibold shrink-0">
-            <button
-              type="button"
-              onClick={() => handleLayoutChange('matrix')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
-                activeLayout === 'matrix'
-                  ? 'bg-emerald-500 text-slate-950 shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-              title={t('dashboard_layout_matrix_name')}
-            >
-              <span>⊞</span>
-              <span className="hidden sm:inline">{t('dashboard_layout_matrix_name')}</span>
-              <span className="sm:hidden">M1</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLayoutChange('zone')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition cursor-pointer text-[11px] font-bold ${
-                activeLayout === 'zone'
-                  ? 'bg-sky-500 text-slate-950 shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-              }`}
-              title={t('dashboard_layout_zone_name')}
-            >
-              <span>☷</span>
-              <span className="hidden sm:inline">{t('dashboard_layout_zone_name')}</span>
-              <span className="sm:hidden">M2</span>
-            </button>
-          </div>
         </div>
 
         {/* Target Indicator */}
@@ -405,6 +378,34 @@ export const Dashboard: React.FC = () => {
           <span className={`font-mono ${warnTextCls}`}>{warningTarget}-{target}%</span>
         </div>
       </div>
+
+      {/* RENDER LAYOUT 3: BENTO TELEMETRY 2.0 */}
+      {activeLayout === 'bento' && (
+        <DashboardBento
+          data={data}
+          lang={lang}
+          t={t}
+          is_authenticated={is_authenticated}
+          target={target}
+          warningTarget={warningTarget}
+          formatMonthYear={formatMonthYear}
+          getMonthShortName={getMonthShortName}
+        />
+      )}
+
+      {/* RENDER LAYOUT 4: INDUSTRIAL CYBERPUNK HUD */}
+      {activeLayout === 'hud' && (
+        <DashboardHud
+          data={data}
+          lang={lang}
+          t={t}
+          is_authenticated={is_authenticated}
+          target={target}
+          warningTarget={warningTarget}
+          formatMonthYear={formatMonthYear}
+          getMonthShortName={getMonthShortName}
+        />
+      )}
 
       {/* RENDER LAYOUT 2: WORKSHOP ZONE FOCUS */}
       {activeLayout === 'zone' && (
@@ -822,10 +823,10 @@ export const Dashboard: React.FC = () => {
                         title={t('vs_prev_month')}
                       >
                         {area.delta_prev_month !== null && area.delta_prev_month > 0
-                          ? `▲+${area.delta_prev_month}đ`
+                          ? `▲+${area.delta_prev_month}${t('pts_unit')}`
                           : area.delta_prev_month !== null && area.delta_prev_month < 0
-                          ? `▼${area.delta_prev_month}đ`
-                          : '▬ 0đ'}
+                          ? `▼${area.delta_prev_month}${t('pts_unit')}`
+                          : `▬ 0${t('pts_unit')}`}
                       </span>
                       <span className={`text-[9px] sm:text-[10px] font-mono truncate ${mutedTextCls}`}>
                         {isSubmitted ? (
@@ -1222,7 +1223,7 @@ export const Dashboard: React.FC = () => {
                         {formatScore(a.current_score, lang)}
                       </span>
                       <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
-                        ▲+{a.delta}đ
+                        ▲+{a.delta}{t('pts_unit')}
                       </span>
                     </div>
                   </div>
@@ -1260,10 +1261,10 @@ export const Dashboard: React.FC = () => {
                           : 'bg-amber-500/20 text-amber-300'
                       }`}>
                         {a.delta !== null && a.delta < 0
-                          ? `▼${a.delta}đ`
+                          ? `▼${a.delta}${t('pts_unit')}`
                           : a.delta !== null && a.delta > 0
-                          ? `▲+${a.delta}đ`
-                          : '▬ 0đ'}
+                          ? `▲+${a.delta}${t('pts_unit')}`
+                          : `▬ 0${t('pts_unit')}`}
                       </span>
                     </div>
                   </div>

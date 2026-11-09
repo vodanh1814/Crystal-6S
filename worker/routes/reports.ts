@@ -4,6 +4,7 @@ import { authMiddleware, optionalAuthMiddleware } from '../lib/auth';
 import { isAdmin } from '../lib/permissions';
 import { getISOWeek, getVietnamToday, addDays, daysRemaining } from '../lib/week';
 import { calculateMonthlyScore, isScorePassing, cleanHistoricalScore, getScoreStatus } from '../lib/scoring';
+import { normalizeDashboardLayout } from '../lib/theme';
 
 export const reportsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -484,6 +485,12 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     .first<{ target: number; warning_target?: number }>();
   const target = targetRow ? targetRow.target : 95;
   const warningTarget = targetRow ? (targetRow.warning_target ?? 90) : 90;
+
+  // Plant-wide dashboard layout setting
+  const layoutSetting = await c.env.DB
+    .prepare("SELECT value FROM app_settings WHERE key = 'dashboard_layout'")
+    .first<{ value: string }>();
+  const dashboardLayout = normalizeDashboardLayout(layoutSetting?.value);
 
   // 2. Active areas
   const areasRes = await c.env.DB
@@ -1229,5 +1236,6 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       not_improved: notImprovedCountRes?.cnt || 0,
       waiting_verify: waitingVerifyCountRes?.cnt || 0,
     },
+    dashboard_layout: dashboardLayout,
   });
 });

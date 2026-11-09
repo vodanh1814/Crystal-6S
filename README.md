@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.10.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,24 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.10.2`
+## 1. Điểm nổi bật của phiên bản `v2.11.0`
+
+### 🎨 Tích Hợp 4 Layout Dashboard Tuyệt Đẹp Chuẩn UI/UX Pro Max
+- **Mẫu 1: Classic Andon Matrix (`matrix`)**: Ma trận 3 tầng tiêu chuẩn nhà máy, hiển thị 16 khu vực, cảnh báo 7 ngày và biểu đồ 12 tuần.
+- **Mẫu 2: Workshop Zone Focus (`zone`)**: Phân nhóm 2 khối lớn Sản xuất chính (10 khu vực) & Phụ trợ dịch vụ (6 khu vực) kèm Hero gauge và thanh lệnh 3 tab.
+- **Mẫu 3: Bento Telemetry 2.0 (`bento`)**: Bố cục Bento Grid 4x4 đa chiều kèm Radar 5S Telemetry hình sao SVG, theo dõi cân bằng 5 trụ cột và Kaizen MoM Spotlight.
+- **Mẫu 4: Industrial SCADA HUD (`hud`)**: Phong cách phòng điều khiển vi sai công nghiệp tương phản cao (Cyan / Amber), tháp cảnh báo thời gian thực và 2 cánh chiến thuật.
+
+### ⚙️ Chuyển Quyền Quản Lý Layout Độc Quyền Vào Admin Settings (Layout Studio)
+- **Tập Trung Hóa Quản Trị**: Xóa bỏ các nút chọn layout công khai ngoài Dashboard tổng. Chỉ Admin có quyền xem trước 4 layout và thiết lập mẫu mặc định cho toàn bộ nhà máy tại `AdminTargets.tsx`.
+- **Tự Động Đồng Bộ Toàn Nhà Máy**: Khách và người xem khi mở trang chủ Dashboard luôn tự động tải mẫu bố cục do Admin cấu hình.
+
+### 📏 Chuẩn Hóa 100% Đơn Vị Điểm Số (`đ` và `pts`)
+- Loại bỏ hoàn toàn lỗi hiển thị lệch đơn vị: Phiên bản tiếng Việt chuẩn hóa sử dụng đơn vị `đ` (`-1đ`, `(-7đ)`, `▲ +5.5đ`, `+1đ/tuần`); phiên bản tiếng Anh chuẩn hóa sử dụng `pts` (`-1 pt`, `(-7 pts)`, `▲ +5.5 pts`, `+1 pt/week`).
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.10.2`
 
 ### 🔓 Tra Cứu Lỗi Khu Vực Dành Cho Khách Không Cần Đăng Nhập
 - **Xem Lỗi Trực Tiếp Từ Dashboard**: Khách (Guest) nhấp vào bất kỳ ô nào trong 16 khu vực trên Dashboard hoặc khối Production/Support sẽ được chuyển thẳng đến danh sách lỗi của khu vực đó (`/findings?area_id=X`) mà không bị chuyển hướng về trang `/login`.

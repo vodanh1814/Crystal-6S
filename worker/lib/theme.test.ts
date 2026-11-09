@@ -56,16 +56,18 @@ test('resolveColorMode keeps classic TV dark & management light', () => {
   assert.equal(resolveColorMode('classic', 'dark', false), 'light');
 });
 
-test('VALID_DASHBOARD_LAYOUTS supports 2 dashboard layouts', () => {
+test('VALID_DASHBOARD_LAYOUTS supports 4 dashboard layouts', () => {
   assert.equal(DEFAULT_DASHBOARD_LAYOUT, 'matrix');
-  assert.deepEqual(VALID_DASHBOARD_LAYOUTS, ['matrix', 'zone']);
+  assert.deepEqual(VALID_DASHBOARD_LAYOUTS, ['matrix', 'zone', 'bento', 'hud']);
   assert.deepEqual(
     DASHBOARD_LAYOUT_CATALOG.map((item) => item.id),
-    ['matrix', 'zone']
+    ['matrix', 'zone', 'bento', 'hud']
   );
 
   assert.equal(isValidDashboardLayout('matrix'), true);
   assert.equal(isValidDashboardLayout('zone'), true);
+  assert.equal(isValidDashboardLayout('bento'), true);
+  assert.equal(isValidDashboardLayout('hud'), true);
   assert.equal(isValidDashboardLayout('heatmap'), false);
   assert.equal(isValidDashboardLayout('invalid'), false);
 

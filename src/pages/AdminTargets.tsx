@@ -150,13 +150,25 @@ export const AdminTargets: React.FC = () => {
   const [selectedLayoutDraft, setSelectedLayoutDraft] = useState<DashboardLayoutId>(() => {
     try {
       const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone') return saved;
+      if (saved === 'matrix' || saved === 'zone' || saved === 'bento' || saved === 'hud') return saved;
     } catch {}
     return 'matrix';
   });
   const [savingLayout, setSavingLayout] = useState(false);
   const [layoutSuccess, setLayoutSuccess] = useState<string | null>(null);
   const [layoutError, setLayoutError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<{ settings: any }>('/settings').then((res) => {
+      const layout = res?.settings?.dashboard_layout;
+      if (layout === 'matrix' || layout === 'zone' || layout === 'bento' || layout === 'hud') {
+        setSelectedLayoutDraft(layout);
+        try {
+          localStorage.setItem('crystal_5s_dashboard_layout', layout);
+        } catch {}
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleSaveDashboardLayout = async (targetLayout: DashboardLayoutId) => {
     if (!isAdmin) return;
@@ -667,8 +679,8 @@ export const AdminTargets: React.FC = () => {
           </div>
         )}
 
-        {/* 2 Dashboard Layout Selector Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 4 Dashboard Layout Selector Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {DASHBOARD_LAYOUT_CATALOG.map((item) => {
             const isDraftSelected = selectedLayoutDraft === item.id;
 
@@ -696,7 +708,7 @@ export const AdminTargets: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-mono">{item.icon}</span>
                         <span className="text-[9px] font-bold font-mono tracking-tight text-slate-200">
-                          {item.id === 'matrix' ? '3-ROW MATRIX' : 'PRODUCTION & SUPPORT'}
+                          {item.id === 'matrix' ? '3-ROW MATRIX' : item.id === 'zone' ? 'PROD & SUPPORT' : item.id === 'bento' ? 'BENTO TELEMETRY' : 'INDUSTRIAL HUD'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -746,6 +758,45 @@ export const AdminTargets: React.FC = () => {
                             <span className="text-[6px] text-amber-300 font-bold">SUPP</span>
                             <div className="h-1 bg-amber-500/40 rounded-full" />
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.id === 'bento' && (
+                      <div className="space-y-1 py-1 h-16 flex flex-col justify-between">
+                        <div className="grid grid-cols-12 gap-1 h-11">
+                          <div className="col-span-5 rounded-xs bg-slate-950 border border-sky-400/30 p-0.5 flex flex-col items-center justify-center">
+                            <div className="w-5 h-5 rounded-full border border-sky-400/60 flex items-center justify-center text-[6px] text-sky-300 font-mono">
+                              RADAR
+                            </div>
+                          </div>
+                          <div className="col-span-7 rounded-xs bg-slate-950 border border-slate-800 p-0.5 grid grid-cols-3 gap-0.5">
+                            {[1, 2, 3, 4, 5, 6].map((k) => (
+                              <div key={k} className="rounded-2xs bg-emerald-500/20 border border-emerald-500/30" />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="h-2 rounded-2xs bg-slate-800 border border-slate-700 flex items-center px-1">
+                          <div className="w-3/4 h-1 bg-sky-400 rounded-full" />
+                        </div>
+                      </div>
+                    )}
+
+                    {item.id === 'hud' && (
+                      <div className="grid grid-cols-12 gap-0.5 py-1 h-16">
+                        <div className="col-span-4 rounded-xs bg-[#050811] border border-emerald-500/40 p-0.5 grid grid-cols-2 gap-0.5">
+                          {[1, 2, 3, 4].map((k) => (
+                            <div key={k} className="rounded-2xs bg-emerald-500/30" />
+                          ))}
+                        </div>
+                        <div className="col-span-4 rounded-xs bg-[#050811] border border-cyan-400/50 p-0.5 flex flex-col items-center justify-center">
+                          <span className="text-[6px] text-cyan-300 font-bold">ALARM</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse mt-0.5" />
+                        </div>
+                        <div className="col-span-4 rounded-xs bg-[#050811] border border-amber-500/40 p-0.5 grid grid-cols-2 gap-0.5">
+                          {[1, 2, 3, 4].map((k) => (
+                            <div key={k} className="rounded-2xs bg-amber-500/30" />
+                          ))}
                         </div>
                       </div>
                     )}

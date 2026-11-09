@@ -30,6 +30,18 @@ export const DASHBOARD_LAYOUT_CATALOG: DashboardLayoutMeta[] = [
     nameKey: 'dashboard_layout_zone_name',
     descKey: 'dashboard_layout_zone_desc',
   },
+  {
+    id: 'bento',
+    icon: '▦',
+    nameKey: 'dashboard_layout_bento_name',
+    descKey: 'dashboard_layout_bento_desc',
+  },
+  {
+    id: 'hud',
+    icon: '◈',
+    nameKey: 'dashboard_layout_hud_name',
+    descKey: 'dashboard_layout_hud_desc',
+  },
 ];
 
 export interface ThemeMeta {

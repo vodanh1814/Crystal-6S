@@ -4,11 +4,13 @@ export const VALID_UI_THEMES: readonly UiThemeId[] = ['classic'] as const;
 
 export const DEFAULT_UI_THEME: UiThemeId = 'classic';
 
-export type DashboardLayoutId = 'matrix' | 'zone';
+export type DashboardLayoutId = 'matrix' | 'zone' | 'bento' | 'hud';
 
 export const VALID_DASHBOARD_LAYOUTS: readonly DashboardLayoutId[] = [
   'matrix',
   'zone',
+  'bento',
+  'hud',
 ] as const;
 
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayoutId = 'matrix';

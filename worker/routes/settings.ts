@@ -196,7 +196,7 @@ settingsRouter.put('/', authMiddleware, async (c) => {
   if (body.dashboard_layout !== undefined) {
     const rawLayout = typeof body.dashboard_layout === 'string' ? body.dashboard_layout.trim() : '';
     if (!isValidDashboardLayout(rawLayout)) {
-      return c.json({ error: 'Invalid dashboard_layout. Must be matrix, zone, or heatmap' }, 400);
+      return c.json({ error: 'Invalid dashboard_layout. Must be matrix, zone, bento, or hud' }, 400);
     }
     await c.env.DB
       .prepare(`

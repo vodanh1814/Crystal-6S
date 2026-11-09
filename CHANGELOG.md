@@ -7,6 +7,29 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.0] - 2026-11-09
+
+### Added & Improved (UI/UX Pro Max 4 Mẫu Dashboard & Chuẩn Hóa Quản Trị Trung Tâm)
+- **Tích Hợp 2 Mẫu Dashboard Thiết Kế Mới Tuyệt Đẹp (4 Mẫu Hoàn Chỉnh)**:
+  - **Mẫu 3: Bento Telemetry 2.0 (`bento` - Bento Grid Đa Chiều)**:
+    - Bố cục Bento Grid bất đối xứng 4x4 hiện đại với góc bo tròn mềm mại (`rounded-2xl`).
+    - Tích hợp biểu đồ Radar 5S Telemetry hình sao SVG tự vẽ, hiển thị sức khỏe cân bằng cả 5 trụ cột S1-S5 toàn nhà máy.
+    - Thanh đo tiến độ vi mô kèm điểm Kaizen MoM Spotlight (Top Improvers vs Stagnant Areas) và biểu đồ xu hướng 12 tuần spline.
+  - **Mẫu 4: Industrial SCADA HUD (`hud` - Tactical Factory Cyberpunk)**:
+    - Giao diện phòng điều khiển trung tâm tương phản cao với viền huỳnh quang Cyan / Amber phong cách SCADA công nghiệp.
+    - Phân tách 2 cánh chiến thuật: Cánh trái gồm 10 xưởng Sản xuất chính, Cánh phải gồm 6 bộ phận Phụ trợ & Tiện ích.
+    - Trung tâm là bảng điều khiển cảnh báo 7 ngày trực tiếp kèm chỉ số thực hiện khắc phục lỗi đúng hạn (On-Time Rate).
+- **Chuyển Toàn Bộ Quyền Chọn Layout Vào Cài Đặt Admin (Admin Layout Studio)**:
+  - **Xóa Nút Chọn Layout Ngoài Dashboard Tổng**: Gỡ bỏ hoàn toàn thanh nút bấm chuyển đổi layout công khai ở header `Dashboard.tsx`, trả lại giao diện tối giản, tập trung và sạch sẽ cho màn hình TV nhà xưởng.
+  - **Admin Layout Studio (`AdminTargets.tsx`)**: Là nơi duy nhất cho phép quản trị viên xem trước 4 mẫu layout qua các thẻ minh họa CSS trực quan và lưu cấu hình mặc định toàn nhà máy (`app_settings.dashboard_layout`).
+  - **Đồng Bộ Tự Động**: Khách và người dùng khi mở Dashboard sẽ luôn nhận diện và tải đúng layout do Admin chỉ định từ backend API (`/api/reports/dashboard`).
+- **Chuẩn Hóa 100% Đơn Vị Điểm Số & Điểm Trừ Toàn Hệ Thống**:
+  - Khắc phục triệt để hiện tượng không đồng nhất (nơi hiển thị tắt `pts`, nơi lại dùng `đ`).
+  - **Tiếng Việt (`vi`)**: Chuẩn hóa 100% sử dụng đơn vị `đ` viết liền cho tất cả điểm số, điểm trừ lỗi và biến động MoM (`-1đ`, `(-7đ)`, `▲ +5.5đ`, `▼ -1.0đ`, `+1đ/tuần`).
+  - **Tiếng Anh (`en`)**: Chuẩn hóa 100% sử dụng đơn vị `pts` (`-1 pt`, `(-7 pts)`, `▲ +5.5 pts`, `▼ -1.0 pts`, `+1 pt/week`).
+
+---
+
 ## [2.10.2] - 2026-11-09
 
 ### Added & Improved (Tra Cứu Lỗi Từng Khu Vực Cho Khách Mà Không Cần Đăng Nhập)

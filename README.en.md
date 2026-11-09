@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.10.2`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,25 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.10.2`
+## 1. Highlights of Version `v2.11.0`
+
+### 🎨 4 Full-Fledged UI/UX Pro Max Dashboard Layouts
+- **Layout 1: Classic Andon Matrix (`matrix`)**: Traditional 3-row layout, 16 plant areas, 7-day alarms, and 12-week trend curve.
+- **Layout 2: Workshop Zone Focus (`zone`)**: Dual divisions for Production (10 areas) and Support (6 areas) with Hero gauge and 3-tab Command Bar.
+- **Layout 3: Bento Telemetry 2.0 (`bento`)**: Modern 4x4 Bento grid architecture with handcrafted SVG 5S Star Radar chart and MoM Kaizen Spotlight.
+- **Layout 4: Industrial SCADA HUD (`hud`)**: Cyberpunk tactical command center with high-contrast Cyan/Amber borders, central alarm core, and dual flanks.
+
+### ⚙️ Centralized Exclusive Admin Layout Management (Layout Studio)
+- **Zero Clutter on Main Dashboard**: Public layout switcher buttons removed from `Dashboard.tsx`.
+- **Admin Layout Studio (`AdminTargets.tsx`)**: Exclusive control room for administrators to preview all 4 layouts and set the plant-wide default layout (`app_settings.dashboard_layout`).
+- **Seamless Public Display Sync**: Visitors and shop-floor Andon TV screens automatically load the layout designated by the Admin.
+
+### 📏 Plant-wide Point & Penalty Unit Standardization
+- Complete consistency across the application: Vietnamese uses `đ` (`-1đ`, `(-7đ)`, `▲ +5.5đ`, `+1đ/tuần`), English uses `pts` (`-1 pt`, `(-7 pts)`, `▲ +5.5 pts`, `+1 pt/week`).
+
+---
+
+## 2. Highlights of Version `v2.10.2`
 
 ### 🔓 Guest Public Access to Area Findings Without Sign-In
 - **Direct Findings Inspection from Dashboard**: Unauthenticated guests can click any area card on the Dashboard or Production/Support divisions to view the area's findings (`/findings?area_id=X`) without being redirected to `/login`.

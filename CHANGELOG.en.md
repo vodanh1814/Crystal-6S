@@ -7,6 +7,29 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.0] - 2026-11-09
+
+### Added & Improved (UI/UX Pro Max 4 Dashboard Layouts & Centralized Admin Layout Studio)
+- **Integrated 2 New Approved Cutting-Edge Dashboard Layouts (4 Complete Layouts)**:
+  - **Layout 3: Bento Telemetry 2.0 (`bento` - Multidimensional Bento Grid)**:
+    - Sleek modern 4x4 Bento grid architecture with subtle border highlights (`rounded-2xl`).
+    - Handcrafted SVG 5S Star Radar chart visualizing plant-wide health balance across S1-S5.
+    - Micro progress indicators, MoM Kaizen Spotlight (Top Improvers vs Stagnant Areas), and a 12-week spline score trend.
+  - **Layout 4: Industrial SCADA HUD (`hud` - Tactical Factory Cyberpunk)**:
+    - High-contrast central control console featuring neon Cyan & Amber cyber accents.
+    - Dual tactical flanks: Left flank grouping 10 core Production workshops; Right flank grouping 6 Support & Utility areas.
+    - Real-time 7-day alarms command core with live On-Time Remediation analytics.
+- **Centralized Layout Selection Exclusively in Admin Settings (Admin Layout Studio)**:
+  - **Removed Public Switcher Buttons from Main Dashboard**: Completely removed layout switch buttons from `Dashboard.tsx` header for a clutter-free, production-ready Andon TV screen.
+  - **Admin Layout Studio (`AdminTargets.tsx`)**: Exclusive control center for Admins to preview all 4 layouts via interactive CSS miniature cards and set the plant-wide default layout (`app_settings.dashboard_layout`).
+  - **Automatic Public Sync**: Public visitors and shop-floor displays automatically load and render the layout configured by Admin via `/api/reports/dashboard`.
+- **Plant-wide Point & Penalty Unit Standardization**:
+  - Eliminated unit inconsistencies across the entire application.
+  - **Vietnamese (`vi`)**: 100% standardized with `đ` (`-1đ`, `(-7đ)`, `▲ +5.5đ`, `▼ -1.0đ`, `+1đ/tuần`).
+  - **English (`en`)**: 100% standardized with `pts` (`-1 pt`, `(-7 pts)`, `▲ +5.5 pts`, `▼ -1.0 pts`, `+1 pt/week`).
+
+---
+
 ## [2.10.2] - 2026-11-09
 
 ### Added & Improved (Guest Public Access to Area Findings from Dashboard Without Sign-in)
