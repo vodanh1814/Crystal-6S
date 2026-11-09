@@ -26,7 +26,7 @@
     "preview": "npm run build && vite preview",
     "typecheck": "tsc -b",
     "db:migrate:local": "wrangler d1 migrations apply cetvn-5s-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply cetvn-5s-db --remote --yes",
+    "db:migrate:remote": "wrangler d1 migrations apply cetvn-5s-db --remote",
     "db:sample:local": "wrangler d1 execute cetvn-5s-db --local --file=seed/sample_areas.sql",
     "db:sample:remote": "wrangler d1 execute cetvn-5s-db --remote --file=seed/sample_areas.sql",
     "deploy": "npm run build && wrangler deploy",

@@ -62,7 +62,7 @@ jobs:
           npm test
 
       - name: Apply D1 Migrations (Remote)
-        run: npx wrangler d1 migrations apply cetvn-5s-db --remote --yes
+        run: npx wrangler d1 migrations apply cetvn-5s-db --remote
 
       - name: Build and Deploy to Cloudflare Workers
         run: npm run deploy
