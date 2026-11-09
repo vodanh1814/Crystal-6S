@@ -7,6 +7,24 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.8.1] - 2026-11-09
+
+### Fixed & Improved (Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix)
+- **Eliminated Text Dropping and Layout Squashing on 14" Laptops**:
+  - Removed rigid height and overflow constraints (`lg:overflow-hidden`, `lg:min-h-0`) that previously forced card heights below 46px on 1366x768 screens or standard 125%/150% Windows scaling.
+  - Introduced `.theme-tv-canvas` in `src/index.css`: Defaults to smooth vertical scrolling (`overflow-y: auto`) on compact viewports (< 860px height).
+  - Automatically preserves strict 100vh zero-scroll locking (`overflow-y: hidden`) on large monitors / Smart TV walls (`@media (min-height: 860px) and (min-width: 1280px)`) and Fullscreen mode (`:fullscreen`).
+- **Dashboard 3-Row Layout Optimization**:
+  - **Row 1 (KPI Strip):** Increased minimum height (`min-h-[68px] sm:min-h-[72px]`), converted to `flex-nowrap`, applied `whitespace-nowrap` to scores and `shrink-0` to badges. Fixed awkward line wrap where "areas" or "KV" dropped below the numeric score.
+  - **Row 2 (16-Area Wall & 7-Day Alarms Board):** Enforced `min-h-[380px]` row container and `min-h-[80px] sm:min-h-[84px]` per area card; Truncated area names safely (`max-w-[70%] truncate`); Prevented divider borders from cutting into Open/Verify counts; Streamlined 7-day alarms mini cards and finding descriptions.
+  - **Row 3 (Trend, 5S Breakdown & Monthly Leaderboard):** Enforced `min-h-[220px]`; Rebalanced 5S breakdown column tracks to 4:4:4 with `whitespace-nowrap` preventing penalty tags `(-7pts)` from wrapping; Added `truncate min-w-0` and `shrink-0` to leaderboard entries.
+- **Bilingual Localization Enhancements (i18n)**:
+  - Shortened `'avg_remediation_time'` to `'TB xử lý'` (VI) / `'Avg Time'` (EN).
+  - Shortened `'area_count_slash'` to `'/{n} KV'` (VI) / `'/{n}'` (EN).
+  - Applied responsive truncation to application title on the top navbar (`src/components/Layout.tsx`).
+
+---
+
 ## [2.8.0] - 2026-11-09
 
 ### Added & Improved (Edit 5S Finding Capability & Audit Detail Edit Controls)

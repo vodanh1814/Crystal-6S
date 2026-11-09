@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.8.1] - 2026-11-09
+
+### Fixed & Improved (Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14")
+- **Khắc phục Triệt để Hiện tượng Rơi chữ (Text Dropping) và Bẹp Layout trên Màn hình Laptop 14"**:
+  - Gỡ bỏ các giới hạn chiều cao cưỡng bức (`lg:overflow-hidden`, `lg:min-h-0`) từng khiến các khối nội dung bị dồn ép chỉ còn dưới 46px trên laptop có độ phân giải 1366x768 hoặc tỉ lệ hiển thị Windows 125%/150%.
+  - Bổ sung cấu hình `.theme-tv-canvas` trong `src/index.css`: Mặc định kích hoạt cuộn mượt mà (`overflow-y: auto`) trên các màn hình có chiều cao hạn chế (< 860px).
+  - Tự động duy trì tiêu chuẩn khóa cứng 100vh không cuộn (`overflow-y: hidden`) trên Smart TV Wall / Màn hình lớn (`@media (min-height: 860px) and (min-width: 1280px)`) và khi ở chế độ Fullscreen (`:fullscreen`).
+- **Tối ưu Bố cục Dashboard 3 Tầng (3-Row Layout Optimization)**:
+  - **Dòng 1 (KPI Strip):** Tăng chiều cao tối thiểu (`min-h-[68px] sm:min-h-[72px]`), chuyển `flex-wrap` thành `flex-nowrap`, áp dụng `whitespace-nowrap` cho điểm số và `shrink-0` cho các chỉ số cảnh báo/chênh lệch; Khắc phục lỗi chữ `areas` hoặc `KV` bị rớt xuống dòng thứ 2 tại thẻ KPI số khu vực đạt chuẩn.
+  - **Dòng 2 (Ma trận 16 Khu vực & Bảng Báo động 7 Ngày):** Thiết lập `min-h-[380px]` cho toàn dòng và `min-h-[80px] sm:min-h-[84px]` cho từng thẻ khu vực; Cắt ngắn an toàn tiêu đề khu vực (`max-w-[70%] truncate`); Đảm bảo đường viền ngăn cách không đè lên chữ số đếm lỗi (`Open / Verify`); Tối ưu khối cảnh báo 7 ngày với các thẻ mini rút gọn và mô tả lỗi không vỡ layout.
+  - **Dòng 3 (Phân tích: Xu hướng 12 Tuần, Phân rã 5S & Bảng Xếp hạng):** Thiết lập `min-h-[220px]`; Điều chỉnh tỉ lệ cột biểu đồ phân rã 5S thành 4:4:4 kèm `whitespace-nowrap` để nhãn phạt `(-7pts)` hiển thị gọn gàng trên một hàng duy nhất; Bổ sung `truncate min-w-0` và `shrink-0` cho Bảng xếp hạng.
+- **Tinh gọn Bản địa hóa Song ngữ (i18n)**:
+  - Cập nhật từ khóa `'avg_remediation_time'` thành `'TB xử lý'` (VI) / `'Avg Time'` (EN).
+  - Cập nhật `'area_count_slash'` thành `'/{n} KV'` (VI) / `'/{n}'` (EN).
+  - Bổ sung truncation lũy tiến cho tiêu đề ứng dụng trên Header (`src/components/Layout.tsx`).
+
+---
+
 ## [2.8.0] - 2026-11-09
 
 ### Added & Improved (Tính năng Chỉnh sửa Lỗi 5S Đã Nhập & Nút Edit Trong Phiếu Chấm)

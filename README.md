@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.8.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.8.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,19 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.8.0`
+## 1. Điểm nổi bật của phiên bản `v2.8.1`
 
-### ✏️ Tính năng Chỉnh sửa Lỗi 5S Đã Nhập (Edit Finding) Trong Phiếu Chấm
+### 💻 Tối ưu Hiển thị Thích ứng Đa Màn hình & Khắc phục Rơi chữ trên Laptop 14"
+- **Thích ứng Hoàn hảo Mọi Độ phân giải**:
+  - Gỡ bỏ giới hạn tĩnh khiến các ô ma trận khu vực bị bẹp xuống dưới 46px trên laptop màn hình 14" (độ phân giải 1366x768 hoặc Windows scale 125%/150%).
+  - Lớp `.theme-tv-canvas` tự động kích hoạt cuộn trang êm ái trên laptop/màn hình nhỏ và tự động khóa cứng 100vh không cuộn khi hiển thị trên TV Wall Andon Board hoặc Fullscreen.
+- **Triệt tiêu Rơi dòng Điểm số & Nhãn Thống kê**:
+  - Bổ sung `whitespace-nowrap`, `flex-nowrap` và `min-h-[68px]` cho thanh KPI, giúp tỷ lệ khu vực đạt chuẩn không bị rớt chữ xuống dòng thứ 2.
+  - Cân đối biểu đồ phân rã 5S với tỉ lệ 4:4:4 để nhãn phạt `(-7pts)` hiển thị chuẩn xác trên một dòng.
+- **Tinh gọn Từ ngữ Song ngữ & Tiêu đề Header Thích ứng**:
+  - Tinh chỉnh các từ khóa `'TB xử lý'` / `'Avg Time'` và `'/{n} KV'` / `'/{n}'` vừa vặn với mọi kích thước thẻ.
+
+### ✏️ Tính năng Chỉnh sửa Lỗi 5S Đã Nhập (Edit Finding) Trong Phiếu Chấm (`v2.8.0`)
 - **Bổ sung Nút Chỉnh sửa (Edit) tại Section 2 Phiếu Chấm (`/audits/:id`)**:
   - Cho phép người chấm (Auditor) hoặc Quản trị viên (Admin) điều chỉnh thông tin lỗi 5S sau khi đã nhập hoặc nộp phiếu chấm (khi lỗi đang ở trạng thái `open`).
 - **Modal Chỉnh sửa Toàn diện & Tự động Tính toán Lại Điểm**:

@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.8.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.8.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,9 +9,19 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.8.0`
+## 1. Highlights of Version `v2.8.1`
 
-### ✏️ Edit 5S Finding Capability in Weekly Audits
+### 💻 Adaptive Multi-Screen Responsiveness & 14" Laptop Text Dropping Fix
+- **Flawless Fit Across All Aspect Ratios and Screen Sizes**:
+  - Eliminated squashed area cards (< 46px) on 14" laptop viewports (1366x768 or standard 125%/150% Windows scaling).
+  - Adaptive `.theme-tv-canvas` enables smooth vertical scrolling on compact laptop screens while maintaining zero-scroll 100vh lock on Smart TV walls and Fullscreen mode.
+- **Zero Text Dropping on KPI & Analytics Strips**:
+  - Added `whitespace-nowrap`, `flex-nowrap`, and robust minimum heights on KPI cards to prevent numbers and labels from wrapping onto multiple lines.
+  - Rebalanced 5S breakdown column ratio to 4:4:4 so penalty tags `(-7pts)` fit cleanly on a single row.
+- **Concise Bilingual Localization & Progressive Truncation**:
+  - Optimized localized terms (`'TB xử lý'` / `'Avg Time'`, `'/{n} KV'` / `'/{n}'`) and progressive header title truncation.
+
+### ✏️ Edit 5S Finding Capability in Weekly Audits (`v2.8.0`)
 - **Edit Action on Finding Cards (`/audits/:id`)**:
   - Allows Auditors and Admins to modify finding details even after initial submission (as long as the finding is `open`).
 - **Full-Featured Edit Modal with Dynamic Recalculation**:

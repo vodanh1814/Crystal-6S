@@ -548,7 +548,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               )}
               <span
-                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[130px] sm:max-w-none ${
+                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[150px] sm:max-w-[240px] md:max-w-[340px] xl:max-w-none ${
                   isLightChrome ? 'text-slate-900' : 'text-white'
                 }`}
               >
@@ -802,9 +802,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Main Workspace */}
         {isDashboard ? (
-          // On Dashboard: 100% viewport fit, zero scroll on lg:
+          // On Dashboard: adaptive viewport fit on tall screens, smooth scroll on laptops
           <main
-            className={`theme-tv-canvas flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col ${
+            className={`theme-tv-canvas flex-1 min-h-0 flex flex-col ${
               isClassic ? 'bg-slate-950 text-slate-100' : ''
             }`}
           >
