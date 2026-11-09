@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.10.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.10.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,14 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.10.0`
+## 1. Highlights of Version `v2.10.1`
+
+### 💻 Fluid Auto-Scaling Typography, Card Sizing & Web Mode Overflow Fix
+- **Eliminated Overflow Bleed & Text Overlapping on 14" Laptops**:
+  - Removed rigid height and overflow constraints (`lg:flex-[58]`, `lg:overflow-visible`), enabling smooth vertical scrolling (`overflow-y: auto`) in standard web browser windows.
+  - Compacted 16 area card min-heights (`min-h-[56px] sm:min-h-[62px] lg:min-h-[66px]`) and 7-day alarms (`min-h-[46px] sm:min-h-[50px]`), aligning row heights and eliminating alarm bleed into Row 3.
+  - Total dashboard height optimized to ~620px - 650px, fitting seamlessly on standard 14" laptop viewports (1366x768 or 1080p with 125%-150% display scaling) without scrolling.
+  - Zero-scroll locking strictly retained for **Full TV Mode** (`:fullscreen`).
 
 ### 📈 Month-over-Month (MoM) Continuous Improvement & Kaizen Tracking
 - **Comprehensive MoM Analytics**:

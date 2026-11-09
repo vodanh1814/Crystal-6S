@@ -7,6 +7,26 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.10.1] - 2026-11-09
+
+### Fixed & Improved (Auto-Scale Kích Thước Chữ, Ô & Khắc Phục Tràn Viền Trên Bản Web)
+- **Cơ Chế Cuộn Tự Nhiên & Bỏ Khóa Cuộn Tĩnh Trên Bản Web (`src/index.css`)**:
+  - Gỡ bỏ hoàn toàn media query cưỡng bức `@media (min-height: 860px) and (min-width: 1280px) { overflow-y: hidden; }` từng cấm cuộn trên màn hình laptop 1080p mở cửa sổ trình duyệt thường (có tab, thanh bookmark và taskbar).
+  - Lớp `.theme-tv-canvas` mặc định luôn có `overflow-y: auto`, chỉ khóa cứng không cuộn khi người dùng kích hoạt Full TV Mode (`:fullscreen`, `:-webkit-full-screen`, `.full-tv-mode`).
+- **Auto-Scale Toàn Diện & Triệt Tiêu Hiện Tượng Đè Chữ (`Dashboard.tsx`)**:
+  - Gỡ bỏ `lg:overflow-visible` và các tỉ lệ flex cứng (`lg:flex-[58]`, `lg:flex-[42]`), chuyển sang cấu trúc auto-scale linh hoạt `overflow-y: auto overflow-x-hidden`.
+  - **Hàng 1 (6 KPI Strip):** Giảm chiều cao từ `72px` xuống `min-h-[56px] sm:min-h-[62px]`, font số `text-lg sm:text-xl font-mono`, padding `p-1.5 sm:px-2.5 sm:py-1.5`.
+  - **Hàng 2 (Ma trận 16 Ô & Bảng Báo Động 7 Ngày):**
+    - 16 ô khu vực: Chiều cao tối ưu `min-h-[56px] sm:min-h-[62px] lg:min-h-[66px]`, padding `px-2 py-1 sm:px-2.5 sm:py-1.5`, tên khu vực `truncate max-w-[68%] text-[11px] sm:text-xs`, điểm số `text-sm sm:text-base lg:text-lg`. Tổng chiều cao ma trận giảm từ 420px xuống còn ~300px.
+    - Bảng báo động 7 ngày: 3 thẻ cảnh báo hạ chiều cao đồng bộ `min-h-[46px] sm:min-h-[50px]`, tiêu đề thu gọn 1 dòng. Chiều cao bằng khít với ma trận 16 ô bên cạnh, triệt tiêu 100% hiện tượng thẻ cảnh báo đè lên Hàng 3.
+  - **Hàng 3 (Biểu Đồ Xu Hướng & Kaizen Tracker):**
+    - Biểu đồ xu hướng hạ chiều cao `h-36 sm:h-40 lg:h-44 min-h-[140px]`. Cột 5S và thẻ Kaizen/Xếp hạng padding gọn gàng `py-0.5 px-1.5`.
+  - **Tổng chiều cao toàn Dashboard:** Giảm từ ~820px xuống mức lý tưởng ~620px - 650px, vừa vặn 100% trong 1 màn hình laptop 14", và cuộn trơn tru không bao giờ bị đè chữ.
+- **Đồng Bộ Mẫu 2 (`DashboardZoneFocus.tsx`)**:
+  - Đồng bộ kích thước Hero circular gauge `w-20 h-20 sm:w-22 sm:h-22` và các ô khu vực co giãn tự động.
+
+---
+
 ## [2.10.0] - 2026-11-09
 
 ### Added (Theo Dõi Tiến Bộ & Cải Thiện Liên Tục 5S MoM)

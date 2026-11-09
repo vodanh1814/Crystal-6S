@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.10.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.10.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,14 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.10.0`
+## 1. Điểm nổi bật của phiên bản `v2.10.1`
+
+### 💻 Tự Động Co Giãn (Auto-Scale) Chữ & Ô theo Màn Hình Bản Web
+- **Khắc Phục Hoàn Toàn Lỗi Đè Chữ & Tràn Khung trên Laptop 14"**:
+  - Gỡ bỏ giới hạn tĩnh và các tỉ lệ flex cứng (`lg:flex-[58]`, `lg:overflow-visible`), cho phép container chính cuộn êm ái (`overflow-y: auto`) trên bản web.
+  - Tối ưu hóa kích thước tối thiểu các ô khu vực (`min-h-[56px] sm:min-h-[62px] lg:min-h-[66px]`) và 3 thẻ cảnh báo (`min-h-[46px] sm:min-h-[50px]`), giúp chiều cao bảng báo động 7 ngày bằng khít với ma trận 16 ô, triệt tiêu 100% hiện tượng tràn đè lên Hàng 3.
+  - Tổng chiều cao Dashboard tối ưu về ~620px - 650px, vừa vặn hoàn hảo trên 1 màn hình laptop 14" (độ phân giải 1366x768 hoặc 1080p scaling 125%-150%) mà không cần cuộn trang.
+  - Chỉ khóa cứng không cuộn khi người dùng kích hoạt chế độ **Full TV Mode** (`:fullscreen`).
 
 ### 📈 Theo Dõi Tiến Độ & Cải Thiện Liên Tục 5S MoM (Month-over-Month Kaizen)
 - **Hệ Thống Phân Tích MoM Toàn Diện**:

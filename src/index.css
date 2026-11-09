@@ -108,22 +108,17 @@ html[data-ui-theme="classic"][data-color-mode="dark"] body {
 
 /* ============================================================================
    RESPONSIVE ADAPTIVE DASHBOARD CANVAS (14" Laptop, Desktops & Wall TV)
-   - On true wall TVs / large monitors (min-height: 860px and min-width: 1280px): 100vh locked, zero scroll.
-   - On 14" laptops (standard height 550px - 780px) and compact screens:
-     Allow smooth overflow-y-auto so cards, typography, and charts have breathing room and never squash or drop text.
+   - On Web Browser (normal windowed mode): Always allows smooth overflow-y: auto
+     so elements, cards, and text co-exist cleanly with zero bleeding or overlapping.
+   - On Fullscreen TV Mode (:fullscreen): Locks strictly to 100vh with zero scroll.
    ============================================================================ */
 .theme-tv-canvas {
   overflow-y: auto;
 }
 
-@media (min-height: 860px) and (min-width: 1280px) {
-  .theme-tv-canvas {
-    overflow-y: hidden;
-  }
-}
-
 :fullscreen .theme-tv-canvas,
-:-webkit-full-screen .theme-tv-canvas {
+:-webkit-full-screen .theme-tv-canvas,
+.full-tv-mode .theme-tv-canvas {
   overflow-y: hidden;
 }
 

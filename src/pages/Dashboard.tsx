@@ -305,7 +305,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div
-      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-3 lg:gap-2.5 select-none overflow-y-auto lg:overflow-visible ${
+      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-2.5 sm:gap-3 select-none overflow-y-auto overflow-x-hidden ${
         isHybrid ? 'pb-20 md:pb-2.5' : 'pb-2 sm:pb-2.5'
       }`}
     >
@@ -435,7 +435,7 @@ export const Dashboard: React.FC = () => {
               : kpi.weekly_avg >= warningTarget
               ? 'border-l-amber-400'
               : 'border-l-rose-500'
-          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}
+          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
@@ -463,9 +463,9 @@ export const Dashboard: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
             <span
-              className={`text-xl font-black font-mono leading-none whitespace-nowrap ${
+              className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${
                 kpi?.weekly_avg === null
                   ? `${mutedTextCls} text-sm sm:text-base font-bold`
                   : kpi.weekly_avg >= target
@@ -498,7 +498,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-sky-500' : ''
-          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}
+          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
@@ -516,8 +516,8 @@ export const Dashboard: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
-            <span className={`text-xl font-black font-mono leading-none whitespace-nowrap ${headingTextCls}`}>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${headingTextCls}`}>
               {formatScore(kpi?.monthly_avg_overall, lang)}
             </span>
             <span className={`text-xs font-mono truncate shrink-0 ${mutedTextCls}`}>
@@ -532,7 +532,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-blue-500' : ''
-          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}
+          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('areas_meeting_target')}</span>
@@ -545,8 +545,8 @@ export const Dashboard: React.FC = () => {
                   })}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
-            <span className={`text-xl font-black font-mono leading-none whitespace-nowrap shrink-0 ${blueStatTextCls}`}>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap shrink-0 ${blueStatTextCls}`}>
               {kpi?.passed_areas_count || 0}{' '}
               <span className={`text-xs font-normal ${mutedTextCls}`}>
                 {t('area_count_slash', { n: kpi?.audited_areas_count || 0 })}
@@ -569,7 +569,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-amber-400' : ''
-          )} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}
+          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('open_findings_kpi')}</span>
@@ -577,8 +577,8 @@ export const Dashboard: React.FC = () => {
               {t('waiting_mng')}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
-            <span className={`text-xl font-black font-mono leading-none whitespace-nowrap ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
               {counts.open}
             </span>
             <span className={`text-xs truncate shrink-0 ${mutedTextCls}`}>
@@ -588,7 +588,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 5: 7-Day Overdue Alarm */}
-        <div className={`${kpiOverdueCardCls} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}>
+        <div className={`${kpiOverdueCardCls} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}>
           <div className={`flex items-center justify-between gap-1 text-xs font-bold min-w-0 ${failTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('alarm_7_days')}</span>
             {totalOverdue > 0 && (
@@ -597,8 +597,8 @@ export const Dashboard: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
-            <span className={`text-xl font-black font-mono leading-none whitespace-nowrap ${failTextCls}`}>{totalOverdue}</span>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${failTextCls}`}>{totalOverdue}</span>
             <span className={`text-[11px] font-semibold truncate shrink-0 max-w-[140px] ${isLightTv ? 'text-rose-700' : 'text-rose-300'}`}>
               {overdueAreasList || t('no_findings_clean')}
             </span>
@@ -606,7 +606,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 6: Repeat Findings Escalation */}
-        <div className={`${kpiRepeatCardCls} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[68px] sm:min-h-[72px]`}>
+        <div className={`${kpiRepeatCardCls} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}>
           <div className={`flex items-center justify-between gap-1 text-xs font-semibold min-w-0 ${purpleTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('repeat_findings_kpi')}</span>
             <span
@@ -617,8 +617,8 @@ export const Dashboard: React.FC = () => {
               {t('repeat_step_badge')}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-1 flex-nowrap">
-            <span className={`text-xl font-black font-mono leading-none whitespace-nowrap ${purpleValTextCls}`}>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${purpleValTextCls}`}>
               {counts.not_improved}
             </span>
             <span className={`text-[11px] font-semibold truncate shrink-0 max-w-[140px] ${purpleTextCls}`}>
@@ -629,10 +629,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="flex-none min-h-0 lg:flex-[58] grid grid-cols-12 gap-3 lg:gap-2.5">
+      <div className="flex-none grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 16 AREAS 4x4 MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col`}>
-          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-8 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
@@ -640,7 +640,7 @@ export const Dashboard: React.FC = () => {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
-            <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs shrink-0 flex-nowrap overflow-x-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs shrink-0 flex-nowrap overflow-x-auto">
               <span className={`flex items-center gap-1 font-semibold whitespace-nowrap ${passTextCls}`}>
                 <span className="w-2 h-2 rounded-xs bg-emerald-500 shrink-0"></span>
                 {t('areas_pass_count', { target, n: kpi?.passed_areas_count || 0 })}
@@ -665,7 +665,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Grid of 16 area cards: 2 cols on mobile, 4 cols on tablet & desktop */}
-          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 flex-1 auto-rows-fr">
+          <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 flex-1 auto-rows-fr">
             {current_week_status.map((area: any) => {
               const isSubmitted = area.status === 'submitted' && area.score !== null;
               // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
@@ -765,13 +765,13 @@ export const Dashboard: React.FC = () => {
                 <Link
                   key={area.area_id}
                   to={is_authenticated ? `/findings?area_id=${area.area_id}` : '/login'}
-                  className={`${boxCls} px-2.5 py-1.5 sm:py-2 flex flex-col justify-between min-h-[80px] sm:min-h-[84px] ${
+                  className={`${boxCls} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px] lg:min-h-[66px] ${
                     isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
                   } transition cursor-pointer group`}
                 >
-                  <div className="flex items-center justify-between gap-1.5 min-w-0">
+                  <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className={`font-black text-xs sm:text-[13px] tracking-wide transition-colors truncate max-w-[70%] ${headingTextCls} ${
+                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[68%] ${headingTextCls} ${
                         isClassic
                           ? 'group-hover:text-emerald-400'
                           : isLightTv
@@ -783,36 +783,36 @@ export const Dashboard: React.FC = () => {
                       {area.area_name || area.area_code}
                     </span>
                     {isOverdue ? (
-                      <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-bold shrink-0">
+                      <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] sm:text-[10px] font-bold shrink-0">
                         {t('tag_overdue', { n: area.overdue_count })}
                       </span>
                     ) : (isSubmitted || displayScore !== null) ? (
                       isPass ? (
-                        <span className={`text-xs font-bold shrink-0 ${passTextCls}`}>{t('tag_pass')}</span>
+                        <span className={`text-[10px] sm:text-xs font-bold shrink-0 ${passTextCls}`}>{t('tag_pass')}</span>
                       ) : isWarning ? (
-                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
                           {t('tag_warning')}
                         </span>
                       ) : (
-                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${failBadgeCls}`}>
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-bold shrink-0 ${failBadgeCls}`}>
                           {t('tag_fail')}
                         </span>
                       )
                     ) : (
-                      <span className={`text-[10px] font-medium shrink-0 ${warnTextCls}`}>
+                      <span className={`text-[9px] sm:text-[10px] font-medium shrink-0 ${warnTextCls}`}>
                         {t('tag_pending')}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-baseline justify-between my-0.5 gap-1">
-                    <span className={`text-base sm:text-lg font-black font-mono leading-none ${scoreCls}`}>
+                    <span className={`text-sm sm:text-base lg:text-lg font-black font-mono leading-none ${scoreCls}`}>
                       {scoreTxt}
                     </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                       {/* MoM Delta Badge */}
                       <span
-                        className={`text-[10px] font-mono font-bold shrink-0 ${
+                        className={`text-[9px] sm:text-[10px] font-mono font-bold shrink-0 ${
                           area.delta_prev_month !== null && area.delta_prev_month > 0
                             ? passTextCls
                             : area.delta_prev_month !== null && area.delta_prev_month < 0
@@ -827,7 +827,7 @@ export const Dashboard: React.FC = () => {
                           ? `▼${area.delta_prev_month}đ`
                           : '▬ 0đ'}
                       </span>
-                      <span className={`text-[10px] font-mono truncate ${mutedTextCls}`}>
+                      <span className={`text-[9px] sm:text-[10px] font-mono truncate ${mutedTextCls}`}>
                         {isSubmitted ? (
                           <>
                             {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
@@ -849,7 +849,7 @@ export const Dashboard: React.FC = () => {
                   {/* Signature Sample 4 Slim Progress Bar */}
                   {isHybrid && (
                     <div
-                      className={`h-1 w-full rounded-full overflow-hidden mb-1 ${
+                      className={`h-1 w-full rounded-full overflow-hidden mb-0.5 ${
                         isLightTv ? 'bg-slate-200/90' : 'bg-white/10'
                       }`}
                     >
@@ -860,7 +860,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   )}
 
-                  <div className={`flex items-center justify-between text-[11px] border-t pt-1 ${mutedTextCls} ${innerRowDividerCls}`}>
+                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] border-t pt-0.5 sm:pt-1 ${mutedTextCls} ${innerRowDividerCls}`}>
                     <span className="truncate">
                       {t('open_short')}:{' '}
                       <strong
@@ -890,7 +890,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col min-w-0`}>
+        <div className={`col-span-12 lg:col-span-4 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
@@ -905,7 +905,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Single-line Compact Remediation Effectiveness Strip */}
           <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1 sm:gap-1.5 min-w-0">
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('on_time')}
               </span>
@@ -913,7 +913,7 @@ export const Dashboard: React.FC = () => {
                 {formatScore(remediation?.on_time_rate_pct, lang)}
               </span>
             </div>
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('avg_remediation_time')}
               </span>
@@ -924,7 +924,7 @@ export const Dashboard: React.FC = () => {
                   : '-'}
               </span>
             </div>
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('repeat_findings_label')}
               </span>
@@ -934,7 +934,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-2 flex-1 flex flex-col gap-2 sm:gap-1.5 min-w-0">
+          <div className="mt-1.5 flex-1 flex flex-col gap-1.5 min-w-0">
             {urgent_alarms && urgent_alarms.length > 0 ? (
               urgent_alarms.slice(0, 3).map((f: any) => {
                 const isOverdue = f.is_overdue;
@@ -965,37 +965,37 @@ export const Dashboard: React.FC = () => {
                     key={f.id}
                     to={is_authenticated ? `/findings/${f.id}` : '/login'}
                     title={fullCriterion}
-                    className={`flex-1 min-h-[58px] sm:min-h-[62px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2.5 py-1 sm:py-1.5 flex flex-col justify-between ${
+                    className={`flex-1 min-h-[46px] sm:min-h-[50px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2 py-0.5 sm:px-2.5 sm:py-1 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
                     } transition cursor-pointer group`}
                   >
-                    <div className="flex items-center justify-between gap-2 text-xs min-w-0">
-                      <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <div className="flex items-center justify-between gap-1.5 text-xs min-w-0">
+                      <div className="flex items-center gap-1 min-w-0 truncate">
                         <span
-                          className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px] shrink-0 max-w-[85px] truncate"
+                          className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[9px] sm:text-[10px] shrink-0 max-w-[85px] truncate"
                           title={`${f.area_name || f.area_code} (${f.area_code})`}
                         >
                           {f.area_name || f.area_code}
                         </span>
-                        <span className={`font-mono font-bold text-[11px] shrink-0 ${headingTextCls}`}>
+                        <span className={`font-mono font-bold text-[10px] sm:text-[11px] shrink-0 ${headingTextCls}`}>
                           {f.item_code}
                         </span>
                         {isRepeat ? (
                           <span
-                            className={`px-1.5 rounded font-semibold text-[10px] shrink-0 ${
+                            className={`px-1.5 rounded font-semibold text-[9px] sm:text-[10px] shrink-0 ${
                               isLightTv ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/25 text-purple-300'
                             }`}
                           >
                             {t('repeat_level_pts', { w: f.repeat_level, pts: f.applied_penalty })}
                           </span>
                         ) : (
-                          <span className={`font-mono text-[10px] shrink-0 ${warnTextCls}`}>
+                          <span className={`font-mono text-[9px] sm:text-[10px] shrink-0 ${warnTextCls}`}>
                             -{f.applied_penalty}{t('pts_unit')}
                           </span>
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-bold shrink-0 ${
+                        className={`text-[9px] sm:text-[10px] font-bold shrink-0 ${
                           isOverdue
                             ? failTextCls
                             : isFixed
@@ -1016,11 +1016,11 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className={`text-xs font-medium truncate leading-tight my-0.5 min-w-0 ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
+                    <div className={`text-[10px] sm:text-[11px] font-medium truncate leading-tight my-0.5 min-w-0 ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
                       {shortCriterion}
                     </div>
 
-                    <div className={`flex items-center justify-between gap-2 text-[10px] border-t pt-1 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}>
+                    <div className={`flex items-center justify-between gap-2 text-[9px] sm:text-[10px] border-t pt-0.5 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}>
                       <span className="truncate min-w-0">
                         {isFixed ? 'Auditor:' : 'MNG:'}{' '}
                         <strong className={subTextCls}>
@@ -1050,9 +1050,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="flex-none min-h-0 lg:flex-[42] grid grid-cols-12 gap-3 lg:gap-2.5">
+      <div className="flex-none grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-5 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col`}>
+        <div className={`col-span-12 lg:col-span-5 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
@@ -1067,11 +1067,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-48 sm:h-56 lg:h-full lg:flex-1 min-h-[160px] pt-1">
+          <div className="h-36 sm:h-40 lg:h-44 min-h-[140px] pt-0.5">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trend_12_weeks}
-                margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                margin={{ top: 8, right: 8, left: -25, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
                 <XAxis dataKey="week" tick={{ fontSize: 10, fill: chartTickColor }} />
@@ -1104,7 +1104,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col justify-between gap-2`}>
+        <div className={`col-span-12 lg:col-span-4 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
@@ -1116,7 +1116,7 @@ export const Dashboard: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex-1 flex flex-col justify-around py-1 text-xs gap-1.5 lg:gap-1">
+          <div className="flex-1 flex flex-col justify-around py-0.5 text-xs gap-1">
             {s_group_breakdown.map((group: any) => {
               const widthPct = Math.round(((group.count || 0) / maxGroupFindings) * 100);
               const barColor =
@@ -1159,7 +1159,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 lg:col-span-3 h-auto lg:h-full ${panelCls} p-2.5 sm:p-3 flex flex-col justify-between gap-2`}>
+        <div className={`col-span-12 lg:col-span-3 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
@@ -1203,7 +1203,7 @@ export const Dashboard: React.FC = () => {
                 improvement_analysis.top_improvers.slice(0, 2).map((a: any) => (
                   <div
                     key={a.area_id}
-                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                    className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1 rounded border min-w-0 ${
                       isLightTv
                         ? 'bg-emerald-50 border-emerald-200'
                         : 'bg-emerald-500/10 border-emerald-500/25'
@@ -1236,7 +1236,7 @@ export const Dashboard: React.FC = () => {
                 improvement_analysis.stagnant_areas.slice(0, 2).map((a: any) => (
                   <div
                     key={a.area_id}
-                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                    className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1 rounded border min-w-0 ${
                       isLightTv
                         ? 'bg-rose-50 border-rose-200'
                         : 'bg-rose-500/15 border-rose-500/35'
@@ -1276,7 +1276,7 @@ export const Dashboard: React.FC = () => {
                 top_areas.slice(0, 2).map((a: any, idx: number) => (
                   <div
                     key={a.area_id}
-                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                    className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1 rounded border min-w-0 ${
                       isLightTv
                         ? 'bg-emerald-50 border-emerald-200'
                         : 'bg-emerald-500/10 border-emerald-500/25'
@@ -1303,7 +1303,7 @@ export const Dashboard: React.FC = () => {
                 bottom_areas.slice(0, 2).map((a: any) => (
                   <div
                     key={a.area_id}
-                    className={`flex items-center justify-between px-2.5 py-1.5 sm:py-1 rounded border min-w-0 ${
+                    className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1 rounded border min-w-0 ${
                       isLightTv
                         ? 'bg-rose-50 border-rose-200'
                         : 'bg-rose-500/15 border-rose-500/35'

@@ -7,6 +7,26 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.10.1] - 2026-11-09
+
+### Fixed & Improved (Fluid Auto-Scaling Typography, Card Sizing & Web Mode Overflow Fix)
+- **Natural Web Scrolling & Static Lock Removal (`src/index.css`)**:
+  - Removed rigid media query `@media (min-height: 860px) and (min-width: 1280px) { overflow-y: hidden; }` that prevented scrolling on 1080p laptop displays in standard windowed browser mode.
+  - Set `.theme-tv-canvas` to `overflow-y: auto` by default; strictly locks to `overflow-y: hidden` only when entering Full TV Mode (`:fullscreen`, `:-webkit-full-screen`, `.full-tv-mode`).
+- **Comprehensive Auto-Scaling & Layout Bleed Prevention (`Dashboard.tsx`)**:
+  - Removed `lg:overflow-visible` and forced ratio constraints (`lg:flex-[58]`, `lg:flex-[42]`), transitioning to responsive fluid flow `overflow-y: auto overflow-x-hidden`.
+  - **Row 1 (6 KPI Strip):** Adjusted height to `min-h-[56px] sm:min-h-[62px]`, numbers to `text-lg sm:text-xl font-mono`, padding `p-1.5 sm:px-2.5 sm:py-1.5`.
+  - **Row 2 (16 Areas & 7-Day Alarms Board):**
+    - 16 area cards: Optimized height `min-h-[56px] sm:min-h-[62px] lg:min-h-[66px]`, padding `px-2 py-1 sm:px-2.5 sm:py-1.5`, area name `truncate max-w-[68%] text-[11px] sm:text-xs`, score `text-sm sm:text-base lg:text-lg`. Total matrix height reduced from 420px to ~300px.
+    - 7-day alarms panel: 3 alarm cards compacted to `min-h-[46px] sm:min-h-[50px]`, title line-clamped to 1 row. Height matches the 16-area wall exactly, permanently eliminating alarm bleed into Row 3.
+  - **Row 3 (12-Week Trend Line & Kaizen Tracker):**
+    - Trend chart height adjusted to `h-36 sm:h-40 lg:h-44 min-h-[140px]`. 5S breakdown and Kaizen/Leaderboard cards padded compactly `py-0.5 px-1.5`.
+  - **Total Dashboard Height:** Compressed from ~820px to ~620px - 650px, fitting 100% on a 14" laptop screen in windowed web browser mode without clipping, and scrolling smoothly on smaller screens.
+- **Synchronized Sample 2 (`DashboardZoneFocus.tsx`)**:
+  - Scaled Hero circular gauge to `w-20 h-20 sm:w-22 sm:h-22` with synchronized responsive division cards.
+
+---
+
 ## [2.10.0] - 2026-11-09
 
 ### Added (Month-over-Month Continuous Improvement & Kaizen Tracking)

@@ -119,11 +119,11 @@ export const DashboardZoneFocus: React.FC<Props> = ({
   const stagnantAreas = improvement_analysis?.stagnant_areas || [];
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3">
+    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2.5 sm:gap-3 overflow-y-auto overflow-x-hidden pb-2 select-none">
       {/* LEFT COLUMN: 32% COMMAND & KAISEN INSIGHTS */}
       <div className="w-full lg:w-[32%] shrink-0 flex flex-col gap-2.5">
         {/* HERO CIRCULAR GAUGE CARD */}
-        <div className="rounded-xl border border-slate-700/80 bg-slate-900/90 p-3 sm:p-3.5 flex flex-col justify-between shadow-lg">
+        <div className="rounded-xl border border-slate-700/80 bg-slate-900/90 p-2.5 sm:p-3 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
@@ -143,8 +143,8 @@ export const DashboardZoneFocus: React.FC<Props> = ({
           </div>
 
           {/* Radial Circular Progress Gauge */}
-          <div className="my-2 flex items-center justify-center gap-4">
-            <div className="relative w-24 h-24 sm:w-26 sm:h-26 flex items-center justify-center">
+          <div className="my-1.5 flex items-center justify-center gap-3">
+            <div className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
