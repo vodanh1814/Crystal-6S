@@ -48,8 +48,17 @@ export const DashboardZoneFocus: React.FC<Props> = ({
 
   const [leftTab, setLeftTab] = useState<'improvement' | '5s' | 'leaderboard'>('improvement');
 
+  const isCurrentWeekAudited = kpi?.weekly_avg !== null && kpi?.weekly_avg !== undefined;
+  const isFallbackWeek = !isCurrentWeekAudited && kpi?.latest_completed_avg !== null && kpi?.latest_completed_avg !== undefined;
+  const effectiveWeeklyScore = isCurrentWeekAudited ? kpi.weekly_avg : isFallbackWeek ? kpi.latest_completed_avg : null;
+  const effectiveWeeklyWeekName = isCurrentWeekAudited
+    ? `W${current_week.iso_week}`
+    : isFallbackWeek && kpi.latest_completed_week
+    ? kpi.latest_completed_week
+    : `W${current_week.iso_week}`;
+
   const totalOverdue = counts.overdue || 0;
-  const overallScore = kpi?.monthly_avg_overall ?? kpi?.weekly_avg ?? 0;
+  const overallScore = kpi?.monthly_avg_overall ?? effectiveWeeklyScore ?? 0;
   const isOverallPass = overallScore >= target;
   const isOverallWarn = overallScore >= warningTarget && overallScore < target;
 
@@ -187,13 +196,30 @@ export const DashboardZoneFocus: React.FC<Props> = ({
 
             <div className="flex-1 flex flex-col justify-center gap-1 text-xs">
               <div className="flex items-center justify-between gap-2 text-slate-300">
-                <span className="text-[11px] text-slate-400">{t('weekly_avg_kpi', { week: `W${current_week.iso_week}` })}:</span>
-                <strong className={`font-mono font-bold ${kpi?.weekly_avg >= target ? passTextCls : kpi?.weekly_avg >= warningTarget ? warnTextCls : failTextCls}`}>
-                  {kpi?.weekly_avg !== null ? formatScore(kpi?.weekly_avg, lang) : t('waiting_audit_badge')}
+                <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                  <span>{t('weekly_avg_kpi', { week: effectiveWeeklyWeekName })}:</span>
+                  {isFallbackWeek && (
+                    <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      {t('latest_week_badge')}
+                    </span>
+                  )}
+                </span>
+                <strong className={`font-mono font-bold ${
+                  effectiveWeeklyScore === null
+                    ? 'text-slate-400'
+                    : effectiveWeeklyScore >= target
+                    ? passTextCls
+                    : effectiveWeeklyScore >= warningTarget
+                    ? warnTextCls
+                    : failTextCls
+                }`}>
+                  {effectiveWeeklyScore !== null ? formatScore(effectiveWeeklyScore, lang) : t('waiting_audit_badge')}
                 </strong>
               </div>
               <div className="flex items-center justify-between gap-2 text-slate-300">
-                <span className="text-[11px] text-slate-400">{t('vs_prev_month')}:</span>
+                <span className="text-[11px] text-slate-400">
+                  {t('vs_prev_week')}{isFallbackWeek ? ` (${t('pending_audit_week', { week: current_week.iso_week })}):` : ':'}
+                </span>
                 <span className={`text-[11px] font-mono font-bold ${
                   (kpi?.weekly_delta ?? 0) >= 0 ? passTextCls : failTextCls
                 }`}>

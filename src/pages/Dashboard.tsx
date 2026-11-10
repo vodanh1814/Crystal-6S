@@ -160,6 +160,15 @@ export const Dashboard: React.FC = () => {
     counts,
   } = data;
 
+  const isCurrentWeekAudited = kpi?.weekly_avg !== null && kpi?.weekly_avg !== undefined;
+  const isFallbackWeek = !isCurrentWeekAudited && kpi?.latest_completed_avg !== null && kpi?.latest_completed_avg !== undefined;
+  const effectiveWeeklyScore = isCurrentWeekAudited ? kpi.weekly_avg : isFallbackWeek ? kpi.latest_completed_avg : null;
+  const effectiveWeeklyWeekName = isCurrentWeekAudited
+    ? `W${current_week.iso_week}`
+    : isFallbackWeek && kpi.latest_completed_week
+    ? kpi.latest_completed_week
+    : `W${current_week.iso_week}`;
+
   const totalOverdue = counts.overdue || 0;
   const overdueAreasList = (current_week_status || [])
     .filter((a: any) => a.overdue_count > 0)
@@ -444,34 +453,41 @@ export const Dashboard: React.FC = () => {
         {/* KPI 1: Weekly Average Score */}
         <div
           className={`${panelCls} ${hybridKpiAccent(
-            kpi?.weekly_avg === null
+            effectiveWeeklyScore === null
               ? 'border-l-amber-400'
-              : kpi.weekly_avg >= target
+              : effectiveWeeklyScore >= target
               ? 'border-l-emerald-500'
-              : kpi.weekly_avg >= warningTarget
+              : effectiveWeeklyScore >= warningTarget
               ? 'border-l-amber-400'
               : 'border-l-rose-500'
           )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
-              {t('weekly_avg_kpi', { week: `W${current_week.iso_week}` })}
+              {t('weekly_avg_kpi', { week: effectiveWeeklyWeekName })}
             </span>
-            {kpi?.weekly_avg !== null ? (
+            {isCurrentWeekAudited ? (
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${
-                  kpi.weekly_avg >= target
+                  effectiveWeeklyScore >= target
                     ? passBadgeCls
-                    : kpi.weekly_avg >= warningTarget
+                    : effectiveWeeklyScore >= warningTarget
                     ? warnBadgeCls
                     : failBadgeCls
                 }`}
               >
-                {kpi.weekly_avg >= target
+                {effectiveWeeklyScore >= target
                   ? t('tag_pass')
-                  : kpi.weekly_avg >= warningTarget
+                  : effectiveWeeklyScore >= warningTarget
                   ? t('tag_warning')
                   : t('tag_fail')}
+              </span>
+            ) : isFallbackWeek ? (
+              <span
+                className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}
+                title={t('pending_audit_week', { week: current_week.iso_week })}
+              >
+                {t('latest_week_badge')}
               </span>
             ) : (
               <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
@@ -482,31 +498,33 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
             <span
               className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${
-                kpi?.weekly_avg === null
+                effectiveWeeklyScore === null
                   ? `${mutedTextCls} text-sm sm:text-base font-bold`
-                  : kpi.weekly_avg >= target
+                  : effectiveWeeklyScore >= target
                   ? passTextCls
-                  : kpi.weekly_avg >= warningTarget
+                  : effectiveWeeklyScore >= warningTarget
                   ? warnTextCls
                   : failTextCls
               }`}
             >
-              {kpi?.weekly_avg !== null ? formatScore(kpi.weekly_avg, lang) : t('waiting_audit_badge')}
+              {effectiveWeeklyScore !== null ? formatScore(effectiveWeeklyScore, lang) : t('waiting_audit_badge')}
             </span>
-            {kpi?.weekly_delta !== null ? (
-              <span
-                className={`text-xs font-semibold shrink-0 whitespace-nowrap ${
-                  kpi.weekly_delta >= 0 ? passTextCls : failTextCls
-                }`}
-              >
-                {formatDelta(kpi.weekly_delta, lang)}
-              </span>
-            ) : kpi?.latest_completed_avg !== null ? (
-              <span className={`text-[11px] font-mono truncate shrink-0 ${mutedTextCls}`}>
-                {kpi.latest_completed_week || getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
-                <strong className={subTextCls}>{formatScore(kpi.latest_completed_avg, lang)}</strong>
-              </span>
-            ) : null}
+            <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+              {kpi?.weekly_delta !== null && kpi?.weekly_delta !== undefined ? (
+                <span
+                  className={`text-xs font-semibold shrink-0 whitespace-nowrap ${
+                    kpi.weekly_delta >= 0 ? passTextCls : failTextCls
+                  }`}
+                >
+                  {formatDelta(kpi.weekly_delta, lang)}
+                </span>
+              ) : null}
+              {isFallbackWeek && (
+                <span className={`text-[10px] font-mono truncate shrink-0 ${mutedTextCls}`}>
+                  ({t('pending_audit_week', { week: current_week.iso_week })})
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

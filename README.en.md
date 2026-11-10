@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.4`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.5`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.4`
+## 1. Highlights of Version `v2.11.5`
+
+### 📊 Automatic Fallback to Latest Completed Week When Weekly Audit Is Pending
+- **Smart Fallback Mechanism for Weekly Average KPI**: When the current week has not been completed, the system automatically displays the latest audited week's score and week label (`WEEKLY AVG W45` / `ĐIỂM TB TUẦN W45`).
+- **Standard 3-Tier Semantic Score Coloring**: Fallback scores are rendered in large colored typography matching Green/Yellow/Red tiers, replacing the plain `Pending audit` text.
+- **Intuitive Badges & Delta Notes**: Automatically shows **`[Latest Week]`** status badge and clear pending annotations on weekly delta **`▲ +0.3% (W46 pending)`**.
+- **100% Cross-Layout Consistency**: Unified behavior across both Classic Matrix and Workshop Zone Focus views.
+
+---
+
+## 2. Highlights of Version `v2.11.4`
 
 ### 🏷️ Standardized Tab Toggle to "Improvement" & Terminology Unification
 - **Standardized Tab Toggle Label**: Replaced hardcoded `Kaizen` with `{t('tab_improvement_btn')}`, cleanly rendering **`[Improvement]  [Top]`** (English) and **`[Cải thiện]  [Top]`** (Vietnamese), achieving 100% harmonization with the card header `5S CONTINUOUS IMPROVEMENT`.

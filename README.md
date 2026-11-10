@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.5`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.4`
+## 1. Điểm nổi bật của phiên bản `v2.11.5`
+
+### 📊 Tự Động Hiển Thị Tuần Gần Nhất Khi Tuần Hiện Tại Chưa Có Đánh Giá Mới
+- **Cơ Chế Fallback Thông Minh Cho Thẻ Điểm TB Tuần**: Khi tuần hiện tại chưa hoàn thành đánh giá, hệ thống tự động kế thừa và hiển thị điểm số cùng tên tuần đã hoàn thành gần nhất (`WEEKLY AVG W45` / `ĐIỂM TB TUẦN W45`).
+- **Phân Loại Màu Điểm Số Chuẩn 3 Mức**: Điểm số tuần fallback hiển thị to rõ theo chuẩn màu Green/Yellow/Red, thay thế trạng thái mờ nhạt `Pending audit` trước đây.
+- **Huy Hiệu & Chú Thích Trực Quan**: Tự động chuyển huy hiệu sang **`[Tuần gần nhất]`** (`[Latest Week]`) và bổ sung chú thích delta trực quan **`▲ +0.3% (W46 chờ chấm)`**.
+- **Đồng Bộ Hoàn Toàn 100%**: Đồng bộ trên cả giao diện Classic Matrix View và Workshop Zone Focus View.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.4`
 
 ### 🏷️ Chuẩn Hóa Nhãn Nút Tab "Improvement" & Loại Bỏ Thuật Ngữ "Kaizen" Trùng Lặp
 - **Chuẩn Hóa Nhãn Nút Chuyển Tab**: Thay thế hoàn toàn nhãn cứng `Kaizen` bằng `{t('tab_improvement_btn')}`, hiển thị **`[Improvement]  [Top]`** (Tiếng Anh) và **`[Cải thiện]  [Top]`** (Tiếng Việt), đồng bộ tuyệt đối với tiêu đề thẻ `5S CONTINUOUS IMPROVEMENT`.

@@ -7,6 +7,21 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.5] - 2026-11-10
+
+### Added & Improved (Automatic Fallback to Latest Completed Week When Weekly Audit Is Pending)
+- **Smart Fallback Mechanism for Weekly Average KPI Card (KPI 1)**:
+  - When the current week has not been audited yet (`kpi.weekly_avg === null`), the system automatically inherits and displays the latest completed week's score and week label (`kpi.latest_completed_avg`, `kpi.latest_completed_week`).
+  - Card header title automatically updates to reflect the active data: **`WEEKLY AVG {W_latest}`** (e.g. `WEEKLY AVG W45` instead of showing a blank/pending current week).
+  - Status badge switches to **`[Latest Week]`** with a helpful tooltip referencing the pending audit week.
+  - Score is displayed in large, bold font with full standard 3-tier semantic coloring: Green (`≥95%`), Yellow (`≥90%`), Red (`<90%`).
+  - Weekly change delta is preserved with an informative pending audit note: **`▲ +0.3% (W{current} pending)`**.
+- **Complete Synchronization Across All Dashboard Views**:
+  - Fully synchronized on both **Classic Matrix View** ([Dashboard.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx)) and **Zone Focus View** ([DashboardZoneFocus.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/DashboardZoneFocus.tsx)).
+  - Added new multilingual translation keys: `latest_week_badge`, `pending_audit_week`, `vs_prev_week` across `en.ts` and `vi.ts`.
+
+---
+
 ## [2.11.4] - 2026-11-10
 
 ### Fixed & Improved (Standardized Tab Button to "Improvement" & Eliminated Redundant "Kaizen" References)

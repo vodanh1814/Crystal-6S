@@ -7,6 +7,21 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.5] - 2026-11-10
+
+### Added & Improved (Tự Động Hiển Thị Tuần Gần Nhất Khi Tuần Hiện Tại Chưa Có Đánh Giá Mới)
+- **Cơ Chế Fallback Thông Minh Cho Khối Thẻ Điểm TB Tuần (KPI 1)**:
+  - Khi tuần hiện tại chưa có đợt đánh giá mới (`kpi.weekly_avg === null`), hệ thống tự động kế thừa và hiển thị điểm số cùng tên tuần đã hoàn thành gần nhất (`kpi.latest_completed_avg`, `kpi.latest_completed_week`).
+  - Tiêu đề card tự động cập nhật tuần tương ứng: **`ĐIỂM TB TUẦN {W_gần_nhất}`** (thay vì cố định tuần hiện tại khi chưa có số liệu).
+  - Huy hiệu trạng thái chuyển sang **`[Tuần gần nhất]`** kèm tooltip thông báo tuần đang chờ chấm.
+  - Điểm số tuần được hiển thị to rõ với phân loại màu tiêu chuẩn 3 mức: Xanh (`≥95%`), Vàng (`≥90%`), Đỏ (`<90%`).
+  - Delta biến động tuần được giữ nguyên kèm chú thích rõ ràng: **`▲ +0.3% (W{hiện_tại} chờ chấm)`**.
+- **Đồng Bộ Hoàn Toàn Trên Tất Cả Chế Độ Dashboard**:
+  - Cập nhật đồng bộ trên giao diện chính **Classic Matrix View** ([Dashboard.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx)) và **Zone Focus View** ([DashboardZoneFocus.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/DashboardZoneFocus.tsx)).
+  - Bổ sung các khóa đa ngôn ngữ: `latest_week_badge`, `pending_audit_week`, `vs_prev_week` trong `vi.ts` và `en.ts`.
+
+---
+
 ## [2.11.4] - 2026-11-10
 
 ### Fixed & Improved (Chuẩn Hóa Nhãn Nút Tab "Improvement" & Loại Bỏ Thuật Ngữ "Kaizen" Trùng Lặp)
