@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.3`
+## 1. Điểm nổi bật của phiên bản `v2.11.4`
+
+### 🏷️ Chuẩn Hóa Nhãn Nút Tab "Improvement" & Loại Bỏ Thuật Ngữ "Kaizen" Trùng Lặp
+- **Chuẩn Hóa Nhãn Nút Chuyển Tab**: Thay thế hoàn toàn nhãn cứng `Kaizen` bằng `{t('tab_improvement_btn')}`, hiển thị **`[Improvement]  [Top]`** (Tiếng Anh) và **`[Cải thiện]  [Top]`** (Tiếng Việt), đồng bộ tuyệt đối với tiêu đề thẻ `5S CONTINUOUS IMPROVEMENT`.
+- **Đồng Bộ Hóa Ngữ Nghĩa Khối Cải Thiện 5S**: Cập nhật thanh đo Micro-Strip (`Needs Improvement` / `Cần cải thiện`) và nhóm khu vực cần hành động (`STAGNANT / NEEDS IMPROVEMENT` / `Khu vực Chưa cải thiện`).
+- **Bảo Toàn Chuẩn UI/UX 100%**: 0 hardcoded text, tự động thích ứng với cấu hình ngôn ngữ của từng người dùng.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.3`
 
 ### 🔔 Trung Tâm Thông Báo Dropdown Xổ Xuống & Thẻ Cảnh Báo Accordion
 - **Notification Center Dropdown Tại Header**: Chuyển đổi nút Chuông cảnh báo trên thanh Menu thành menu xổ xuống (Popover), cho phép người dùng đọc nhanh tất cả thông báo/cảnh báo mà không bị gián đoạn hay phải chuyển trang. Tự động đóng khi click ra ngoài hoặc bấm phím `Esc`.

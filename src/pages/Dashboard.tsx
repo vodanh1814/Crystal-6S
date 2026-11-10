@@ -1247,7 +1247,7 @@ export const Dashboard: React.FC = () => {
                 }`}
                 title={t('switch_to_improvement_view')}
               >
-                Kaizen
+                {t('tab_improvement_btn')}
               </button>
               <button
                 type="button"

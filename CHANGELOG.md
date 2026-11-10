@@ -7,6 +7,20 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.4] - 2026-11-10
+
+### Fixed & Improved (Chuẩn Hóa Nhãn Nút Tab "Improvement" & Loại Bỏ Thuật Ngữ "Kaizen" Trùng Lặp)
+- **Chuẩn Hóa Nhãn Nút Tab Trong Khối 5S Continuous Improvement**:
+  - Thay thế nhãn cứng `Kaizen` trên nút chuyển tab bằng khóa đa ngôn ngữ `{t('tab_improvement_btn')}`.
+  - Giao diện Tiếng Anh hiển thị chuẩn mực: **`[Improvement]  [Top]`**, đồng bộ 100% với tên khối thẻ `5S CONTINUOUS IMPROVEMENT`.
+  - Giao diện Tiếng Việt hiển thị: **`[Cải thiện]  [Top]`**.
+- **Đồng Bộ Hóa Ngữ Nghĩa Toàn Bộ Khối Thẻ**:
+  - Cập nhật thanh Micro-Strip: `▼ {n} Needs Improvement` (EN) / `▼ {n} Cần cải thiện` (VI).
+  - Cập nhật tiêu đề phân mục khu vực chưa cải thiện: `⚠️ STAGNANT / NEEDS IMPROVEMENT` (EN) / `⚠️ Khu vực Chưa cải thiện` (VI).
+  - Loại bỏ hoàn toàn sự không nhất quán giữa các thuật ngữ tiếng Anh và tiếng Việt trong toàn bộ ứng dụng.
+
+---
+
 ## [2.11.3] - 2026-11-10
 
 ### Added & Improved (Trung Tâm Thông Báo Dropdown Xổ Xuống & Thẻ Cảnh Báo Accordion)

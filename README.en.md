@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.3`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.4`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.3`
+## 1. Highlights of Version `v2.11.4`
+
+### 🏷️ Standardized Tab Toggle to "Improvement" & Terminology Unification
+- **Standardized Tab Toggle Label**: Replaced hardcoded `Kaizen` with `{t('tab_improvement_btn')}`, cleanly rendering **`[Improvement]  [Top]`** (English) and **`[Cải thiện]  [Top]`** (Vietnamese), achieving 100% harmonization with the card header `5S CONTINUOUS IMPROVEMENT`.
+- **Card-wide Semantic Consistency**: Updated Micro-Strip status pill (`Needs Improvement` / `Cần cải thiện`) and action-needed header (`STAGNANT / NEEDS IMPROVEMENT` / `Khu vực Chưa cải thiện`).
+- **100% UI/UX & i18n Fidelity**: Zero hardcoded strings, preserving Simon's core authorship.
+
+---
+
+## 2. Highlights of Version `v2.11.3`
 
 ### 🔔 Dropdown Notification Center & Dashboard Accordion Alarm Cards
 - **Header Dropdown Notification Center**: Converted the top navigation Bell button into an elegant popover dropdown, enabling users to read all urgent notifications and alarms without leaving the current view. Auto-closes on click-outside or `Escape`.

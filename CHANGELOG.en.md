@@ -7,6 +7,20 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.4] - 2026-11-10
+
+### Fixed & Improved (Standardized Tab Button to "Improvement" & Eliminated Redundant "Kaizen" References)
+- **Standardized Tab Toggle Label in 5S Continuous Improvement Card**:
+  - Replaced hardcoded `Kaizen` tab button label with localized `{t('tab_improvement_btn')}`.
+  - English interface now cleanly displays **`[Improvement]  [Top]`**, perfectly matching the card header `5S CONTINUOUS IMPROVEMENT`.
+  - Vietnamese interface displays **`[Cải thiện]  [Top]`**.
+- **Consistent Terminology Across the Entire Card**:
+  - Updated Micro-Strip telemetry pill: `▼ {n} Needs Improvement` (EN) / `▼ {n} Cần cải thiện` (VI).
+  - Updated action-needed section header: `⚠️ STAGNANT / NEEDS IMPROVEMENT` (EN) / `⚠️ Khu vực Chưa cải thiện` (VI).
+  - Fully eliminated terminology discrepancies and hardcoded text.
+
+---
+
 ## [2.11.3] - 2026-11-10
 
 ### Added & Improved (Dropdown Notification Center & Dashboard Accordion Alarm Cards)
