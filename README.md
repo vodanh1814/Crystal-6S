@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,20 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.2`
+## 1. Điểm nổi bật của phiên bản `v2.11.3`
+
+### 🔔 Trung Tâm Thông Báo Dropdown Xổ Xuống & Thẻ Cảnh Báo Accordion
+- **Notification Center Dropdown Tại Header**: Chuyển đổi nút Chuông cảnh báo trên thanh Menu thành menu xổ xuống (Popover), cho phép người dùng đọc nhanh tất cả thông báo/cảnh báo mà không bị gián đoạn hay phải chuyển trang. Tự động đóng khi click ra ngoài hoặc bấm phím `Esc`.
+- **3 Tab Phân Loại Thông Báo Nhanh**:
+  - `Tất cả`: Tổng hợp mọi cảnh báo.
+  - `Cần khắc phục`: Lọc các lỗi quá hạn hoặc sắp hết hạn cho Quản lý khu vực (Area MNG).
+  - `Chờ duyệt`: Lọc các lỗi đã hoàn thành khắc phục chờ Auditor nghiệm thu.
+- **Accordion Xổ Xuống Trên Thẻ Cảnh Báo Dashboard**: Cho phép bấm vào từng thẻ cảnh báo trong khối `7-DAY ALARMS & REPEATED FINDINGS` để xổ xuống xem đầy đủ nội dung tiêu chí 5S, ghi chú hiện trường thực tế, khu vực và hạn khắc phục.
+- **Chuẩn Hóa Quốc Tế Hóa (i18n)**: Bổ sung 100% các khóa dịch cho Tiếng Việt và Tiếng Anh, đảm bảo không có văn bản hardcoded.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.2`
 
 ### 📊 Tối Ưu Bố Cục & Triệt Tiêu Khoảng Trống Thừa 2 Khối 5S Breakdown & Kaizen
 - **Cấu Trúc 2-Tier Stacked Telemetry Row Cho 5S Breakdown**: Thay thế hàng đơn dòng cũ bằng hàng 2 tầng trực quan: tầng trên hiển thị nhãn nhóm S kèm dot màu nhận diện và số lỗi + điểm phạt (-Xđ/-Xpts); tầng dưới là thanh đo tiến độ dày dặn (`h-2.5 sm:h-3 rounded-full`) với animation chuyển động 500ms mượt mà.

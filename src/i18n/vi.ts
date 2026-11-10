@@ -644,4 +644,13 @@ export const vi = {
   kaizen_stat_declined: '{n} Cần Kaizen',
   top_leaders_title: '🏆 Top 3 Dẫn đầu',
   bottom_lagging_title: '⚠️ Top 3 Cần Cải thiện',
+  notifications: 'Thông báo & Cảnh báo',
+  tab_all_notifications: 'Tất cả',
+  tab_fix_needed: 'Cần khắc phục',
+  tab_verify_needed: 'Chờ duyệt',
+  view_all_findings: 'Xem danh sách lỗi',
+  view_overdue_only: 'Xem lỗi quá hạn',
+  alarm_details_expand: 'Xem chi tiết',
+  alarm_details_collapse: 'Thu gọn',
+  refresh_notifications: 'Làm mới thông báo',
 };

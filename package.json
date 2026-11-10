@@ -1,7 +1,7 @@
 {
   "name": "crystal-5s-audit",
   "private": true,
-  "version": "2.11.2",
+  "version": "2.11.3",
   "description": "Crystal 5S Audit — Smart Factory Andon & 5S Continuous Improvement System designed by Simon",
   "author": "Simon (https://github.com/vodanh1814)",
   "homepage": "https://5s-audit.cetvn.workers.dev",

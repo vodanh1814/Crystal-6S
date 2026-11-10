@@ -11,7 +11,6 @@ import {
   Target,
   User as UserIcon,
   LogOut,
-  Bell,
   Menu,
   X,
   ChevronLeft,
@@ -30,6 +29,7 @@ import { api } from '../api/client';
 import { APP_VERSION, APP_COPYRIGHT } from '../version';
 import { resolveColorMode } from '../lib/theme';
 import { AboutModal } from './AboutModal';
+import { NotificationDropdown } from './NotificationDropdown';
 
 type SidebarState = 'expanded' | 'collapsed' | 'hidden';
 
@@ -660,23 +660,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <span>{isFullscreen ? t('exit_full_tv') : t('full_tv_mode')}</span>
             </button>
 
-            {/* Alarm Bell Button */}
-            <Link
-              to="/findings?overdue=1"
-              className={`relative p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center ${
-                isLightChrome
-                  ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-              title={t('alarms')}
-            >
-              <Bell className="w-4 h-4" />
-              {alarmCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">
-                  {alarmCount > 99 ? '99+' : alarmCount}
-                </span>
-              )}
-            </Link>
+            {/* Alarm Bell Notification Dropdown */}
+            <NotificationDropdown isLightChrome={isLightChrome} />
 
             {/* Language Switcher */}
             <button

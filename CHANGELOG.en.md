@@ -7,6 +7,27 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.3] - 2026-11-10
+
+### Added & Improved (Dropdown Notification Center & Dashboard Accordion Alarm Cards)
+- **Integrated Header Dropdown Notification Center (`NotificationDropdown.tsx`)**:
+  - Replaced the simple Bell redirect link with an enterprise **Dropdown Notification Center (Popover)**.
+  - Interactive popup: Click to toggle, auto-closes on outside click (`mousedown`) or `Escape` key.
+  - Features **3 Fast-Filtering Tabs**:
+    - **All**: Aggregates all active plant alarms and notifications.
+    - **Needs Fix**: Filters open overdue and upcoming findings for Area Managers.
+    - **Awaiting Verify**: Filters resolved findings awaiting Auditor/Admin verification.
+  - Full Telemetry display: Status badges (Overdue X days, Due today, X days left, Awaiting verify), area code, criterion code, penalty deduction (-1 pt), violation description, and deadline.
+  - Direct navigation: Clicking any notification immediately closes the menu and navigates to the finding detail page; footer links provide shortcuts to overdue-only findings and full findings inventory.
+  - Automatic theme adaptation with backdrop-blur styling across both Dark and Light Chrome modes.
+- **Accordion Drawer for Dashboard Alarm Cards**:
+  - Cards in the `7-DAY ALARMS & REPEATED FINDINGS` widget on the Dashboard can now be clicked to **expand downwards (Accordion Drawer)**, displaying the complete 5S criterion, on-site observations (`description`), area, and deadline without navigating away.
+  - Action buttons ("Update After →" / "Verify Close →") include event bubbling protection (`stopPropagation`), allowing instant navigation.
+- **Full Internationalization (i18n)**:
+  - Added 100% of new localization keys for Vietnamese and English, 0 hardcoded text.
+
+---
+
 ## [2.11.2] - 2026-11-10
 
 ### Fixed & Improved (Eliminated Empty Voids in 5S Breakdown & Kaizen Continuous Improvement Cards)

@@ -7,6 +7,27 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.3] - 2026-11-10
+
+### Added & Improved (Trung Tâm Thông Báo Dropdown Xổ Xuống & Thẻ Cảnh Báo Accordion)
+- **Tích Hợp Notification Center Dropdown Tại Nút Chuông Header (`NotificationDropdown.tsx`)**:
+  - Chuyển đổi nút Chuông cảnh báo trên thanh điều hướng từ thẻ link thô sang một **Trung tâm Thông báo Dropdown (Popover)** nổi sang trọng.
+  - Hỗ trợ đóng mở linh hoạt: Click bật/tắt, tự động đóng khi click ra ngoài (`mousedown`) hoặc khi nhấn phím `Escape`.
+  - Cung cấp **3 Tab Lọc Nhanh Thông Báo**:
+    - **Tất cả (`All`)**: Tổng hợp toàn bộ các cảnh báo đang hoạt động trong hệ thống.
+    - **Cần khắc phục (`Needs Fix`)**: Lọc riêng các lỗi mở quá hạn hoặc sắp đến hạn mà Area Manager cần xử lý.
+    - **Chờ duyệt (`Awaiting Verify`)**: Lọc riêng các lỗi đã cập nhật khắc phục đang chờ Auditor nghiệm thu.
+  - Hiển thị đầy đủ Telemetry: Badge trạng thái (Quá hạn X ngày, Hôm nay, Còn X ngày, Chờ verify), mã khu vực, mã tiêu chí vi phạm, điểm phạt (-1đ), trích dẫn nội dung vi phạm và hạn xử lý.
+  - Bấm vào bất kỳ thông báo nào sẽ đóng menu và mở thẳng trang chi tiết lỗi để thao tác; chân menu có liên kết nhanh đến danh sách lỗi quá hạn và toàn bộ danh mục lỗi.
+  - Tự động thích ứng màu sắc và hiệu ứng kính mờ (`backdrop-blur-md`) trên cả Dark Mode và Light Mode.
+- **Thẻ Cảnh Báo Trên Dashboard Dạng Xổ Xuống (Accordion Drawer)**:
+  - Khối `7-DAY ALARMS & REPEATED FINDINGS` trên Dashboard cho phép bấm vào từng thẻ cảnh báo để **xổ xuống (Accordion Drawer)** đọc toàn bộ nội dung tiêu chí 5S, ghi chú hiện trường thực tế (`description`), khu vực và ngày hết hạn mà không cần rời màn hình.
+  - Nút hành động trực tiếp ("Cập nhật khắc phục →" / "Xác nhận đóng lỗi →") kèm ngăn chặn xung đột sự kiện (`stopPropagation`), đảm bảo chuyển trang mượt mà.
+- **Chuẩn Hóa Quốc Tế Hóa (i18n)**:
+  - Bổ sung 100% các khóa dịch i18n mới cho Tiếng Việt và Tiếng Anh (`notifications`, `tab_all_notifications`, `tab_fix_needed`, `tab_verify_needed`, `view_all_findings`, `view_overdue_only`, `alarm_details_expand`, `alarm_details_collapse`, `refresh_notifications`), 0 hardcoded text.
+
+---
+
 ## [2.11.2] - 2026-11-10
 
 ### Fixed & Improved (Tối Ưu Hóa & Lấp Đầy Khoảng Trống Thừa 2 Khối 5S Breakdown & Kaizen Continuous Improvement)

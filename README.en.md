@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.2`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.3`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,20 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.2`
+## 1. Highlights of Version `v2.11.3`
+
+### 🔔 Dropdown Notification Center & Dashboard Accordion Alarm Cards
+- **Header Dropdown Notification Center**: Converted the top navigation Bell button into an elegant popover dropdown, enabling users to read all urgent notifications and alarms without leaving the current view. Auto-closes on click-outside or `Escape`.
+- **3 Fast-Filtering Tabs**:
+  - `All`: Aggregates all plant alarms.
+  - `Needs Fix`: Filters open overdue or upcoming findings for Area Managers.
+  - `Awaiting Verify`: Filters resolved findings awaiting Auditor/Admin verification.
+- **Dashboard Accordion Alarm Cards**: Cards in the `7-DAY ALARMS & REPEATED FINDINGS` panel can be expanded downwards to inspect full 5S criterion text, specific notes, area, and deadline.
+- **100% Internationalization (i18n)**: All new UI strings fully localized in Vietnamese and English, 0 hardcoded text.
+
+---
+
+## 2. Highlights of Version `v2.11.2`
 
 ### 📊 Optimized Layout & Eliminated Empty Voids in 5S Breakdown & Kaizen
 - **2-Tier Stacked Telemetry Rows for 5S Breakdown**: Replaced legacy thin rows with modern stacked telemetry cards: upper tier displays S-group label with semantic color dot and count/penalty badge (-X pts); lower tier houses a bold modern progress bar (`h-2.5 sm:h-3 rounded-full`) with smooth 500ms animation.

@@ -646,4 +646,13 @@ export const en: typeof vi = {
   kaizen_stat_declined: '{n} Needs Kaizen',
   top_leaders_title: '🏆 Top 3 Leaders',
   bottom_lagging_title: '⚠️ Top 3 Needs Improvement',
+  notifications: 'Notifications & Alarms',
+  tab_all_notifications: 'All',
+  tab_fix_needed: 'Needs Fix',
+  tab_verify_needed: 'Awaiting Verify',
+  view_all_findings: 'View All Findings',
+  view_overdue_only: 'View Overdue Only',
+  alarm_details_expand: 'Expand Details',
+  alarm_details_collapse: 'Collapse',
+  refresh_notifications: 'Refresh notifications',
 };

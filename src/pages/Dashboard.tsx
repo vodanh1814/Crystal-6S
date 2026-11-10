@@ -4,6 +4,9 @@ import {
   Loader2,
   Calendar,
   RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -79,6 +82,7 @@ export const Dashboard: React.FC = () => {
   });
 
   const [row3Tab, setRow3Tab] = useState<'improvement' | 'leaderboard'>('improvement');
+  const [expandedAlarmId, setExpandedAlarmId] = useState<number | null>(null);
 
   // Automatically sync with Admin's plant-wide default dashboard layout from settings
   useEffect(() => {
@@ -972,14 +976,15 @@ export const Dashboard: React.FC = () => {
                 const fullCriterion = lang === 'en' ? f.content_en || f.content_vi : f.content_vi;
                 const shortCriterion = getShortCriterionText(f.item_code, fullCriterion, lang);
 
+                const isExpanded = expandedAlarmId === f.id;
+
                 return (
-                  <Link
+                  <div
                     key={f.id}
-                    to={`/findings/${f.id}`}
-                    title={fullCriterion}
-                    className={`flex-1 min-h-[46px] sm:min-h-[50px] w-full min-w-0 overflow-hidden rounded-lg border ${cardBorder} px-2 py-0.5 sm:px-2.5 sm:py-1 flex flex-col justify-between ${
+                    onClick={() => setExpandedAlarmId(isExpanded ? null : f.id)}
+                    className={`w-full min-w-0 rounded-lg border ${cardBorder} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
-                    } transition cursor-pointer group`}
+                    } transition-all cursor-pointer group`}
                   >
                     <div className="flex items-center justify-between gap-1.5 text-xs min-w-0">
                       <div className="flex items-center gap-1 min-w-0 truncate">
@@ -1006,31 +1011,62 @@ export const Dashboard: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <span
-                        className={`text-[9px] sm:text-[10px] font-bold shrink-0 ${
-                          isOverdue
-                            ? failTextCls
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className={`text-[9px] sm:text-[10px] font-bold ${
+                            isOverdue
+                              ? failTextCls
+                              : isFixed
+                              ? blueStatTextCls
+                              : isLightTv
+                              ? 'text-amber-700'
+                              : 'text-amber-400'
+                          }`}
+                        >
+                          {isOverdue
+                            ? t('days_overdue_text', { n: Math.abs(f.days_remaining) })
                             : isFixed
-                            ? blueStatTextCls
-                            : isLightTv
-                            ? 'text-amber-700'
-                            : 'text-amber-400'
-                        }`}
-                      >
-                        {isOverdue
-                          ? t('days_overdue_text', { n: Math.abs(f.days_remaining) })
-                          : isFixed
-                          ? t('waiting_auditor_verify')
-                          : t('days_remaining_text', {
-                              n: f.days_remaining,
-                              date: f.due_date.slice(5),
-                            })}
-                      </span>
+                            ? t('waiting_auditor_verify')
+                            : t('days_remaining_text', {
+                                n: f.days_remaining,
+                                date: f.due_date.slice(5),
+                              })}
+                        </span>
+                        <span
+                          className="p-0.5 rounded text-slate-400 group-hover:text-white transition"
+                          title={isExpanded ? t('alarm_details_collapse') : t('alarm_details_expand')}
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-sky-400" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className={`text-[10px] sm:text-[11px] font-medium truncate leading-tight my-0.5 min-w-0 ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
-                      {shortCriterion}
+                    <div className={`text-[10px] sm:text-[11px] font-medium leading-tight my-0.5 min-w-0 ${
+                      isExpanded ? 'whitespace-normal' : 'truncate'
+                    } ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
+                      {isExpanded ? fullCriterion : shortCriterion}
                     </div>
+
+                    {/* Expandable Accordion Drawer ("dạng xổ xuống để đọc notify") */}
+                    {isExpanded && (
+                      <div className="pt-1.5 pb-1 mt-1 border-t border-white/10 flex flex-col gap-1 text-[11px] animate-in fade-in duration-150">
+                        {f.description && (
+                          <div className={`text-[11px] italic p-1.5 rounded ${
+                            isLightTv ? 'bg-slate-100 text-slate-700' : 'bg-black/30 text-slate-200'
+                          }`}>
+                            "{f.description}"
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
+                          <span>{t('areas')}: <strong className={subTextCls}>{f.area_name || f.area_code}</strong></span>
+                          <span>{t('due_date')}: <strong className={subTextCls}>{f.due_date}</strong></span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className={`flex items-center justify-between gap-2 text-[9px] sm:text-[10px] border-t pt-0.5 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}>
                       <span className="truncate min-w-0">
@@ -1041,15 +1077,18 @@ export const Dashboard: React.FC = () => {
                             : f.manager_name || f.fixer_name || 'Area Manager'}
                         </strong>
                       </span>
-                      <span
-                        className={`font-semibold shrink-0 whitespace-nowrap ${
+                      <Link
+                        to={`/findings/${f.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`font-semibold shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded transition hover:underline flex items-center gap-0.5 ${
                           isFixed ? blueStatTextCls : passTextCls
                         }`}
                       >
-                        {isFixed ? t('verify_close_btn') : t('update_after_btn')}
-                      </span>
+                        <span>{isFixed ? t('verify_close_btn') : t('update_after_btn')}</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </Link>
                     </div>
-                  </Link>
+                  </div>
                 );
               })
             ) : (
