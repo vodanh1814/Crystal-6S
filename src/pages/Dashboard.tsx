@@ -310,7 +310,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div
-      className={`flex-1 min-h-0 px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-2.5 sm:gap-3 select-none overflow-y-auto overflow-x-hidden ${
+      className={`flex-1 min-h-0 h-full px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-2 sm:gap-2.5 select-none overflow-y-auto overflow-x-hidden ${
         isHybrid ? 'pb-20 md:pb-2.5' : 'pb-2 sm:pb-2.5'
       }`}
     >
@@ -630,9 +630,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="flex-none grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-[1.25] min-h-[290px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 16 AREAS 4x4 MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
+        <div className={`col-span-12 lg:col-span-8 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
@@ -766,7 +766,7 @@ export const Dashboard: React.FC = () => {
                 <Link
                   key={area.area_id}
                   to={`/findings?area_id=${area.area_id}`}
-                  className={`${boxCls} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px] lg:min-h-[66px] ${
+                  className={`${boxCls} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between h-full min-h-[56px] sm:min-h-[62px] lg:min-h-[66px] ${
                     isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
                   } transition cursor-pointer group`}
                 >
@@ -891,7 +891,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
+        <div className={`col-span-12 lg:col-span-4 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
@@ -1051,9 +1051,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="flex-none grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-1 min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-5 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
+        <div className={`col-span-12 lg:col-span-5 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
@@ -1068,7 +1068,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-36 sm:h-40 lg:h-44 min-h-[140px] pt-0.5">
+          <div className="flex-1 min-h-[140px] pt-0.5">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trend_12_weeks}
@@ -1105,7 +1105,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 lg:col-span-4 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
+        <div className={`col-span-12 lg:col-span-4 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
@@ -1160,7 +1160,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 lg:col-span-3 h-auto ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
+        <div className={`col-span-12 lg:col-span-3 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'

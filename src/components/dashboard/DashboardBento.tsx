@@ -83,9 +83,9 @@ export const DashboardBento: React.FC<Props> = ({
   const isWarn = currentScore >= warningTarget && currentScore < target;
 
   return (
-    <div className="theme-tv-canvas w-full px-2 sm:px-3 lg:px-4 py-2 select-none overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-2.5">
+    <div className="theme-tv-canvas w-full h-full flex-1 min-h-0 flex flex-col px-2 sm:px-3 lg:px-4 py-2 select-none overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-2.5">
       {/* ── ROW 1: TOP BENTO TELEMETRY KPI STRIP ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
+      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
         {/* KPI 1: Weekly Score */}
         <div className="rounded-xl bg-[#0b111e]/90 border border-sky-400/20 p-2 flex flex-col justify-between min-h-[56px] shadow-sm">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
@@ -199,9 +199,9 @@ export const DashboardBento: React.FC<Props> = ({
       </div>
 
       {/* ── ROW 2: BENTO CORE (38% TELEMETRY HERO + 62% 16-AREA BENTO GRID) ── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-[1.25] min-h-[300px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* Left Bento Flank (38% on lg): Telemetry Dial & Kaizen Spotlight */}
-        <div className="col-span-12 lg:col-span-4 space-y-2 sm:space-y-2.5 flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-4 space-y-2 sm:space-y-2.5 flex flex-col justify-between h-full">
           {/* Card 1: 5S Circular Radar Telemetry Card */}
           <div className="rounded-2xl bg-[#0b111e]/90 border border-sky-400/20 p-3 sm:p-3.5 flex flex-col justify-between flex-1 shadow-md">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -342,7 +342,7 @@ export const DashboardBento: React.FC<Props> = ({
         </div>
 
         {/* Right Bento Flank (62% on lg): 4x4 Grid of 16 Plant Areas */}
-        <div className="col-span-12 lg:col-span-8 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-8 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between h-full">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 mb-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black uppercase tracking-wider text-slate-200">
@@ -441,9 +441,9 @@ export const DashboardBento: React.FC<Props> = ({
       </div>
 
       {/* ── ROW 3: BENTO BOTTOM STRIP (12-WEEK TREND & 5S PILLAR TELEMETRY) ── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-1 min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* Left: 12-Week Score Trend Graph (7 Cols) */}
-        <div className="col-span-12 lg:col-span-7 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-7 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between h-full">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-wider text-slate-200">
               {t('score_trend_12_weeks')}
@@ -455,7 +455,7 @@ export const DashboardBento: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="h-36 sm:h-40 w-full min-h-[140px]">
+          <div className="flex-1 min-h-[140px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trend_12_weeks} margin={{ top: 8, right: 10, left: -22, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
@@ -486,7 +486,7 @@ export const DashboardBento: React.FC<Props> = ({
         </div>
 
         {/* Right: 5S Pillar Telemetry Bars & Overdue Action Tracker (5 Cols) */}
-        <div className="col-span-12 lg:col-span-5 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between space-y-2">
+        <div className="col-span-12 lg:col-span-5 rounded-2xl bg-[#0b111e]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between space-y-2 h-full">
           <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
             <span className="text-xs font-black uppercase tracking-wider text-slate-200">
               {t('findings_by_s_group')}

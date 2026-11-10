@@ -120,6 +120,8 @@ html[data-ui-theme="classic"][data-color-mode="dark"] body {
 :-webkit-full-screen .theme-tv-canvas,
 .full-tv-mode .theme-tv-canvas {
   overflow-y: hidden;
+  height: 100% !important;
+  max-height: 100vh;
 }
 
 /* ============================================================================

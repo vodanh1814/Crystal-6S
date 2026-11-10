@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.1] - 2026-11-10
+
+### Fixed & Improved (Tự Động Co Giãn Fluid Lấp Đầy Màn Hình Khi Bật Full TV Mode)
+- **Khắc Phục Hoàn Toàn Khoảng Trống Đen Thừa Ở Chân Trang Trong Chế Độ Full TV**:
+  - Khi xem trên TV hoặc màn hình lớn (1080p, 1440p, 4K), các khối nội dung Dashboard trước đây bị cố định chiều cao tối thiểu khiến gần 40% diện tích màn hình phía dưới bị bỏ trống.
+  - Áp dụng cơ chế **Flexbox Fluid Auto-Fit** thông minh: Hàng 2 (Ma trận 16 khu vực & Báo động 7 ngày) tự động nhận `flex-[1.25] min-h-[290px]`, Hàng 3 (Biểu đồ xu hướng 12 tuần & Phân tích 5S/Kaizen) tự động nhận `flex-1 min-h-[180px]`. Toàn bộ không gian màn hình được phân bổ đều, triệt tiêu 100% dải đen thừa ở đáy trang.
+  - Vùng chứa biểu đồ Recharts chuyển sang `flex-1 min-h-[140px]`, tự động phóng lớn chiều cao và tăng độ chi tiết trực quan cho đường xu hướng 12 tuần.
+  - Tất cả các thẻ khu vực (Area cards) và thẻ cảnh báo (Alarm cards) đều nhận `h-full flex flex-col justify-between`, các nội dung bên trong được dàn đều hoàn hảo theo chiều dọc.
+- **Đồng Bộ Hoàn Chỉnh Trên Cả 4 Mẫu Layout**:
+  - **Mẫu 1 (Classic Andon Matrix)**: Co giãn cân xứng giữa ma trận 16 ô và tháp cảnh báo 7 ngày.
+  - **Mẫu 2 (Workshop Zone Focus)**: Hai phân khu Sản xuất chính (`flex-[1.4]`) và Phụ trợ dịch vụ (`flex-1`) tự động giãn nở lấp đầy chiều cao.
+  - **Mẫu 3 (Bento Telemetry 2.0)**: Lưới Bento 16 ô và các thẻ tiến độ Kaizen tự động dàn đều.
+  - **Mẫu 4 (Industrial SCADA HUD)**: Bảng điều khiển vi sai 3 cánh và khu vực Telemetry Spline lấp đầy toàn bộ màn hình.
+- **Bảo Toàn Trải Nghiệm Laptop 14" (Chế Độ Cửa Sổ)**:
+  - Nhờ duy trì các ngưỡng chặn `min-h-[...]` và lớp cuộn dọc tự nhiên (`overflow-y: auto`), giao diện trên laptop nhỏ không bao giờ bị vỡ hay chồng đè chữ, cuộn mượt mà khi cửa sổ trình duyệt bị thu nhỏ.
+
+---
+
 ## [2.11.0] - 2026-11-09
 
 ### Added & Improved (UI/UX Pro Max 4 Mẫu Dashboard & Chuẩn Hóa Quản Trị Trung Tâm)

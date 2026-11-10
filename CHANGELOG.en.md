@@ -7,6 +7,24 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.1] - 2026-11-10
+
+### Fixed & Improved (Fluid Auto-Fitting Viewport Scaling in Full TV Mode)
+- **Eliminated Excessive Empty Bottom Gap in Full TV Mode**:
+  - In fullscreen TV mode on large displays (1080p, 1440p, 4K), dashboard cards previously had fixed compact heights leaving up to 40% unused black space at the bottom.
+  - Implemented smart **Flexbox Fluid Auto-Fit**: Row 2 (16-Area Matrix & 7-Day Alarms) automatically takes `flex-[1.25] min-h-[290px]`, Row 3 (12-Week Trend Line & 5S/Kaizen Analysis) takes `flex-1 min-h-[180px]`. Screen space is proportionally filled with zero empty gap at the bottom.
+  - Recharts chart wrapper converted to `flex-1 min-h-[140px]`, automatically enlarging chart height and boosting visual clarity of the 12-week trend line.
+  - All Area cards and 7-Day Alarm cards now stretch to `h-full flex flex-col justify-between`, distributing content evenly across vertical space.
+- **Synchronized Across All 4 Dashboard Layouts**:
+  - **Layout 1 (Classic Andon Matrix)**: Symmetrical expansion of the 16-area matrix wall and 7-day alarms panel.
+  - **Layout 2 (Workshop Zone Focus)**: Both Production (`flex-[1.4]`) and Support (`flex-1`) divisions expand vertically to fill the screen.
+  - **Layout 3 (Bento Telemetry 2.0)**: Bento 4x4 grid and Kaizen progress cards stretch evenly.
+  - **Layout 4 (Industrial SCADA HUD)**: 3-flank control console and Telemetry Spline fill the entire viewport.
+- **Preserved 14" Laptop Windowed Experience**:
+  - Maintained safe `min-h-[...]` bounds and natural vertical scrolling (`overflow-y: auto`), preventing text overlap or clipping when running inside compact laptop browser windows.
+
+---
+
 ## [2.11.0] - 2026-11-09
 
 ### Added & Improved (UI/UX Pro Max 4 Dashboard Layouts & Centralized Admin Layout Studio)

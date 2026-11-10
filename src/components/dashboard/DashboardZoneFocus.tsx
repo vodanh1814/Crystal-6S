@@ -119,9 +119,9 @@ export const DashboardZoneFocus: React.FC<Props> = ({
   const stagnantAreas = improvement_analysis?.stagnant_areas || [];
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2.5 sm:gap-3 overflow-y-auto overflow-x-hidden pb-2 select-none">
+    <div className="flex-1 min-h-0 h-full flex flex-col lg:flex-row gap-2.5 sm:gap-3 overflow-y-auto overflow-x-hidden pb-2 select-none">
       {/* LEFT COLUMN: 32% COMMAND & KAISEN INSIGHTS */}
-      <div className="w-full lg:w-[32%] shrink-0 flex flex-col gap-2.5">
+      <div className="w-full lg:w-[32%] shrink-0 flex flex-col gap-2.5 h-full">
         {/* HERO CIRCULAR GAUGE CARD */}
         <div className="rounded-xl border border-slate-700/80 bg-slate-900/90 p-2.5 sm:p-3 flex flex-col justify-between shadow-lg">
           <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
@@ -455,9 +455,9 @@ export const DashboardZoneFocus: React.FC<Props> = ({
       </div>
 
       {/* RIGHT COLUMN: 68% PRODUCTION & SUPPORT DIVISIONS */}
-      <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3">
+      <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3 h-full">
         {/* DIVISION 1: KHỐI SẢN XUẤT (PRODUCTION) */}
-        <div className="rounded-xl border border-slate-700/80 bg-slate-900/90 p-3 sm:p-3.5 shadow-lg flex flex-col gap-2.5">
+        <div className="flex-[1.4] min-h-[260px] rounded-xl border border-slate-700/80 bg-slate-900/90 p-3 sm:p-3.5 shadow-lg flex flex-col justify-between gap-2.5">
           {/* Division Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -594,7 +594,7 @@ export const DashboardZoneFocus: React.FC<Props> = ({
         </div>
 
         {/* DIVISION 2: KHỐI PHỤ TRỢ (SUPPORT & UTILITY) */}
-        <div className="rounded-xl border border-slate-700/80 bg-slate-900/90 p-3 sm:p-3.5 shadow-lg flex flex-col gap-2.5">
+        <div className="flex-1 min-h-[200px] rounded-xl border border-slate-700/80 bg-slate-900/90 p-3 sm:p-3.5 shadow-lg flex flex-col justify-between gap-2.5">
           {/* Division Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">

@@ -134,6 +134,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const handleFsChange = () => {
       const isFs = Boolean(document.fullscreenElement);
       setIsFullscreen(isFs);
+      if (isFs) {
+        document.documentElement.classList.add('full-tv-mode');
+      } else {
+        document.documentElement.classList.remove('full-tv-mode');
+      }
       if (!isFs && sidebarState === 'hidden') {
         // User exited fullscreen via ESC key, restore sidebar
         setSidebarState('expanded');
@@ -141,7 +146,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       }
     };
     document.addEventListener('fullscreenchange', handleFsChange);
-    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.documentElement.classList.remove('full-tv-mode');
+    };
   }, [sidebarState]);
 
   const cycleSidebar = () => {
@@ -804,7 +812,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {isDashboard ? (
           // On Dashboard: adaptive viewport fit on tall screens, smooth scroll on laptops
           <main
-            className={`theme-tv-canvas flex-1 min-h-0 flex flex-col overflow-y-auto ${
+            className={`theme-tv-canvas flex-1 min-h-0 h-full flex flex-col overflow-y-auto ${
               isClassic ? 'bg-slate-950 text-slate-100' : ''
             }`}
           >

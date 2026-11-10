@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.0`
+## 1. Điểm nổi bật của phiên bản `v2.11.1`
+
+### 📺 Tự Động Co Giãn Fluid Auto-Fit Khi Bật Chế Độ Full TV Mode
+- **Khắc Phục 100% Khoảng Trống Đen Ở Chân Trang**: Ứng dụng cơ chế Flexbox tỉ lệ động (`flex-[1.25]` và `flex-1`), cho phép các khối ma trận 16 khu vực, bảng báo động 7 ngày và biểu đồ xu hướng tự động giãn nở lấp đầy toàn bộ chiều cao màn hình TV 1080p, 1440p hoặc 4K.
+- **Biểu Đồ Xu Hướng & Thẻ Khu Vực To Rõ Ràng**: Vùng chứa biểu đồ chuyển sang `flex-1 min-h-[140px]`, các thẻ khu vực và cảnh báo nhận `h-full flex flex-col justify-between`, tối ưu góc nhìn từ xa trong xưởng sản xuất.
+- **Áp Dụng Đồng Bộ Cho Cả 4 Mẫu Layout**: Cả 4 giao diện (Classic Matrix, Zone Focus, Bento Telemetry 2.0, Industrial SCADA HUD) đều tự động co giãn toàn màn hình mượt mà.
+- **Bảo Toàn Hiển Thị Trên Laptop 14"**: Giữ nguyên giới hạn an toàn `min-h-[...]` và chế độ cuộn tự nhiên trên trình duyệt cửa sổ thu nhỏ.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.0`
 
 ### 🎨 Tích Hợp 4 Layout Dashboard Tuyệt Đẹp Chuẩn UI/UX Pro Max
 - **Mẫu 1: Classic Andon Matrix (`matrix`)**: Ma trận 3 tầng tiêu chuẩn nhà máy, hiển thị 16 khu vực, cảnh báo 7 ngày và biểu đồ 12 tuần.

@@ -63,9 +63,9 @@ export const DashboardHud: React.FC<Props> = ({
   const isWarn = currentScore >= warningTarget && currentScore < target;
 
   return (
-    <div className="theme-tv-canvas w-full px-2 sm:px-3 lg:px-4 py-2 select-none overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-2.5 bg-[#060a12] text-slate-100 font-mono">
+    <div className="theme-tv-canvas w-full h-full flex-1 min-h-0 flex flex-col px-2 sm:px-3 lg:px-4 py-2 select-none overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-2.5 bg-[#060a12] text-slate-100 font-mono">
       {/* ── TOP TACTICAL HUD TELEMETRY BAR ── */}
-      <div className="rounded-xl bg-[#090f1d] border border-cyan-500/35 p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-[0_0_15px_rgba(6,182,212,0.12)]">
+      <div className="shrink-0 rounded-xl bg-[#090f1d] border border-cyan-500/35 p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-[0_0_15px_rgba(6,182,212,0.12)]">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-400/40 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -99,9 +99,9 @@ export const DashboardHud: React.FC<Props> = ({
       </div>
 
       {/* ── MAIN TACTICAL FLANKS (LEFT: PRODUCTION 10, CENTER: ALARMS HUD, RIGHT: SUPPORT 6) ── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-[1.25] min-h-[300px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* Left Flank: Production Division (10 Workshops) */}
-        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-emerald-500/30 p-2.5 sm:p-3 shadow-md flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-emerald-500/30 p-2.5 sm:p-3 shadow-md flex flex-col justify-between h-full">
           <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20 mb-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -167,7 +167,7 @@ export const DashboardHud: React.FC<Props> = ({
         </div>
 
         {/* Center Flank: Real-time Alarms & Remediation Command Core */}
-        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-cyan-500/35 p-2.5 sm:p-3 shadow-md flex flex-col justify-between space-y-2">
+        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-cyan-500/35 p-2.5 sm:p-3 shadow-md flex flex-col justify-between space-y-2 h-full">
           <div className="flex items-center justify-between pb-2 border-b border-cyan-500/20">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -223,7 +223,7 @@ export const DashboardHud: React.FC<Props> = ({
         </div>
 
         {/* Right Flank: Support & Utility Division (6 Areas) */}
-        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-amber-500/30 p-2.5 sm:p-3 shadow-md flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-4 rounded-xl bg-[#090f1d]/90 border border-amber-500/30 p-2.5 sm:p-3 shadow-md flex flex-col justify-between h-full">
           <div className="flex items-center justify-between pb-2 border-b border-amber-500/20 mb-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
@@ -290,9 +290,9 @@ export const DashboardHud: React.FC<Props> = ({
       </div>
 
       {/* ── BOTTOM TACTICAL TELEMETRY STRIP (COMPARATIVE TREND & 5S PILLARS) ── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-1 min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* Trend Curve (8 Cols) */}
-        <div className="col-span-12 lg:col-span-8 rounded-xl bg-[#090f1d]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-8 rounded-xl bg-[#090f1d]/90 border border-slate-800 p-2.5 sm:p-3 shadow-md flex flex-col justify-between h-full">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
               {t('score_trend_12_weeks')} (TELEMETRY SPLINE)
@@ -304,7 +304,7 @@ export const DashboardHud: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="h-32 sm:h-36 w-full min-h-[130px]">
+          <div className="flex-1 min-h-[130px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trend_12_weeks} margin={{ top: 8, right: 10, left: -22, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="2 2" stroke="#172554" />

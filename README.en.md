@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.0`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.0`
+## 1. Highlights of Version `v2.11.1`
+
+### 📺 Fluid Auto-Fit Viewport Scaling in Full TV Mode
+- **Zero Empty Black Gap at Screen Bottom**: Employs proportional Flexbox auto-fill (`flex-[1.25]` and `flex-1`), dynamically expanding the 16-area matrix wall, 7-day alarms panel, and trend graphs to fill 100% of large TV displays (1080p, 1440p, 4K).
+- **Enlarged High-Visibility Telemetry & Cards**: Trend chart wrapper expands to `flex-1 min-h-[140px]`, and area cards stretch to `h-full flex flex-col justify-between`, optimizing long-distance readability across the factory shop floor.
+- **Unified Across All 4 Layouts**: Classic Andon Matrix, Workshop Zone Focus, Bento Telemetry 2.0, and Industrial SCADA HUD all auto-scale flawlessly in fullscreen mode.
+- **Protected 14" Laptop Experience**: Preserves sensible minimum heights and smooth vertical scrolling in standard windowed browser views.
+
+---
+
+## 2. Highlights of Version `v2.11.0`
 
 ### 🎨 4 Full-Fledged UI/UX Pro Max Dashboard Layouts
 - **Layout 1: Classic Andon Matrix (`matrix`)**: Traditional 3-row layout, 16 plant areas, 7-day alarms, and 12-week trend curve.
