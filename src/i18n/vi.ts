@@ -637,5 +637,11 @@ export const vi = {
   no_stagnant: 'Tất cả khu vực đều có tiến bộ hoặc đã đạt mục tiêu',
   switch_to_improvement_view: 'Xem Cải thiện',
   switch_to_leaderboard_view: 'Xem Xếp hạng',
-
+  total_penalty_month: 'Tổng phạt: -{n}đ',
+  top_violation_group: 'Lỗi nhiều nhất: {group}',
+  kaizen_stat_improved: '{n} Tiến bộ',
+  kaizen_stat_stable: '{n} Ổn định',
+  kaizen_stat_declined: '{n} Cần Kaizen',
+  top_leaders_title: '🏆 Top 3 Dẫn đầu',
+  bottom_lagging_title: '⚠️ Top 3 Cần Cải thiện',
 };

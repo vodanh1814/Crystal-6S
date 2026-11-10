@@ -639,5 +639,11 @@ export const en: typeof vi = {
   no_stagnant: 'All areas are improving or meeting 5S target',
   switch_to_improvement_view: 'View Improvement',
   switch_to_leaderboard_view: 'View Leaderboard',
-
+  total_penalty_month: 'Total Penalties: -{n} pts',
+  top_violation_group: 'Top Violation: {group}',
+  kaizen_stat_improved: '{n} Improved',
+  kaizen_stat_stable: '{n} Stable',
+  kaizen_stat_declined: '{n} Needs Kaizen',
+  top_leaders_title: '🏆 Top 3 Leaders',
+  bottom_lagging_title: '⚠️ Top 3 Needs Improvement',
 };

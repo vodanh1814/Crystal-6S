@@ -7,6 +7,27 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.2] - 2026-11-10
+
+### Fixed & Improved (Tối Ưu Hóa & Lấp Đầy Khoảng Trống Thừa 2 Khối 5S Breakdown & Kaizen Continuous Improvement)
+- **Cải Tiến Triệt Để Ô "FINDINGS & PENALTIES BY 5S"**:
+  - Chuyển đổi 5 hàng vi phạm đơn dòng trước đây sang cấu trúc **2-Tier Stacked Telemetry Row** hiện đại:
+    - Hàng trên: Nhãn nhóm S kèm dot tròn màu nhận diện (`S1 · Sort - Sàng lọc`, `S2 · Set in order - Sắp xếp`,...), bên phải hiển thị số lỗi và điểm phạt (-Xđ/-Xpts) với màu cảnh báo rõ ràng.
+    - Hàng dưới: Thanh tiến độ dày dặn (`h-2.5 sm:h-3 rounded-full`) với animation chuyển động 500ms mượt mà.
+  - Tích hợp **Thanh Tóm Tắt Telemetry Dưới Đáy (Footer Strip)**: Hiển thị Tổng điểm phạt trong tháng (`Tổng phạt: -Xđ`) và Nhóm có số lỗi vi phạm cao nhất (`Lỗi nhiều nhất: S...`), phân bổ đều đặn và triệt tiêu 100% khoảng trống thừa trong chế độ Full TV.
+- **Tối Ưu Hóa Ô "5S CONTINUOUS IMPROVEMENT / LEADERBOARD"**:
+  - **Tab Kaizen**:
+    - Bổ sung **Kaizen Status Micro-Strip**: Thanh thống kê nhanh 3 chỉ số Kaizen toàn xưởng (`▲ X Tiến bộ` | `▬ Y Ổn định` | `▼ Z Cần Kaizen`).
+    - Mở rộng hiển thị từ 2 lên tới **Top 3 Khu vực tiến bộ tốt nhất** (`🚀`) và **Top 3 Khu vực chưa cải thiện / cần Kaizen** (`⚠️`), kèm điểm trung bình tháng và delta so sánh tháng trước.
+  - **Tab Leaderboard (Top)**:
+    - Mở rộng hiển thị từ 2 lên tới **Top 3 Dẫn đầu** (`🏆 1.`, `🥈 2.`, `🥉 3.`) và **Top 3 Cần Cải thiện** (`⚠️`).
+    - Tinh chỉnh padding thẻ (`px-2.5 py-1.5 sm:py-2`), cân bằng tỷ lệ hoàn hảo với biểu đồ 12 tuần bên cạnh.
+- **Chuẩn Hóa Ngôn Ngữ & Đơn Vị**:
+  - Bổ sung các khóa i18n mới: `total_penalty_month`, `top_violation_group`, `kaizen_stat_improved`, `kaizen_stat_stable`, `kaizen_stat_declined`, `top_leaders_title`, `bottom_lagging_title`.
+  - Đảm bảo 100% không còn văn bản hardcoded, quy chuẩn `đ` (Tiếng Việt) và `pts` (Tiếng Anh).
+
+---
+
 ## [2.11.1] - 2026-11-10
 
 ### Fixed & Improved (Tự Động Co Giãn Fluid Lấp Đầy Màn Hình Khi Bật Full TV Mode)

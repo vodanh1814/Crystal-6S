@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,20 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.1`
+## 1. Điểm nổi bật của phiên bản `v2.11.2`
+
+### 📊 Tối Ưu Bố Cục & Triệt Tiêu Khoảng Trống Thừa 2 Khối 5S Breakdown & Kaizen
+- **Cấu Trúc 2-Tier Stacked Telemetry Row Cho 5S Breakdown**: Thay thế hàng đơn dòng cũ bằng hàng 2 tầng trực quan: tầng trên hiển thị nhãn nhóm S kèm dot màu nhận diện và số lỗi + điểm phạt (-Xđ/-Xpts); tầng dưới là thanh đo tiến độ dày dặn (`h-2.5 sm:h-3 rounded-full`) với animation chuyển động 500ms mượt mà.
+- **Thanh Tóm Tắt Telemetry Dưới Đáy (Footer Strip)**: Tích hợp thông tin tổng điểm phạt trong tháng (`Tổng phạt: -Xđ`) và nhóm vi phạm nhiều nhất (`Lỗi nhiều nhất: S...`), lấp đầy hoàn hảo chiều cao thẻ và xóa bỏ 100% khoảng trống thừa trong chế độ Full TV.
+- **Micro-Strip & Mở Rộng Danh Sách Kaizen / Leaderboard**:
+  - Tab Kaizen: Bổ sung thanh thống kê nhanh (`▲ X Tiến bộ` | `▬ Y Ổn định` | `▼ Z Cần Kaizen`) và hiển thị lên tới **Top 3 Khu vực tiến bộ** (`🚀`) cùng **Top 3 Khu vực cần Kaizen** (`⚠️`).
+  - Tab Leaderboard: Mở rộng hiển thị lên tới **Top 3 Dẫn đầu** (`🏆 1.`, `🥈 2.`, `🥉 3.`) và **Top 3 Cần Cải thiện** (`⚠️`).
+  - Tinh chỉnh padding thẻ (`px-2.5 py-1.5 sm:py-2`), cân xứng tuyệt đối với biểu đồ xu hướng 12 tuần bên cạnh.
+- **Chuẩn Hóa Ngôn Ngữ & Đơn Vị**: Bổ sung đầy đủ khóa dịch i18n mới, chuẩn hóa `đ` (Tiếng Việt) và `pts` (Tiếng Anh), 0 hardcoded text.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.1`
 
 ### 📺 Tự Động Co Giãn Fluid Auto-Fit Khi Bật Chế Độ Full TV Mode
 - **Khắc Phục 100% Khoảng Trống Đen Ở Chân Trang**: Ứng dụng cơ chế Flexbox tỉ lệ động (`flex-[1.25]` và `flex-1`), cho phép các khối ma trận 16 khu vực, bảng báo động 7 ngày và biểu đồ xu hướng tự động giãn nở lấp đầy toàn bộ chiều cao màn hình TV 1080p, 1440p hoặc 4K.

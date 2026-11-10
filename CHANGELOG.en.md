@@ -7,6 +7,27 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.2] - 2026-11-10
+
+### Fixed & Improved (Eliminated Empty Voids in 5S Breakdown & Kaizen Continuous Improvement Cards)
+- **Redesigned "FINDINGS & PENALTIES BY 5S" Card**:
+  - Replaced legacy single-row items with modern **2-Tier Stacked Telemetry Rows**:
+    - Upper Tier: S-group label with semantic color indicator dot (`S1 · Sort`, `S2 · Set in order`,...), right-aligned badge showing finding count and penalty points (-X pts).
+    - Lower Tier: Full-width modern progress bar (`h-2.5 sm:h-3 rounded-full`) with smooth 500ms animation.
+  - Added **Telemetry Summary Footer Strip**: Displays plant-wide monthly penalties (`Total Penalties: -X pts`) and highest violation driver (`Top Violation: S...`), eliminating vertical empty space.
+- **Enhanced "5S CONTINUOUS IMPROVEMENT / LEADERBOARD" Card**:
+  - **Kaizen View**:
+    - Integrated **Kaizen Status Micro-Strip**: Quick summary pills showing factory-wide Kaizen status (`▲ X Improved` | `▬ Y Stable` | `▼ Z Needs Kaizen`).
+    - Expanded display from 2 up to **Top 3 Improvers** (`🚀`) and **Top 3 Stagnant / Action Needed Areas** (`⚠️`), complete with month average and MoM delta.
+  - **Leaderboard View**:
+    - Expanded display up to **Top 3 Leaders** (`🏆 1.`, `🥈 2.`, `🥉 3.`) and **Top 3 Action Needed Areas** (`⚠️`).
+    - Refined card padding (`px-2.5 py-1.5 sm:py-2`), matching height with the adjacent 12-week trend chart.
+- **Standardized Localization & Units**:
+  - Added new i18n keys: `total_penalty_month`, `top_violation_group`, `kaizen_stat_improved`, `kaizen_stat_stable`, `kaizen_stat_declined`, `top_leaders_title`, `bottom_lagging_title`.
+  - Zero hardcoded text, unified points unit as `pts` (EN) and `đ` (VI).
+
+---
+
 ## [2.11.1] - 2026-11-10
 
 ### Fixed & Improved (Fluid Auto-Fitting Viewport Scaling in Full TV Mode)

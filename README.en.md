@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.1`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.2`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,20 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.1`
+## 1. Highlights of Version `v2.11.2`
+
+### 📊 Optimized Layout & Eliminated Empty Voids in 5S Breakdown & Kaizen
+- **2-Tier Stacked Telemetry Rows for 5S Breakdown**: Replaced legacy thin rows with modern stacked telemetry cards: upper tier displays S-group label with semantic color dot and count/penalty badge (-X pts); lower tier houses a bold modern progress bar (`h-2.5 sm:h-3 rounded-full`) with smooth 500ms animation.
+- **Telemetry Summary Footer Strip**: Added plant-wide penalty total (`Total Penalties: -X pts`) and highest violation driver (`Top Violation: S...`), perfectly filling card height and eradicating vertical voids in Full TV mode.
+- **Kaizen Status Micro-Strip & Expanded List**:
+  - Kaizen Tab: Added factory-wide summary pills (`▲ X Improved` | `▬ Y Stable` | `▼ Z Needs Kaizen`) and expanded view to **Top 3 Improvers** (`🚀`) and **Top 3 Needs Kaizen Areas** (`⚠️`).
+  - Leaderboard Tab: Expanded to **Top 3 Leaders** (`🏆 1.`, `🥈 2.`, `🥉 3.`) and **Top 3 Action Needed Areas** (`⚠️`).
+  - Refined card padding (`px-2.5 py-1.5 sm:py-2`), achieving harmonious balance with the adjacent 12-week trend graph.
+- **Standardized Localization & Units**: Added complete set of i18n keys, unified `pts` (EN) and `đ` (VI), 0 hardcoded text.
+
+---
+
+## 2. Highlights of Version `v2.11.1`
 
 ### 📺 Fluid Auto-Fit Viewport Scaling in Full TV Mode
 - **Zero Empty Black Gap at Screen Bottom**: Employs proportional Flexbox auto-fill (`flex-[1.25]` and `flex-1`), dynamically expanding the 16-area matrix wall, 7-day alarms panel, and trend graphs to fill 100% of large TV displays (1080p, 1440p, 4K).
