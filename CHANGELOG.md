@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.14] - 2026-11-11
+
+### Fixed & Improved (Giao Diện Toàn Màn Hình Trong 1 Khung Hình & Tái Cấu Trúc Card Kaizen Không Mất Chữ)
+- **Giao Diện Đơn Khung Hình Không Cuộn (Single-Frame Zero-Scroll 100vh)**:
+  - Khóa toàn bộ Dashboard vào một khung nhìn duy nhất trên Laptop/PC/TV (`min-width: 1024px` và `min-height: 500px`) với `overflow-y: hidden`, loại bỏ hoàn toàn thanh cuộn dọc.
+  - Thu gọn thanh Header linh hoạt (`h-10 sm:h-11 2xl:h-12`), tiết kiệm 8px chiều dọc quý giá.
+  - Hàng 1 (KPIs) tinh chỉnh padding và min-height (`min-h-[46px]`), không xuống dòng chữ số.
+  - Hàng 2 (Ma trận khu vực) chia lưới **5 cột (`lg:grid-cols-5`)**: 15 khu vực nhà máy phân bổ đều chính xác thành **3 hàng x 5 cột = 15 ô**, loại bỏ ô trống thừa và tiết kiệm 25% chiều cao hàng 2.
+  - Hàng 3 (Analytics) chia đều 3 cột cân xứng (`lg:col-span-4` cho Trend Chart, `lg:col-span-4` cho Phân tích 5S, `lg:col-span-4` cho Kaizen/Leaderboard).
+- **Tái Cấu Trúc Card 5S Continuous Improvement & Leaderboard Thành 2 Cột Song Song**:
+  - Chuyển đổi từ bố cục xếp chồng dọc 6 tầng sang **lưới 2 cột song song (`grid grid-cols-2`)**: Cột 1 dành cho Top Improvers (🚀), Cột 2 dành cho Stagnant / Needs Improvement (⚠️).
+  - Tích hợp dải tóm tắt Kaizen 1 dòng trên cùng (▲ Tiến bộ | ▬ Ổn định | ▼ Giảm sút).
+  - Tab Leaderboard cũng hiển thị 2 cột song song: Top 3 Dẫn đầu 🏆 song song Bottom 3 Cần cải thiện ⚠️.
+  - Khắc phục triệt để tình trạng che chữ, cắt chữ hoặc mất chữ, không phát sinh thanh cuộn con.
+- **Tương Thích Mượt Mà Thiết Bị Di Động**: Màn hình hẹp (<1024px hoặc chiều cao <500px) tự động chuyển sang chế độ cuộn dọc tự nhiên mà không vỡ khung.
+
+---
+
 ## [2.11.13] - 2026-11-11
 
 ### Fixed (Khắc Phục Triệt Để Chữ Chồng Chéo & Mất Chữ Thẻ Khu Vực)

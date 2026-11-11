@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.13`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.14`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,23 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.13`
+## 1. Điểm nổi bật của phiên bản `v2.11.14`
+
+### 🖥️ Giao Diện Toàn Màn Hình Trong 1 Khung Hình Duy Nhất & Card Kaizen Song Song Không Mất Chữ
+- **Khóa Toàn Bộ Dashboard Trong 1 Khung Hình (Zero-Scroll 100vh)**:
+  - Khóa màn hình hiển thị trên Laptop/PC/TV (`min-width: 1024px` và `min-height: 500px`) với `overflow-y: hidden`, hoàn toàn không cần cuộn trang.
+  - Tối ưu thanh Header (`h-10 sm:h-11 2xl:h-12`) và dải KPI Row 1 (`min-h-[46px]`), giúp tiết kiệm tối đa không gian dọc.
+  - Ma trận khu vực Row 2 chuyển sang lưới **5 cột (`lg:grid-cols-5`)**: 15 khu vực nhà máy chia đều đúng **3 hàng x 5 cột = 15 ô hoàn hảo**, loại bỏ ô thừa và giảm 25% chiều cao hàng 2.
+  - Hàng 3 (Analytics) chia đều 3 cột cân xứng (`lg:col-span-4` cho Trend Chart, 5S Breakdown và Kaizen/Leaderboard).
+- **Tái Cấu Trúc Card 5S Continuous Improvement & Leaderboard Thành 2 Cột Song Song**:
+  - Chuyển đổi từ bố cục xếp tầng dọc sang **2 cột song song (`grid grid-cols-2`)**: Cột 1 dành cho Top Improvers (🚀), Cột 2 dành cho Stagnant / Needs Improvement (⚠️).
+  - Tích hợp dải tóm tắt Kaizen 1 dòng trên cùng (▲ Tiến bộ | ▬ Ổn định | ▼ Giảm sút).
+  - Khắc phục triệt để tình trạng che chữ, cắt chữ hoặc mất chữ, không phát sinh thanh cuộn con bên trong card.
+- **Tự Động Cuộn Dọc Trên Thiết Bị Di Động**: Điện thoại và máy tính bảng dọc (<1024px) tự động cuộn dọc tự nhiên, giữ nguyên tỷ lệ thẩm mỹ.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.13`
 
 ### 🛡️ Khắc Phục Triệt Để Chồng Chéo Chữ & Bảo Vệ 100% Thông Số Thẻ Khu Vực
 - **Chống Đè Chữ 100% (CSS Grid 2 Hàng)**: Chuyển đổi khối Cải tiến Kaizen và Bảng xếp hạng sang kiến trúc CSS Grid 2 hàng vật lý độc lập (`grid grid-rows-2`), bảo vệ `shrink-0` từng mục, chấm dứt hoàn toàn tình trạng chữ bị đè lên nhau.

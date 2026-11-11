@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* `fit:` variant = TV wall or genuinely tall screen (>= 1280w and >= 880h) large enough to fit the whole dashboard without scrolling */
-@custom-variant fit (@media (min-width: 1280px) and (min-height: 880px));
+/* `fit:` variant = laptop, desktop & TV screen (>= 1024w and >= 500h) fitted into 1 single frame without scrolling */
+@custom-variant fit (@media (min-width: 1024px) and (min-height: 500px));
 
 :root {
   color-scheme: light dark;
@@ -119,9 +119,9 @@ html[data-ui-theme="classic"][data-color-mode="dark"] body {
   overflow-y: auto;
 }
 
-/* TV wall / Large 1080p+ display fit: on tall screens (>=1280w, >=880h) lock the dashboard to one screen.
-   Laptops (768p/900p, windowed browsers with tabs/toolbars) keep smooth natural vertical scrolling. */
-@media (min-width: 1280px) and (min-height: 880px) {
+/* Single-frame zero-scroll dashboard on laptop, desktop & TV screens (>=1024w, >=500h).
+   Phones and portrait tablets (<1024w) keep natural vertical scrolling. */
+@media (min-width: 1024px) and (min-height: 500px) {
   .theme-tv-canvas {
     overflow-y: hidden;
   }

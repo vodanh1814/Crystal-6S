@@ -314,11 +314,11 @@ export const Dashboard: React.FC = () => {
     isHybrid ? `border-l-4 ${tierColor}` : '';
 
   return (
-    <div className="dashboard-container flex-1 w-full min-h-0 p-2.5 sm:p-3.5 flex flex-col gap-2 2xl:gap-3 select-none fit:h-full fit:overflow-hidden fit:p-2 fit:2xl:p-3.5">
+    <div className="dashboard-container flex-1 w-full min-h-0 p-1.5 sm:p-2.5 2xl:p-3 flex flex-col gap-1.5 2xl:gap-2.5 select-none fit:h-full fit:overflow-hidden fit:p-1.5 fit:2xl:p-2.5">
       {/* TOOLBAR: Month Selector & Status */}
-      <div className="shrink-0 flex items-center justify-between gap-2 px-1 text-xs">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border ${toolbarPillCls}`}>
+      <div className="shrink-0 flex items-center justify-between gap-1.5 px-0.5 text-xs">
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+          <div className={`flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border ${toolbarPillCls}`}>
             <Calendar className={`w-3.5 h-3.5 shrink-0 ${accentTextCls}`} />
             <span className={`text-[11px] font-bold uppercase tracking-wider hidden sm:inline ${mutedTextCls}`}>
               {t('dashboard_month_filter')}:
@@ -344,7 +344,7 @@ export const Dashboard: React.FC = () => {
           {selectedMonth && (
             <button
               onClick={() => handleMonthChange('')}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
                 isClassic
                   ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
                   : isLightTv
@@ -381,7 +381,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
-          <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
+      <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
         {/* KPI 1: Weekly Average Score */}
         <div
           className={`${panelCls} ${hybridKpiAccent(
@@ -392,7 +392,7 @@ export const Dashboard: React.FC = () => {
               : effectiveWeeklyScore >= warningTarget
               ? 'border-l-amber-400'
               : 'border-l-rose-500'
-          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
+          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
@@ -464,7 +464,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-sky-500' : ''
-          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
+          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">
@@ -498,7 +498,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-blue-500' : ''
-          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
+          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('areas_meeting_target')}</span>
@@ -535,7 +535,7 @@ export const Dashboard: React.FC = () => {
         <div
           className={`${panelCls} ${hybridKpiAccent(
             isHybrid ? 'border-l-amber-400' : ''
-          )} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}
+          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
             <span className="font-semibold truncate text-[11px] sm:text-xs">{t('open_findings_kpi')}</span>
@@ -554,7 +554,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 5: 7-Day Overdue Alarm */}
-        <div className={`${kpiOverdueCardCls} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}>
+        <div className={`${kpiOverdueCardCls} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}>
           <div className={`flex items-center justify-between gap-1 text-xs font-bold min-w-0 ${failTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('alarm_7_days')}</span>
             {totalOverdue > 0 && (
@@ -572,7 +572,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* KPI 6: Repeat Findings Escalation */}
-        <div className={`${kpiRepeatCardCls} p-1.5 sm:px-2.5 sm:py-1.5 flex flex-col justify-between min-h-[56px] sm:min-h-[62px]`}>
+        <div className={`${kpiRepeatCardCls} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}>
           <div className={`flex items-center justify-between gap-1 text-xs font-semibold min-w-0 ${purpleTextCls}`}>
             <span className="truncate text-[11px] sm:text-xs">{t('repeat_findings_kpi')}</span>
             <span
@@ -630,8 +630,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Grid of area cards: 1 col on mobile, 2 cols on small tablet, 3 cols on medium, 4 cols on desktop */}
-          <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 fit:flex-1 fit:min-h-0 fit:mt-1.5 fit:auto-rows-fr">
+          {/* Grid of area cards: 2 cols mobile, 3 cols tablet, 4 cols md, 5 cols desktop (15 areas = EXACTLY 3 rows!) */}
+          <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 fit:flex-1 fit:min-h-0 fit:mt-1 fit:auto-rows-fr">
             {current_week_status.map((area: any) => {
               const isCurrentWeekAudited = area.status === 'submitted' && area.score !== null;
 
@@ -978,14 +978,14 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="dashboard-row-3 grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[2] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
+      <div className="dashboard-row-3 grid grid-cols-12 gap-1.5 2xl:gap-2.5 fit:flex-[2] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-5 min-h-[220px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between`}>
-          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
             </span>
-            <div className="flex items-center gap-2 text-[11px] font-mono shrink-0">
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono shrink-0">
               <span className={`font-semibold ${passTextCls}`}>
                 {t('target_reference_label', { target: `${target}.0` })}
               </span>
@@ -995,15 +995,15 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-[160px] fit:min-h-0 pt-1">
+          <div className="flex-1 min-h-[130px] fit:min-h-0 pt-0.5">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trend_12_weeks}
-                margin={{ top: 8, right: 8, left: -25, bottom: 0 }}
+                margin={{ top: 6, right: 6, left: -25, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: chartTickColor }} />
-                <YAxis domain={[85, 100]} tick={{ fontSize: 10, fill: chartTickColor }} />
+                <XAxis dataKey="week" tick={{ fontSize: 9, fill: chartTickColor }} />
+                <YAxis domain={[85, 100]} tick={{ fontSize: 9, fill: chartTickColor }} />
                 <Tooltip
                   formatter={(val: any, _name: any, item: any) => {
                     const payload = item?.payload;
@@ -1023,8 +1023,8 @@ export const Dashboard: React.FC = () => {
                   connectNulls
                   stroke={chartLineStroke}
                   strokeWidth={2.5}
-                  dot={{ r: 2.5, fill: chartLineStroke }}
-                  activeDot={{ r: 4.5 }}
+                  dot={{ r: 2, fill: chartLineStroke }}
+                  activeDot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -1032,8 +1032,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[220px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between gap-2`}>
-          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1.5`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
@@ -1044,7 +1044,7 @@ export const Dashboard: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex-1 flex flex-col justify-around py-1 text-xs gap-1 sm:gap-1.5">
+          <div className="flex-1 flex flex-col justify-around py-0.5 text-xs gap-1">
             {(s_group_breakdown || []).map((group: any) => {
               const widthPct = Math.round(((group.count || 0) / maxGroupFindings) * 100);
               const barColor =
@@ -1067,21 +1067,21 @@ export const Dashboard: React.FC = () => {
               };
 
               return (
-                <div key={group.s_group} className="flex flex-col gap-1 py-0.5">
+                <div key={group.s_group} className="flex flex-col gap-0.5 py-0.2">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className={`w-2 h-2 rounded-full ${barColor} shrink-0`}></span>
-                      <span className={`font-semibold truncate text-[11px] sm:text-xs ${subTextCls}`}>
+                      <span className={`font-semibold truncate text-[10px] sm:text-[11px] ${subTextCls}`}>
                         {sNames[group.s_group] || `S${group.s_group}`}
                       </span>
                     </div>
-                    <span className={`font-mono font-bold text-[10px] sm:text-[11px] whitespace-nowrap shrink-0 ml-1.5 ${
+                    <span className={`font-mono font-bold text-[9px] sm:text-[10px] whitespace-nowrap shrink-0 ml-1.5 ${
                       group.count > 0 ? failTextCls : mutedTextCls
                     }`}>
                       {group.count} {t('findings_unit')} (-{group.penalty}{t('pts_unit')})
                     </span>
                   </div>
-                  <div className={`h-2.5 sm:h-3 rounded-full overflow-hidden ${barTrackCls}`}>
+                  <div className={`h-2 sm:h-2.5 rounded-full overflow-hidden ${barTrackCls}`}>
                     <div
                       className={`h-full ${barColor} rounded-full transition-all duration-500`}
                       style={{ width: `${Math.max(group.count > 0 ? 5 : 0, widthPct)}%` }}
@@ -1093,7 +1093,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Telemetry Summary Footer Strip */}
-          <div className={`shrink-0 pt-1.5 border-t ${subtleDividerCls} flex items-center justify-between text-[10px] sm:text-[11px] font-mono ${mutedTextCls}`}>
+          <div className={`shrink-0 pt-1 border-t ${subtleDividerCls} flex items-center justify-between text-[9px] sm:text-[10px] font-mono ${mutedTextCls}`}>
             <span className="font-semibold text-rose-400">
               {t('total_penalty_month', { n: totalPenaltiesInMonth })}
             </span>
@@ -1104,8 +1104,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-3 min-h-[220px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between gap-2`}>
-          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1.5`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
                 ? t('continuous_improvement_title')
@@ -1142,11 +1142,11 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {row3Tab === 'improvement' ? (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0 overflow-hidden">
-              {/* Kaizen Status Micro-Strip */}
-              <div className={`shrink-0 grid grid-cols-3 gap-1 p-1 rounded-lg border ${
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1 min-h-0 overflow-hidden">
+              {/* Kaizen Status Micro-Strip: 1 clean horizontal row */}
+              <div className={`shrink-0 grid grid-cols-3 gap-1 p-0.5 sm:p-1 rounded-lg border ${
                 isLightTv ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-white/5'
-              } text-[10px] font-mono text-center`}>
+              } text-[9px] sm:text-[10px] font-mono text-center whitespace-nowrap`}>
                 <div className="flex items-center justify-center gap-1">
                   <span className="text-emerald-400 font-bold">▲</span>
                   <span className={`font-semibold ${passTextCls}`}>
@@ -1167,37 +1167,37 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Two Distinct Non-Overlapping Sections using Grid */}
-              <div className="flex-1 min-h-0 grid grid-rows-2 gap-1.5 overflow-hidden">
-                {/* Top Improvers */}
+              {/* Side-by-side 2 Columns: Left = Top Improvers, Right = Needs Improvement */}
+              <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-hidden items-stretch">
+                {/* Col 1: Top Improvers */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('top_improvers_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
                     {improvement_analysis?.top_improvers && improvement_analysis.top_improvers.length > 0 ? (
                       improvement_analysis.top_improvers.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-emerald-50 border-emerald-200'
                               : 'bg-emerald-500/10 border-emerald-500/25'
                           }`}
                         >
                           <span
-                            className={`font-bold truncate text-[11px] min-w-0 ${
+                            className={`font-bold truncate text-[10px] sm:text-[11px] min-w-0 ${
                               isLightTv ? 'text-emerald-800' : 'text-emerald-300'
                             }`}
                             title={`${a.area_name || a.area_code} (${a.area_code})`}
                           >
                             🚀 {a.area_name || a.area_code}
                           </span>
-                          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                            <span className={`font-mono font-bold text-xs ${passTextCls}`}>
+                          <div className="flex items-center gap-1 shrink-0 ml-1">
+                            <span className={`font-mono font-bold text-[10px] sm:text-[11px] ${passTextCls}`}>
                               {formatScore(a.current_score, lang)}
                             </span>
-                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
+                            <span className="px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[9px] sm:text-[10px]">
                               ▲+{a.delta}{t('pts_unit')}
                             </span>
                           </div>
@@ -1209,35 +1209,35 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Stagnant / Needs Kaizen Attention */}
+                {/* Col 2: Stagnant / Needs Improvement */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('stagnant_areas_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
                     {improvement_analysis?.stagnant_areas && improvement_analysis.stagnant_areas.length > 0 ? (
                       improvement_analysis.stagnant_areas.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-rose-50 border-rose-200'
                               : 'bg-rose-500/15 border-rose-500/35'
                           }`}
                         >
                           <span
-                            className={`font-bold truncate text-[11px] min-w-0 ${
+                            className={`font-bold truncate text-[10px] sm:text-[11px] min-w-0 ${
                               isLightTv ? 'text-rose-800' : 'text-rose-300'
                             }`}
                             title={`${a.area_name || a.area_code} (${a.area_code})`}
                           >
                             ⚠️ {a.area_name || a.area_code}
                           </span>
-                          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                            <span className={`font-mono font-bold text-xs ${failTextCls}`}>
+                          <div className="flex items-center gap-1 shrink-0 ml-1">
+                            <span className={`font-mono font-bold text-[10px] sm:text-[11px] ${failTextCls}`}>
                               {formatScore(a.current_score, lang)}
                             </span>
-                            <span className={`px-1.5 py-0.2 rounded font-mono font-bold text-[10px] ${
+                            <span className={`px-1 py-0.2 rounded font-mono font-bold text-[9px] sm:text-[10px] ${
                               a.delta !== null && a.delta < 0
                                 ? 'bg-rose-500/25 text-rose-300'
                                 : 'bg-amber-500/20 text-amber-300'
@@ -1259,34 +1259,34 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0 overflow-hidden">
-              {/* Two Distinct Non-Overlapping Leaderboard Sections using Grid */}
-              <div className="flex-1 min-h-0 grid grid-rows-2 gap-1.5 overflow-hidden">
-                {/* Top 3 Leaders */}
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1 min-h-0 overflow-hidden">
+              {/* Side-by-side 2 Columns for Leaderboard */}
+              <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-hidden items-stretch">
+                {/* Col 1: Top 3 Leaders */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('top_leaders_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
                     {top_areas && top_areas.length > 0 ? (
                       top_areas.slice(0, 3).map((a: any, idx: number) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-emerald-50 border-emerald-200'
                               : 'bg-emerald-500/10 border-emerald-500/25'
                           }`}
                         >
                           <span
-                            className={`font-bold truncate text-[11px] min-w-0 ${
+                            className={`font-bold truncate text-[10px] sm:text-[11px] min-w-0 ${
                               isLightTv ? 'text-emerald-800' : 'text-emerald-300'
                             }`}
                             title={`${a.area_name || a.area_code} (${a.area_code})`}
                           >
                             {idx === 0 ? '🏆 1.' : idx === 1 ? '🥈 2.' : '🥉 3.'} {a.area_name || a.area_code}
                           </span>
-                          <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${passTextCls}`}>
+                          <span className={`font-mono font-black text-[10px] sm:text-[11px] shrink-0 ml-1 ${passTextCls}`}>
                             {formatScore(a.month_avg, lang)}
                           </span>
                         </div>
@@ -1297,31 +1297,31 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Bottom 3 Needs Improvement */}
+                {/* Col 2: Bottom 3 Needs Improvement */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('bottom_lagging_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
                     {bottom_areas && bottom_areas.length > 0 ? (
                       bottom_areas.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-rose-50 border-rose-200'
                               : 'bg-rose-500/15 border-rose-500/35'
                           }`}
                         >
                           <span
-                            className={`font-bold truncate text-[11px] min-w-0 ${
+                            className={`font-bold truncate text-[10px] sm:text-[11px] min-w-0 ${
                               isLightTv ? 'text-rose-800' : 'text-rose-300'
                             }`}
                             title={`${a.area_name || a.area_code} (${a.area_code})`}
                           >
                             ⚠️ {a.area_name || a.area_code}
                           </span>
-                          <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${failTextCls}`}>
+                          <span className={`font-mono font-black text-[10px] sm:text-[11px] shrink-0 ml-1 ${failTextCls}`}>
                             {formatScore(a.month_avg, lang)}
                           </span>
                         </div>

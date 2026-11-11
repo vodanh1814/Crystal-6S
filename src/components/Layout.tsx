@@ -518,9 +518,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* RIGHT MAIN VIEWPORT */}
       <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
-        {/* COMPACT TOP HEADER BAR (h-12 = 48px) */}
+        {/* COMPACT TOP HEADER BAR (h-10 on compact/laptop, h-12 on TV) */}
         <header
-          className={`h-12 shrink-0 px-3 md:px-4 flex items-center justify-between gap-2 z-20 select-none ${headerBgCls}`}
+          className={`h-10 sm:h-11 2xl:h-12 shrink-0 px-3 md:px-4 flex items-center justify-between gap-2 z-20 select-none ${headerBgCls}`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Mobile hamburger */}

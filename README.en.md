@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.13`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.14`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,23 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.13`
+## 1. Highlights of Version `v2.11.14`
+
+### 🖥️ Single-Frame Zero-Scroll Dashboard Layout & Dual-Column Kaizen Card Without Text Loss
+- **Single-Frame Zero-Scroll Viewport Lock (100vh)**:
+  - Locks the entire Factory Andon Dashboard to a single-frame viewport on Laptop/PC/TV displays (`min-width: 1024px` and `min-height: 500px`) using `overflow-y: hidden`, eradicating vertical scrolling.
+  - Compact header (`h-10 sm:h-11 2xl:h-12`) and streamlined Row 1 KPI strip (`min-h-[46px]`), saving valuable vertical screen real estate.
+  - Re-gridded Row 2 (Area Status Matrix) into **5 columns (`lg:grid-cols-5`)**: All 15 factory areas now align cleanly into **exactly 3 rows x 5 columns**, eliminating the blank cell and reducing Row 2 vertical height by 25%.
+  - Balanced Row 3 (Bottom Analytics Strip) into equal thirds (`lg:col-span-4` for Trend Chart, 5S Breakdown, and Kaizen/Leaderboard).
+- **Dual Side-by-Side Columns for 5S Continuous Improvement & Leaderboard**:
+  - Replaced the 6-tier vertical stack with a **dual side-by-side column grid (`grid grid-cols-2`)**: Column 1 features Top Improvers (🚀), Column 2 features Stagnant / Needs Improvement areas (⚠️).
+  - Compact single-line Kaizen summary strip (▲ Improved | ▬ Stable | ▼ Declined).
+  - Eradicated text clipping, obscured metrics, and internal card scrollbars.
+- **Fluid Mobile Fallback**: Screen widths <1024px or heights <500px smoothly retain natural vertical scrolling with zero layout breakage.
+
+---
+
+## 2. Highlights of Version `v2.11.13`
 
 ### 🛡️ Complete Prevention of Text Overlapping & 100% Metric Visibility
 - **100% Non-Overlapping Layout (Dual-Row CSS Grid)**: Restructured Continuous Improvement and Leaderboards into dual-row CSS Grid (`grid grid-rows-2`) with `shrink-0` protection, guaranteeing items never collide.

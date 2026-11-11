@@ -7,6 +7,24 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.14] - 2026-11-11
+
+### Fixed & Improved (Single-Frame Zero-Scroll Dashboard Layout & Non-Overlapping Kaizen Card)
+- **Single-Frame Zero-Scroll Layout (100vh)**:
+  - Locked the entire Factory Andon Dashboard to a single-frame viewport on Laptop/PC/TV displays (`min-width: 1024px` and `min-height: 500px`) using `overflow-y: hidden`, eliminating all vertical scrollbars.
+  - Dynamically adjusted header height (`h-10 sm:h-11 2xl:h-12`), reclaiming 8px of valuable vertical screen real estate.
+  - Streamlined Row 1 (KPI strip) padding and min-height (`min-h-[46px]`), guaranteeing numbers stay on a single line (`whitespace-nowrap`).
+  - Re-gridded Row 2 (Area Status Matrix) into **5 columns (`lg:grid-cols-5`)**: All 15 factory areas now align into **exactly 3 rows x 5 columns**, removing the blank cell and reducing Row 2 vertical footprint by 25%.
+  - Balanced Row 3 (Bottom Analytics Strip) into equal thirds (`lg:col-span-4` for Trend Chart, `lg:col-span-4` for 5S Breakdown, `lg:col-span-4` for Kaizen/Leaderboard).
+- **Dual Side-by-Side Columns for 5S Continuous Improvement & Leaderboard**:
+  - Replaced the 6-tier vertical stack with a **dual side-by-side column grid (`grid grid-cols-2`)**: Column 1 features Top Improvers (🚀), Column 2 features Stagnant / Needs Improvement areas (⚠️).
+  - Compact single-line Kaizen summary strip (▲ Improved | ▬ Stable | ▼ Declined).
+  - Leaderboard tab also mirrors the 2-column layout: Top 3 Leaders 🏆 alongside Bottom 3 Lagging ⚠️.
+  - Eradicated text clipping, obscured metrics, and internal card scrollbars.
+- **Fluid Mobile Fallback**: Screen widths <1024px or heights <500px retain natural vertical scrolling with zero layout breakage.
+
+---
+
 ## [2.11.13] - 2026-11-11
 
 ### Fixed (Completely Resolved Text Overlapping & Missing Card Footer Metrics)
