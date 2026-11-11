@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.10`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.11`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,18 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.10`
+## 1. Điểm nổi bật của phiên bản `v2.11.11`
+
+### 🎯 Tinh Giản Thẻ Khu Vực: Loại Bỏ Trend, Tối Ưu Điểm Tuần/Tháng Với Cơ Chế Kế Thừa Thông Minh
+- **Loại Bỏ Hoàn Toàn Phần Trend Khu Vực**: Gỡ bỏ cụm mũi tên delta và biểu đồ mini sparkline khỏi từng thẻ khu vực, loại bỏ hoàn toàn sự rườm rà, rối mắt, giúp thẻ khu vực thoáng đãng, tinh gọn và rộng rãi.
+- **Cơ Chế Kế Thừa Điểm Thông Minh (Smart Fallback)**:
+  - *Điểm Tuần*: Khi tuần hiện tại đã chấm thì hiển thị điểm tuần này (ví dụ `W46: 94.0%`); nếu tuần này chưa chấm, tự động kế thừa và hiển thị điểm của **tuần gần nhất đã chấm** (ví dụ `W45: 87.0%`), không còn để trống `PEND`.
+  - *Điểm Tháng*: Hiển thị điểm trung bình của tháng hiện tại (ví dụ `Tháng 11: 87.0%`); nếu bước sang đầu tháng mới chưa có dữ liệu, tự động hiển thị điểm của **tháng cũ liền kề** (ví dụ `Tháng 10: 89.2%`).
+- **Bố Cục 2 Ô Số Liệu Đối Xứng, Chữ Số To Rõ Nét**: Thân thẻ được tổ chức thành 2 ô số liệu đối xứng (`TUẦN W{n}` và `THÁNG {n}`) với font monospace in đậm to (`text-base sm:text-lg`), tương phản cao và dễ quan sát từ xa trên TV xưởng.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.10`
 
 ### 🎨 Kiến Trúc UI/UX Pro Max: Tự Động Co Giãn Container & Chống Chồng Đè 100% Trên Trình Duyệt Web
 - **Tự Co Giãn Theo Chiều Cao Tự Nhiên (Natural Fluid Density Architecture)**: Loại bỏ triệt để các thuộc tính ép cứng chiều cao như `h-full` và `auto-rows-fr` trong giao diện web thông thường. Cho phép các thẻ khu vực và biểu đồ tự định hình kích thước (`min-h-[102px]` cho thẻ khu vực, `min-h-[220px]` cho biểu đồ), tự động kích hoạt thanh cuộn dọc mượt mà trên trình duyệt khi chiều cao màn hình hạn chế do tabs, bookmarks và thanh tác vụ Windows.

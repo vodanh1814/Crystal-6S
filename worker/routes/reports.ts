@@ -912,6 +912,7 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
 
     const completedWeeks = areaTrend12.filter((p) => p.score !== null);
     const lastScore = completedWeeks.length > 0 ? completedWeeks[completedWeeks.length - 1].score : null;
+    const lastCompletedWeek = completedWeeks.length > 0 ? completedWeeks[completedWeeks.length - 1] : null;
     const prevScoreWeek = completedWeeks.length > 1 ? completedWeeks[completedWeeks.length - 2].score : null;
     const deltaPrevWeek = lastScore !== null && prevScoreWeek !== null
       ? Math.round((lastScore - prevScoreWeek) * 10) / 10
@@ -929,6 +930,16 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       month_avg: currentScore,
       month_source: mInfo.source,
       prev_month_avg: prevScore,
+      prev_month_str: prevMonthStr,
+      latest_completed_week: lastCompletedWeek
+        ? {
+            week: lastCompletedWeek.week,
+            iso_year: lastCompletedWeek.iso_year,
+            iso_week: lastCompletedWeek.iso_week,
+            score: lastCompletedWeek.score,
+            source: lastCompletedWeek.source,
+          }
+        : null,
       delta_prev_month: deltaPrevMonth,
       delta_prev_week: deltaPrevWeek,
       trend_status: trendStatus,

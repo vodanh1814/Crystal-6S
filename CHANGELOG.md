@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.11] - 2026-11-11
+
+### Changed & Improved (Tinh Giản Thẻ Khu Vực: Loại Bỏ Trend, Tối Ưu Điểm Tuần/Tháng Với Cơ Chế Kế Thừa Thông Minh)
+- **Loại Bỏ Hoàn Toàn Phần Trend Khu Vực (Simplified Area Telemetry)**:
+  - Xóa bỏ cụm mũi tên delta và biểu đồ mini sparkline khỏi từng thẻ khu vực trong ma trận 15 khu vực trên bảng Dashboard.
+  - Giải phóng 100% không gian hiển thị, loại bỏ hoàn toàn sự rườm rà và rối mắt, giúp thẻ khu vực trở nên tinh gọn, thoáng đãng và tập trung vào dữ liệu quan trọng nhất.
+- **Cơ Chế Kế Thừa Điểm Tuần & Điểm Tháng Thông Minh (Smart Metric Fallback)**:
+  - **Điểm Tuần**:
+    - Khi tuần hiện tại đã hoàn thành chấm điểm: Hiển thị điểm tuần này (ví dụ `W46: 94.0%`).
+    - Khi tuần hiện tại chưa chấm: Tự động kế thừa và hiển thị điểm của **tuần gần nhất đã chấm** (ví dụ `W45: 87.0%`), không còn để trống hay hiện chữ `PEND` khô cứng, giúp người quản lý lập tức nắm bắt năng lực gần nhất của xưởng.
+  - **Điểm Tháng**:
+    - Khi tháng hiện tại đã có điểm trung bình: Hiển thị điểm tháng này (ví dụ `Tháng 11: 87.0%`).
+    - Khi bước sang đầu tháng mới chưa có dữ liệu: Tự động kế thừa và hiển thị điểm trung bình của **tháng cũ gần nhất** (ví dụ `Tháng 10: 89.2%`).
+- **Thiết Kế 2 Ô Số Liệu Đối Xứng, Chữ Số To Rõ Ràng**:
+  - Tầng thân thẻ khu vực được thiết kế thành 2 ô số liệu đối xứng đẹp mắt: Ô trái hiển thị `TUẦN W{n}` và Ô phải hiển thị `THÁNG {n}` với font chữ số monospace to đậm (`text-base sm:text-lg font-black font-mono`), nổi bật và dễ quan sát từ khoảng cách xa trên TV xưởng.
+
+---
+
 ## [2.11.10] - 2026-11-11
 
 ### Fixed & Improved (Áp Dụng Kiến Trúc UI/UX Pro Max - Tự Động Co Giãn Container & Chống Chồng Đè 100% Trên Trình Duyệt Web)

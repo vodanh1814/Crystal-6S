@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.10`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.11`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,18 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.10`
+## 1. Highlights of Version `v2.11.11`
+
+### 🎯 Streamlined Area Cards: Removed Trend Section, Smart Fallback for Weekly & Monthly Scores
+- **Removed Area Trend Telemetry**: Completely eliminated trend arrows and mini sparkline curves from each individual area card on the Factory Andon status matrix, eradicating clutter and opening up comfortable negative space.
+- **Smart Metric Fallback**:
+  - *Weekly Score*: Displays current week score when audited (e.g. `W46: 94.0%`); when current week is pending, automatically falls back to the **latest audited week** (e.g. `W45: 87.0%`), providing instant visibility into historical performance rather than leaving a dry `PEND`.
+  - *Monthly Score*: Displays current month average when available (e.g. `Month 11: 87.0%` / `Nov: 87.0%`); when starting a new month without data, seamlessly falls back to the **previous month's average** (e.g. `Month 10: 89.2%` / `Oct: 89.2%`).
+- **Symmetric Dual-Tile Layout**: Structured each card body into two balanced, dark glass metric tiles (`WEEK W{n}` and `MONTH {n}`) featuring high-contrast monospace numerals (`text-base sm:text-lg font-black font-mono`) legible from afar across the factory floor.
+
+---
+
+## 2. Highlights of Version `v2.11.10`
 
 ### 🎨 UI/UX Pro Max Architecture: Natural Fluid Density & Zero Overlap on Web Browsers
 - **Natural Fluid Density Architecture**: Eliminated rigid `h-full` and `auto-rows-fr` constraints in standard browser mode. Allows area cards and analytics panels to size intrinsically (`min-h-[102px]` for area cards, `min-h-[220px]` for bottom charts), activating smooth vertical scrolling whenever viewport height is constrained by tabs, bookmarks, and OS taskbars.

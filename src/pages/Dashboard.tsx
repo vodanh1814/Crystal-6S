@@ -24,7 +24,6 @@ import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 import { formatScore, formatDelta } from '../lib/format';
 import { resolveColorMode } from '../lib/theme';
-import { AreaSparkline } from '../components/dashboard/AreaSparkline';
 import { AreaTrendModal } from '../components/dashboard/AreaTrendModal';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
@@ -634,12 +633,36 @@ export const Dashboard: React.FC = () => {
           {/* Grid of area cards: 1 col on mobile, 2 cols on small tablet, 3 cols on medium, 4 cols on desktop */}
           <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5">
             {current_week_status.map((area: any) => {
-              const isSubmitted = area.status === 'submitted' && area.score !== null;
-              // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
-              const displayScore = isSubmitted ? area.score : area.month_avg;
-              const isPass = displayScore !== null && displayScore >= target;
-              const isWarning = displayScore !== null && displayScore >= warningTarget && displayScore < target;
-              const isFail = displayScore !== null && displayScore < warningTarget;
+              const isCurrentWeekAudited = area.status === 'submitted' && area.score !== null;
+
+              // Week score & label: if current week audited, use it. Otherwise fallback to latest completed week!
+              const latestCompleted = area.latest_completed_week;
+              const weekScore = isCurrentWeekAudited
+                ? area.score
+                : (latestCompleted?.score ?? null);
+              const weekLabel = isCurrentWeekAudited
+                ? `W${current_week.iso_week}`
+                : (latestCompleted?.week ?? `W${current_week.iso_week}`);
+              const isWeekFallback = !isCurrentWeekAudited && latestCompleted?.score !== null && latestCompleted?.score !== undefined;
+
+              // Month score & label: if area.month_avg !== null, use it. Otherwise fallback to prev_month_avg!
+              const hasCurrentMonthAvg = area.month_avg !== null && area.month_avg !== undefined;
+              const monthScore = hasCurrentMonthAvg
+                ? area.month_avg
+                : (area.prev_month_avg ?? null);
+              const targetMonthStr = hasCurrentMonthAvg
+                ? (month_info?.display_month || current_week.month)
+                : (area.prev_month_str || current_week.month);
+              const monthParts = String(targetMonthStr).split('-');
+              const monthNum = parseInt(monthParts[monthParts.length - 1], 10);
+              const monthDisplayLabel = lang === 'vi' ? String(monthNum) : getMonthShortName(targetMonthStr);
+              const isMonthFallback = !hasCurrentMonthAvg && area.prev_month_avg !== null && area.prev_month_avg !== undefined;
+
+              // Primary score determines overall card state
+              const primaryScore = isCurrentWeekAudited ? area.score : (weekScore ?? monthScore);
+              const isPass = primaryScore !== null && primaryScore >= target;
+              const isWarning = primaryScore !== null && primaryScore >= warningTarget && primaryScore < target;
+              const isFail = primaryScore !== null && primaryScore < warningTarget;
               const isOverdue = area.overdue_count > 0;
 
               const boxCls = isOverdue
@@ -672,7 +695,7 @@ export const Dashboard: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs shadow-rose-950">
                           🚨 {area.overdue_count}
                         </span>
-                      ) : isSubmitted ? (
+                      ) : isCurrentWeekAudited ? (
                         isPass ? (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/35">
                             {t('tag_pass')}
@@ -694,63 +717,44 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Tier 2: Telemetry Body (Left: Scores | Right: Big Trend Arrow & Dynamic Sparkline) */}
-                  <div className="flex items-center justify-between gap-2 py-2 min-w-0">
-                    {/* Left: Week & Month Metrics */}
-                    <div className="flex flex-col justify-center min-w-0 space-y-1">
-                      <div className="flex items-baseline gap-1.5 text-xs font-mono leading-none">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
-                          {`W${current_week.iso_week}`}:
-                        </span>
-                        <span className={`font-black text-sm ${
-                          isSubmitted
-                            ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
-                            : `${mutedTextCls} text-xs font-bold`
-                        }`}>
-                          {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
+                  {/* Tier 2: Telemetry Body (2 Clean Symmetrical Tiles: Week Score & Month Score) */}
+                  <div className="grid grid-cols-2 gap-2 py-2 min-w-0">
+                    {/* Left Tile: Week Score */}
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-1 px-2 border border-slate-800/80">
+                      <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <span>{t('week')}</span>
+                        <span className={isWeekFallback ? 'text-amber-400/90 font-mono' : 'font-mono'}>
+                          {weekLabel}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 text-xs font-mono leading-none">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
-                          {getMonthShortName(month_info?.display_month || current_week.month)}:
-                        </span>
-                        <span className={`font-black text-sm ${
-                          area.month_avg !== null
-                            ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
+                      <span
+                        className={`font-black text-sm sm:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                          weekScore !== null
+                            ? (weekScore >= target ? passTextCls : weekScore >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
-                        }`}>
-                          {formatScore(area.month_avg, lang)}
-                        </span>
-                      </div>
+                        }`}
+                      >
+                        {weekScore !== null ? formatScore(weekScore, lang) : '-'}
+                      </span>
                     </div>
 
-                    {/* Right: High-Visibility Trend Pill (Big Arrow & Sparkline) */}
-                    <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-700/60 rounded-lg px-2 py-1 shrink-0 shadow-xs">
-                      {/* Prominent Bold Arrow & Delta */}
-                      <div className="flex flex-col items-center justify-center leading-none">
-                        {area.delta_prev_week !== null && area.delta_prev_week > 0 ? (
-                          <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${passTextCls}`} title={`${t('vs_prev_week')}: +${area.delta_prev_week}%`}>
-                            ▲<span className="text-[11px] font-bold ml-0.5">+{area.delta_prev_week}</span>
-                          </span>
-                        ) : area.delta_prev_week !== null && area.delta_prev_week < 0 ? (
-                          <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${failTextCls}`} title={`${t('vs_prev_week')}: ${area.delta_prev_week}%`}>
-                            ▼<span className="text-[11px] font-bold ml-0.5">{area.delta_prev_week}</span>
-                          </span>
-                        ) : (
-                          <span className={`text-xs font-mono font-bold ${mutedTextCls}`} title="Không đổi">
-                            ➔<span className="text-[11px] ml-0.5">0</span>
-                          </span>
-                        )}
+                    {/* Right Tile: Month Score */}
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-1 px-2 border border-slate-800/80">
+                      <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <span>{t('month')}</span>
+                        <span className={isMonthFallback ? 'text-sky-400/90 font-mono' : 'font-mono'}>
+                          {monthDisplayLabel}
+                        </span>
                       </div>
-
-                      {/* Dynamic Mini Sparkline Curve */}
-                      <AreaSparkline
-                        data={area.sparkline_6 || []}
-                        target={target}
-                        warningTarget={warningTarget}
-                        width={58}
-                        height={22}
-                      />
+                      <span
+                        className={`font-black text-sm sm:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                          monthScore !== null
+                            ? (monthScore >= target ? passTextCls : monthScore >= warningTarget ? warnTextCls : failTextCls)
+                            : mutedTextCls
+                        }`}
+                      >
+                        {monthScore !== null ? formatScore(monthScore, lang) : '-'}
+                      </span>
                     </div>
                   </div>
 

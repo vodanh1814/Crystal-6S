@@ -7,6 +7,24 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.11] - 2026-11-11
+
+### Changed & Improved (Streamlined Area Cards: Removed Trend Section, Optimized Weekly & Monthly Scores with Smart Fallback)
+- **Removed Area Trend Telemetry (Simplified Area Telemetry)**:
+  - Completely stripped out the trend arrows and mini sparkline curves from each individual area card on the Factory Andon status matrix.
+  - Eliminated visual clutter and cramped layouts, restoring an uncluttered, spacious, and modern aesthetic.
+- **Smart Metric Fallback for Weekly & Monthly Scores**:
+  - **Weekly Score**:
+    - When the current week audit is submitted: Displays the current week score (e.g. `W46: 94.0%`).
+    - When the current week is pending: Automatically falls back to the **latest audited week** (e.g. `W45: 87.0%`), providing managers with immediate operational context instead of showing a blank or dry `PEND`.
+  - **Monthly Score**:
+    - When the current month has an average score: Displays the current month score (e.g. `Month 11: 87.0%` / `Nov: 87.0%`).
+    - When transitioning into a new month without data: Seamlessly falls back to the **previous month's average score** (e.g. `Month 10: 89.2%` / `Oct: 89.2%`).
+- **Symmetric Dual-Tile Layout with High-Contrast Typography**:
+  - Structured the card telemetry body into two clean, symmetric dark glass tiles: Left Tile for `WEEK W{n}` and Right Tile for `MONTH {n}` with enlarged monospace numerals (`text-base sm:text-lg font-black font-mono`), ensuring immediate readability from distances across the plant floor.
+
+---
+
 ## [2.11.10] - 2026-11-11
 
 ### Fixed & Improved (UI/UX Pro Max Architecture - Natural Fluid Density & Zero Overlap on Web Browsers)
