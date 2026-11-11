@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.6`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.7`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,15 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.6`
+## 1. Điểm nổi bật của phiên bản `v2.11.7`
+
+### 🛠️ Khắc Phục Lỗi Truy Vấn SQL Xu Hướng 12 Tuần
+- **Khắc phục lỗi 500 API Dashboard**: Điều chỉnh chuẩn xác cấu trúc truy vấn SQL lấy điểm 12 tuần của từng khu vực qua bảng `audit_area_scores`, xử lý triệt để lỗi `no such column: area_id` trên SQLite D1.
+- **Khôi phục hoạt động hệ thống**: Đảm bảo toàn bộ bảng điều khiển Andon TV và ứng dụng web tải mượt mà 100%.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.6`
 
 ### 📈 Mini Sparkline Xu Hướng 6 Tuần & Modal Phân Tích Phong Độ 5S Khu Vực
 - **Phân Tách Rõ Ràng Cột Tuần & Tháng Trên Từng Thẻ Khu Vực**: Phân chia thành 2 cột số liệu có nhãn vĩnh viễn (`W46` - `Chờ`/Điểm tuần | `Nov` - Điểm tháng & delta MoM `▲+2.5đ`), loại bỏ hoàn toàn việc nhầm lẫn giữa tuần và tháng.

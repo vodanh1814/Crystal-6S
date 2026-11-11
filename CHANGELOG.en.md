@@ -7,6 +7,16 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.7] - 2026-11-11
+
+### Fixed (Resolved 12-Week SQL Query Bug Causing API 500 Error)
+- **Standardized Plant-wide and Area-level Score Querying**:
+  - Properly segregated factory-wide weekly averages from table `audits` (`iso_year, iso_week, score`) and area-specific scores via `JOIN audit_area_scores aas ON aas.audit_id = a.id`.
+  - Thoroughly eliminated SQLite runtime error `no such column: area_id` triggered by mistakenly querying `area_id` directly on `audits`.
+  - Fully restored 100% healthy operation for [`GET /api/reports/dashboard`](https://5s-audit.cetvn.workers.dev/api/reports/dashboard) and the Smart Factory Andon TV dashboard.
+
+---
+
 ## [2.11.6] - 2026-11-11
 
 ### Added & Improved (6-Week Mini Sparkline Trend & Area 5S Performance Inspector Modal)

@@ -781,22 +781,38 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     trendParams.push(tw.isoYear, tw.isoWeek);
   }
 
+  // Plant-wide weekly scores from audits table
   const allWeeksRes = await c.env.DB
     .prepare(`
-      SELECT area_id, iso_year, iso_week, score FROM audits
+      SELECT iso_year, iso_week, score FROM audits
       WHERE status = 'submitted' AND score IS NOT NULL AND (${conditions})
+    `)
+    .bind(...trendParams)
+    .all<{ iso_year: number; iso_week: number; score: number }>();
+
+  // Area-level weekly scores from audit_area_scores joined with audits
+  const areaConditions = trendWeeks.map(() => '(a.iso_year = ? AND a.iso_week = ?)').join(' OR ');
+  const areaWeeksRes = await c.env.DB
+    .prepare(`
+      SELECT aas.area_id, a.iso_year, a.iso_week, aas.score
+      FROM audit_area_scores aas
+      JOIN audits a ON a.id = aas.audit_id
+      WHERE a.status = 'submitted' AND aas.score IS NOT NULL AND (${areaConditions})
     `)
     .bind(...trendParams)
     .all<{ area_id: number; iso_year: number; iso_week: number; score: number }>();
 
   const scoresByYearWeek = new Map<string, number[]>();
-  const areaScoreByYearWeek = new Map<string, number>();
   for (const r of allWeeksRes.results || []) {
     const key = `${r.iso_year}_${r.iso_week}`;
     if (!scoresByYearWeek.has(key)) {
       scoresByYearWeek.set(key, []);
     }
     scoresByYearWeek.get(key)!.push(r.score);
+  }
+
+  const areaScoreByYearWeek = new Map<string, number>();
+  for (const r of areaWeeksRes.results || []) {
     areaScoreByYearWeek.set(`${r.area_id}_${r.iso_year}_${r.iso_week}`, r.score);
   }
 

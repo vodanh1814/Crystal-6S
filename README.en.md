@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.6`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.7`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,15 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.6`
+## 1. Highlights of Version `v2.11.7`
+
+### 🛠️ Resolved 12-Week SQL Query Bug Causing Dashboard 500
+- **Eliminated 500 API Error**: Corrected SQL queries to fetch area-specific 12-week scores via `audit_area_scores`, thoroughly resolving `no such column: area_id` on SQLite D1.
+- **Restored System Health**: Restored 100% stable data loading for the Smart Factory Andon TV and web interface.
+
+---
+
+## 2. Highlights of Version `v2.11.6`
 
 ### 📈 6-Week Mini Sparkline Trend & Area 5S Performance Inspector Modal
 - **Distinct Dual Telemetry Columns on Each Area Card**: Split each area card into two permanently labeled columns (`W46` - Pending/Score | `Nov` - Monthly Avg & MoM delta `▲+2.5pts`), eliminating ambiguity between weekly and monthly data.

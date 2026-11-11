@@ -7,6 +7,16 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.7] - 2026-11-11
+
+### Fixed (Khắc Phục Lỗi Truy Vấn SQL Xu Hướng 12 Tuần Khiến API Bị 500)
+- **Chuẩn Hóa Quan Hệ Truy Vấn Điểm Số Nhà Máy & Khu Vực**:
+  - Tách bạch truy vấn điểm số toàn nhà máy từ bảng `audits` (`iso_year, iso_week, score`) và điểm số từng khu vực qua `JOIN audit_area_scores aas ON aas.audit_id = a.id`.
+  - Khắc phục triệt để lỗi SQLite runtime `no such column: area_id` do truy vấn trực tiếp cột `area_id` từ bảng `audits`.
+  - Khôi phục hoạt động bình thường 100% của API [`GET /api/reports/dashboard`](https://5s-audit.cetvn.workers.dev/api/reports/dashboard) và toàn bộ giao diện Smart Factory Andon TV.
+
+---
+
 ## [2.11.6] - 2026-11-11
 
 ### Added & Improved (Tích Hợp Mini Sparkline Xu Hướng 6 Tuần & Modal Phân Tích Phong Độ 5S Chi Tiết)
