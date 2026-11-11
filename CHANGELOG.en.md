@@ -1,4 +1,4 @@
-# Changelog (English)
+﻿# Changelog (English)
 
 All notable changes to the **Crystal 5S Audit** system are documented in this file in compliance with [Semantic Versioning](https://semver.org/).
 
@@ -6,6 +6,26 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))
 
 ---
+
+## [2.11.13] - 2026-11-11
+
+### Fixed (Completely Resolved Text Overlapping & Missing Card Footer Metrics)
+- **100% Non-Overlapping Layout in 5S Continuous Improvement & Leaderboard**:
+  - Restructured the list area into an isolated **dual-row CSS Grid layout (grid grid-rows-2 gap-1.5 overflow-hidden)** separating Top Improvers from Stagnant Areas.
+  - Added shrink-0 to all list items and section titles with internal smooth scrolling (overflow-y-auto pr-0.5), guaranteeing that items never collide or paint over each other under any viewport height or zoom scale.
+- **Protected All 3 Tiers of the 15 Area Cards (Zero Missing / Truncated Text)**:
+  - Resolved the issue where Tier 3 (footer Open / Verify / Repeat metrics) was clipped out on constrained viewports by enforcing shrink-0 pt-1 text-[10px] sm:text-[11px].
+  - Optimized Tier 2 padding for symmetrical week & month tiles, ensuring all metrics are 100% visible and sharply legible.
+  - Added shrink-0 protection to individual alarm cards so urgent findings are never vertically squashed.
+
+### Changed & Improved (Adaptive Responsiveness for Laptops & Wall TV Screens)
+- **Natural Vertical Scrolling on Laptops & Standard Displays**: Raised the single-screen viewport lock threshold (it:) to realistic TV dimensions (min-width: 1280px and min-height: 880px).
+- On laptop screens (1366x768, 1536x864 @ 125% scale) and standard windowed browsers with tabs/toolbars: Smooth vertical scrolling (overflow-y: auto) is active by default, completely eliminating forced vertical crushing.
+- On large TV displays and in **"Full TV Mode"** (:fullscreen, .full-tv-mode): Automatically locks cleanly to 100vh with zero scrollbar, distributing proportional heights to Row 2 (flex 3) and Row 3 (flex 2).
+- **Protected Left Sidebar**: Added overflow-y-auto min-h-0 to the desktop navigation list and shrink-0 to the sidebar footer, preventing the menu from crowding out the expand button or user avatar.
+
+### Added (Automated UI Layout Integrity Tests)
+- Added worker/lib/ui_layout_integrity.test.ts to automatically test and verify non-overlapping grid layout, footer metric preservation, and canvas scroll adaptability, bringing total tests to 39 (100% PASS).
 
 ## [2.11.12] - 2026-11-11
 

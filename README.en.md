@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.12`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.13`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.12`
+## 1. Highlights of Version `v2.11.13`
+
+### 🛡️ Complete Prevention of Text Overlapping & 100% Metric Visibility
+- **100% Non-Overlapping Layout (Dual-Row CSS Grid)**: Restructured Continuous Improvement and Leaderboards into dual-row CSS Grid (`grid grid-rows-2`) with `shrink-0` protection, guaranteeing items never collide.
+- **Protected All 3 Tiers on 15 Area Cards**: Restored full visibility for Tier 3 footer telemetry (Open / Verify / Repeat counts) with `shrink-0` protection so no data is ever clipped.
+- **Smooth Adaptive Responsiveness Across Screens**: Laptops and windowed browsers maintain natural vertical scrolling (`overflow-y: auto`), while Full TV Mode locks to 100vh on large factory displays.
+
+---
+
+## 2. Highlights of Version `v2.11.12`
 
 ### 📐 Dashboard Auto-Fits One Screen Per Device
 - **Factory TV & 14" laptop (from 1024×640)**: the dashboard locks to viewport height with no scrolling; the area grid, alarm panel and charts resize automatically. Laptops use compact spacing, large TVs (`2xl`) use roomy spacing.
@@ -26,7 +35,7 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 2. Highlights of Version `v2.11.10`
+## 3. Highlights of Version `v2.11.10`
 
 ### 🎨 UI/UX Pro Max Architecture: Natural Fluid Density & Zero Overlap on Web Browsers
 - **Natural Fluid Density Architecture**: Eliminated rigid `h-full` and `auto-rows-fr` constraints in standard browser mode. Allows area cards and analytics panels to size intrinsically (`min-h-[102px]` for area cards, `min-h-[220px]` for bottom charts), activating smooth vertical scrolling whenever viewport height is constrained by tabs, bookmarks, and OS taskbars.

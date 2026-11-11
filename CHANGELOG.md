@@ -7,6 +7,28 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.13] - 2026-11-11
+
+### Fixed (Khắc Phục Triệt Để Chữ Chồng Chéo & Mất Chữ Thẻ Khu Vực)
+- **Chống Đè Chữ 100% Tại Card 5S Continuous Improvement & Leaderboard**:
+  - Chuyển vùng chứa danh sách cải tiến và danh sách tụt lùi sang cấu trúc **CSS Grid 2 hàng vật lý độc lập (`grid grid-rows-2 gap-1.5 overflow-hidden`)**.
+  - Bổ sung `shrink-0` cho từng item và tiêu đề, kết hợp thanh cuộn nội bộ mượt mà `overflow-y-auto pr-0.5`. Đảm bảo chữ của các nhóm tuyệt đối không thể tràn hay đè lên nhau trong bất kỳ độ phân giải hay tỷ lệ zoom nào.
+- **Bảo Vệ Đầy Đủ Thông Số 3 Tầng Cho 15 Thẻ Khu Vực (Không Mất Chữ / Thiếu Chữ)**:
+  - Khắc phục lỗi Tier 3 (chân thẻ: thống kê số lượng Open / Verify / Repeat) bị nén cắt mất khi viewport hẹp bằng cách gán cố định `shrink-0 pt-1 text-[10px] sm:text-[11px]`.
+  - Tối ưu hóa padding của Tier 2 (ô điểm tuần và tháng) giúp 16 thẻ khu vực hiển thị cân đối, sắc nét và thông số luôn hiển thị 100% trọn vẹn.
+  - Bổ sung `shrink-0` cho từng thẻ cảnh báo (Alarms) giúp danh sách không bị ép méo khi có nhiều cảnh báo.
+
+### Changed & Improved (Tự Thích Ứng Mượt Mà Giữa Màn Hình Laptop & TV Nhà Xưởng)
+- **Tự Động Cuộn Dọc Trên Laptop & Màn Hình Phổ Thông**: Nâng ngưỡng kích hoạt khóa 1 màn hình (`fit:`) lên chuẩn TV thực tế (`min-width: 1280px` và `min-height: 880px`).
+- Trên màn hình Laptop (1366x768, 1536x864 @ 125% scale) hoặc trình duyệt cửa sổ có thanh công cụ (tabs, address bar, bookmarks, taskbar): Kích hoạt cuộn dọc tự nhiên (`overflow-y: auto`), loại bỏ hoàn toàn tình trạng bị ép `overflow-y: hidden` gây nén bẹp layout.
+- Trên màn hình TV lớn hoặc khi bấm **"Full TV Mode"** (`:fullscreen`, `.full-tv-mode`): Tự động khóa vừa khít 100% màn hình (`100vh`) không cuộn, phân bổ tỷ lệ hoàn hảo cho Row 2 (flex 3) và Row 3 (flex 2).
+- **Tối Ưu Sidebar Trái**: Bổ sung `overflow-y-auto min-h-0` cho danh sách menu và `shrink-0` cho chân sidebar, menu cuộn êm ái mà không đè cấn lên nút phóng to hoặc avatar người dùng.
+
+### Added (Bộ Kiểm Thử Toàn Vẹn Giao Diện Tự Động)
+- Thêm test suite `worker/lib/ui_layout_integrity.test.ts` kiểm tra tự động chống đè chữ, chống mất chữ và cơ chế cuộn canvas, nâng tổng số bài kiểm thử lên 39 tests (100% PASS).
+
+---
+
 ## [2.11.12] - 2026-11-11
 
 ### Changed & Improved (Dashboard Tự Vừa 1 Màn Hình Theo Từng Thiết Bị)

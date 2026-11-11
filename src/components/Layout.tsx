@@ -312,9 +312,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             sidebarState === 'expanded' ? 'w-56' : 'w-14'
           }`}
         >
-          <div>
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {/* Sidebar Brand Header */}
-            <div className={`h-12 px-3 flex items-center justify-between border-b ${chromeBorderCls}`}>
+            <div className={`h-12 px-3 flex items-center justify-between border-b shrink-0 ${chromeBorderCls}`}>
               <Link to="/" className="flex items-center gap-2 overflow-hidden group">
                 {companyLogo && !logoBroken ? (
                   <img
@@ -372,7 +372,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* Navigation links */}
-            <nav className="p-2 space-y-1 text-xs font-medium">
+            <nav className="p-2 space-y-1 text-xs font-medium flex-1 overflow-y-auto min-h-0">
               {sidebarState === 'expanded' && (
                 <div
                   className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -438,7 +438,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           {/* Sidebar Footer */}
-          <div className={`p-2.5 border-t space-y-2 ${chromeBorderCls}`}>
+          <div className={`p-2.5 border-t space-y-2 shrink-0 ${chromeBorderCls}`}>
             <button
               onClick={() => {
                 setSidebarState('hidden');

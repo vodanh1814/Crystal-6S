@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* `fit:` variant = screen large enough to fit the whole dashboard without scrolling */
-@custom-variant fit (@media (min-width: 1024px) and (min-height: 640px));
+/* `fit:` variant = TV wall or genuinely tall screen (>= 1280w and >= 880h) large enough to fit the whole dashboard without scrolling */
+@custom-variant fit (@media (min-width: 1280px) and (min-height: 880px));
 
 :root {
   color-scheme: light dark;
@@ -119,9 +119,9 @@ html[data-ui-theme="classic"][data-color-mode="dark"] body {
   overflow-y: auto;
 }
 
-/* Adaptive fit: on laptop/TV screens (>=1024w, >=640h) lock the dashboard to one screen.
-   Phones/tablets and very short windows keep natural vertical scrolling. */
-@media (min-width: 1024px) and (min-height: 640px) {
+/* TV wall / Large 1080p+ display fit: on tall screens (>=1280w, >=880h) lock the dashboard to one screen.
+   Laptops (768p/900p, windowed browsers with tabs/toolbars) keep smooth natural vertical scrolling. */
+@media (min-width: 1280px) and (min-height: 880px) {
   .theme-tv-canvas {
     overflow-y: hidden;
   }
@@ -133,6 +133,28 @@ html[data-ui-theme="classic"][data-color-mode="dark"] body {
   overflow-y: hidden;
   height: 100% !important;
   max-height: 100vh;
+}
+
+:fullscreen .dashboard-container,
+:-webkit-full-screen .dashboard-container,
+.full-tv-mode .dashboard-container {
+  height: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+:fullscreen .dashboard-row-2,
+:-webkit-full-screen .dashboard-row-2,
+.full-tv-mode .dashboard-row-2 {
+  flex: 3 3 0%;
+  min-height: 0;
+}
+
+:fullscreen .dashboard-row-3,
+:-webkit-full-screen .dashboard-row-3,
+.full-tv-mode .dashboard-row-3 {
+  flex: 2 2 0%;
+  min-height: 0;
 }
 
 /* ============================================================================

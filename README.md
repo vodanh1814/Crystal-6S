@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.12`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.13`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.12`
+## 1. Điểm nổi bật của phiên bản `v2.11.13`
+
+### 🛡️ Khắc Phục Triệt Để Chồng Chéo Chữ & Bảo Vệ 100% Thông Số Thẻ Khu Vực
+- **Chống Đè Chữ 100% (CSS Grid 2 Hàng)**: Chuyển đổi khối Cải tiến Kaizen và Bảng xếp hạng sang kiến trúc CSS Grid 2 hàng vật lý độc lập (`grid grid-rows-2`), bảo vệ `shrink-0` từng mục, chấm dứt hoàn toàn tình trạng chữ bị đè lên nhau.
+- **Bảo Vệ Đầy Đủ 3 Tầng Cho 15 Thẻ Khu Vực**: Khắc phục lỗi Tier 3 (chân thẻ: thống kê Open / Verify) bị nén cắt mất khi viewport hẹp, đảm bảo mọi số liệu luôn hiển thị trọn vẹn.
+- **Tự Thích Ứng Đa Màn Hình Mượt Mà**: Laptop và trình duyệt thông thường có thanh công cụ luôn cuộn dọc tự nhiên (`overflow-y: auto`), không bị dồn nén bẹp layout. Chế độ Full TV Mode khóa vừa khít 100vh không thanh cuộn trên TV lớn.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.12`
 
 ### 📐 Dashboard Tự Vừa 1 Màn Hình Theo Từng Thiết Bị
 - **TV xưởng & Laptop 14" (từ 1024×640)**: Dashboard khóa theo chiều cao màn hình, không cần cuộn; lưới thẻ khu vực, panel cảnh báo và biểu đồ tự co giãn. Laptop dùng khoảng cách gọn, TV lớn (`2xl`) dùng khoảng cách rộng.
@@ -26,7 +35,7 @@
 
 ---
 
-## 2. Điểm nổi bật của phiên bản `v2.11.10`
+## 3. Điểm nổi bật của phiên bản `v2.11.10`
 
 ### 🎨 Kiến Trúc UI/UX Pro Max: Tự Động Co Giãn Container & Chống Chồng Đè 100% Trên Trình Duyệt Web
 - **Tự Co Giãn Theo Chiều Cao Tự Nhiên (Natural Fluid Density Architecture)**: Loại bỏ triệt để các thuộc tính ép cứng chiều cao như `h-full` và `auto-rows-fr` trong giao diện web thông thường. Cho phép các thẻ khu vực và biểu đồ tự định hình kích thước (`min-h-[102px]` cho thẻ khu vực, `min-h-[220px]` cho biểu đồ), tự động kích hoạt thanh cuộn dọc mượt mà trên trình duyệt khi chiều cao màn hình hạn chế do tabs, bookmarks và thanh tác vụ Windows.

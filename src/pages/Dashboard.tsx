@@ -314,7 +314,7 @@ export const Dashboard: React.FC = () => {
     isHybrid ? `border-l-4 ${tierColor}` : '';
 
   return (
-    <div className="flex-1 w-full min-h-0 p-2.5 sm:p-3.5 flex flex-col gap-2 2xl:gap-3 select-none fit:h-full fit:overflow-hidden fit:p-2 fit:2xl:p-3.5">
+    <div className="dashboard-container flex-1 w-full min-h-0 p-2.5 sm:p-3.5 flex flex-col gap-2 2xl:gap-3 select-none fit:h-full fit:overflow-hidden fit:p-2 fit:2xl:p-3.5">
       {/* TOOLBAR: Month Selector & Status */}
       <div className="shrink-0 flex items-center justify-between gap-2 px-1 text-xs">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -595,7 +595,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[3] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
+      <div className="dashboard-row-2 grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[3] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
         {/* 16 AREAS STATUS MATRIX WALL */}
         <div className={`col-span-12 lg:col-span-8 ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between fit:min-h-0 fit:overflow-hidden`}>
           <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
@@ -679,13 +679,13 @@ export const Dashboard: React.FC = () => {
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} p-3 flex flex-col justify-between h-auto min-h-[102px] sm:min-h-[108px] fit:min-h-0 fit:h-full fit:overflow-hidden fit:p-1.5 fit:2xl:p-3 transition-all duration-150 cursor-pointer group hover:border-slate-400`}
+                  className={`${boxCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between h-auto min-h-[96px] sm:min-h-[104px] fit:min-h-0 fit:h-full fit:overflow-hidden transition-all duration-150 cursor-pointer group hover:border-slate-400`}
                   title={t('click_to_inspect_area')}
                 >
                   {/* Tier 1: Header (Area Name on Left, Status Badge on Right) */}
-                  <div className="flex items-center justify-between gap-2 min-w-0 pb-1.5 border-b border-slate-800/60">
+                  <div className="flex items-center justify-between gap-1.5 min-w-0 pb-1 border-b border-slate-800/60 shrink-0">
                     <span
-                      className={`font-black text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
+                      className={`font-black text-xs sm:text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
@@ -718,17 +718,17 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Tier 2: Telemetry Body (2 Clean Symmetrical Tiles: Week Score & Month Score) */}
-                  <div className="grid grid-cols-2 gap-2 py-2 min-w-0">
+                  <div className="grid grid-cols-2 gap-1.5 py-1 min-w-0 flex-1 items-center">
                     {/* Left Tile: Week Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-1 px-2 border border-slate-800/80">
-                      <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 border border-slate-800/80">
+                      <div className="flex items-center gap-1 text-[9px] uppercase font-bold text-slate-400 tracking-wider">
                         <span>{t('week')}</span>
                         <span className={isWeekFallback ? 'text-amber-400/90 font-mono' : 'font-mono'}>
                           {weekLabel}
                         </span>
                       </div>
                       <span
-                        className={`font-black text-sm sm:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                        className={`font-black text-xs sm:text-sm 2xl:text-base font-mono tracking-tight leading-tight mt-0.5 ${
                           weekScore !== null
                             ? (weekScore >= target ? passTextCls : weekScore >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
@@ -739,15 +739,15 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Right Tile: Month Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-1 px-2 border border-slate-800/80">
-                      <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 border border-slate-800/80">
+                      <div className="flex items-center gap-1 text-[9px] uppercase font-bold text-slate-400 tracking-wider">
                         <span>{t('month')}</span>
                         <span className={isMonthFallback ? 'text-sky-400/90 font-mono' : 'font-mono'}>
                           {monthDisplayLabel}
                         </span>
                       </div>
                       <span
-                        className={`font-black text-sm sm:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                        className={`font-black text-xs sm:text-sm 2xl:text-base font-mono tracking-tight leading-tight mt-0.5 ${
                           monthScore !== null
                             ? (monthScore >= target ? passTextCls : monthScore >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
@@ -759,14 +759,14 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Tier 3: Action Telemetry Footer */}
-                  <div className={`flex items-center justify-between text-xs pt-1.5 border-t border-slate-800/80 text-slate-400 font-mono`}>
-                    <div className="flex items-center gap-1.5">
+                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-slate-800/80 text-slate-400 font-mono shrink-0`}>
+                    <div className="flex items-center gap-1">
                       <span>{t('open_short')}:</span>
                       <strong className={area.open_count > 0 ? 'text-amber-400 font-bold' : subTextCls}>
                         {area.open_count}
                       </strong>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       {area.repeat_count > 0 ? (
                         <span className={`font-bold shrink-0 ${purpleValTextCls}`}>{t('repeat_short')}</span>
                       ) : (
@@ -859,7 +859,7 @@ export const Dashboard: React.FC = () => {
                   <div
                     key={f.id}
                     onClick={() => setExpandedAlarmId(isExpanded ? null : f.id)}
-                    className={`w-full min-w-0 rounded-lg border ${cardBorder} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between ${
+                    className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
                     } transition-all cursor-pointer group`}
                   >
@@ -978,7 +978,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[2] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
+      <div className="dashboard-row-3 grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[2] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
         {/* 12-WEEK TREND LINE */}
         <div className={`col-span-12 lg:col-span-5 min-h-[220px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
@@ -1142,7 +1142,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {row3Tab === 'improvement' ? (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0">
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0 overflow-hidden">
               {/* Kaizen Status Micro-Strip */}
               <div className={`shrink-0 grid grid-cols-3 gap-1 p-1 rounded-lg border ${
                 isLightTv ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-white/5'
@@ -1167,156 +1167,170 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Top Improvers */}
-              <div className="flex-1 flex flex-col justify-around gap-1 min-h-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center justify-between px-0.5">
-                  <span>{t('top_improvers_title')}</span>
-                </span>
-                {improvement_analysis?.top_improvers && improvement_analysis.top_improvers.length > 0 ? (
-                  improvement_analysis.top_improvers.slice(0, 3).map((a: any) => (
-                    <div
-                      key={a.area_id}
-                      className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border min-w-0 transition-all ${
-                        isLightTv
-                          ? 'bg-emerald-50 border-emerald-200'
-                          : 'bg-emerald-500/10 border-emerald-500/25'
-                      }`}
-                    >
-                      <span
-                        className={`font-bold truncate text-[11px] min-w-0 ${
-                          isLightTv ? 'text-emerald-800' : 'text-emerald-300'
-                        }`}
-                        title={`${a.area_name || a.area_code} (${a.area_code})`}
-                      >
-                        🚀 {a.area_name || a.area_code}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                        <span className={`font-mono font-bold text-xs ${passTextCls}`}>
-                          {formatScore(a.current_score, lang)}
-                        </span>
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
-                          ▲+{a.delta}{t('pts_unit')}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('no_improvers')}</div>
-                )}
-              </div>
+              {/* Two Distinct Non-Overlapping Sections using Grid */}
+              <div className="flex-1 min-h-0 grid grid-rows-2 gap-1.5 overflow-hidden">
+                {/* Top Improvers */}
+                <div className="flex flex-col min-h-0 overflow-hidden justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5">
+                    {t('top_improvers_title')}
+                  </span>
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                    {improvement_analysis?.top_improvers && improvement_analysis.top_improvers.length > 0 ? (
+                      improvement_analysis.top_improvers.slice(0, 3).map((a: any) => (
+                        <div
+                          key={a.area_id}
+                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                            isLightTv
+                              ? 'bg-emerald-50 border-emerald-200'
+                              : 'bg-emerald-500/10 border-emerald-500/25'
+                          }`}
+                        >
+                          <span
+                            className={`font-bold truncate text-[11px] min-w-0 ${
+                              isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+                            }`}
+                            title={`${a.area_name || a.area_code} (${a.area_code})`}
+                          >
+                            🚀 {a.area_name || a.area_code}
+                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                            <span className={`font-mono font-bold text-xs ${passTextCls}`}>
+                              {formatScore(a.current_score, lang)}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px]">
+                              ▲+{a.delta}{t('pts_unit')}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('no_improvers')}</div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Stagnant / Needs Kaizen Attention */}
-              <div className="flex-1 flex flex-col justify-around gap-1 min-h-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center justify-between px-0.5">
-                  <span>{t('stagnant_areas_title')}</span>
-                </span>
-                {improvement_analysis?.stagnant_areas && improvement_analysis.stagnant_areas.length > 0 ? (
-                  improvement_analysis.stagnant_areas.slice(0, 3).map((a: any) => (
-                    <div
-                      key={a.area_id}
-                      className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border min-w-0 transition-all ${
-                        isLightTv
-                          ? 'bg-rose-50 border-rose-200'
-                          : 'bg-rose-500/15 border-rose-500/35'
-                      }`}
-                    >
-                      <span
-                        className={`font-bold truncate text-[11px] min-w-0 ${
-                          isLightTv ? 'text-rose-800' : 'text-rose-300'
-                        }`}
-                        title={`${a.area_name || a.area_code} (${a.area_code})`}
-                      >
-                        ⚠️ {a.area_name || a.area_code}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                        <span className={`font-mono font-bold text-xs ${failTextCls}`}>
-                          {formatScore(a.current_score, lang)}
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${
-                          a.delta !== null && a.delta < 0
-                            ? 'bg-rose-500/25 text-rose-300'
-                            : 'bg-amber-500/20 text-amber-300'
-                        }`}>
-                          {a.delta !== null && a.delta < 0
-                            ? `▼${a.delta}${t('pts_unit')}`
-                            : a.delta !== null && a.delta > 0
-                            ? `▲+${a.delta}${t('pts_unit')}`
-                            : `▬ 0${t('pts_unit')}`}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('no_stagnant')}</div>
-                )}
+                {/* Stagnant / Needs Kaizen Attention */}
+                <div className="flex flex-col min-h-0 overflow-hidden justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5">
+                    {t('stagnant_areas_title')}
+                  </span>
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                    {improvement_analysis?.stagnant_areas && improvement_analysis.stagnant_areas.length > 0 ? (
+                      improvement_analysis.stagnant_areas.slice(0, 3).map((a: any) => (
+                        <div
+                          key={a.area_id}
+                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                            isLightTv
+                              ? 'bg-rose-50 border-rose-200'
+                              : 'bg-rose-500/15 border-rose-500/35'
+                          }`}
+                        >
+                          <span
+                            className={`font-bold truncate text-[11px] min-w-0 ${
+                              isLightTv ? 'text-rose-800' : 'text-rose-300'
+                            }`}
+                            title={`${a.area_name || a.area_code} (${a.area_code})`}
+                          >
+                            ⚠️ {a.area_name || a.area_code}
+                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                            <span className={`font-mono font-bold text-xs ${failTextCls}`}>
+                              {formatScore(a.current_score, lang)}
+                            </span>
+                            <span className={`px-1.5 py-0.2 rounded font-mono font-bold text-[10px] ${
+                              a.delta !== null && a.delta < 0
+                                ? 'bg-rose-500/25 text-rose-300'
+                                : 'bg-amber-500/20 text-amber-300'
+                            }`}>
+                              {a.delta !== null && a.delta < 0
+                                ? `▼${a.delta}${t('pts_unit')}`
+                                : a.delta !== null && a.delta > 0
+                                ? `▲+${a.delta}${t('pts_unit')}`
+                                : `▬ 0${t('pts_unit')}`}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('no_stagnant')}</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0">
-              {/* Top 3 Leaders */}
-              <div className="flex-1 flex flex-col justify-around gap-1 min-h-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center justify-between px-0.5">
-                  <span>{t('top_leaders_title')}</span>
-                </span>
-                {top_areas && top_areas.length > 0 ? (
-                  top_areas.slice(0, 3).map((a: any, idx: number) => (
-                    <div
-                      key={a.area_id}
-                      className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border min-w-0 transition-all ${
-                        isLightTv
-                          ? 'bg-emerald-50 border-emerald-200'
-                          : 'bg-emerald-500/10 border-emerald-500/25'
-                      }`}
-                    >
-                      <span
-                        className={`font-bold truncate text-[11px] min-w-0 ${
-                          isLightTv ? 'text-emerald-800' : 'text-emerald-300'
-                        }`}
-                        title={`${a.area_name || a.area_code} (${a.area_code})`}
-                      >
-                        {idx === 0 ? '🏆 1.' : idx === 1 ? '🥈 2.' : '🥉 3.'} {a.area_name || a.area_code}
-                      </span>
-                      <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${passTextCls}`}>
-                        {formatScore(a.month_avg, lang)}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('noData')}</div>
-                )}
-              </div>
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1.5 min-h-0 overflow-hidden">
+              {/* Two Distinct Non-Overlapping Leaderboard Sections using Grid */}
+              <div className="flex-1 min-h-0 grid grid-rows-2 gap-1.5 overflow-hidden">
+                {/* Top 3 Leaders */}
+                <div className="flex flex-col min-h-0 overflow-hidden justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5">
+                    {t('top_leaders_title')}
+                  </span>
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                    {top_areas && top_areas.length > 0 ? (
+                      top_areas.slice(0, 3).map((a: any, idx: number) => (
+                        <div
+                          key={a.area_id}
+                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                            isLightTv
+                              ? 'bg-emerald-50 border-emerald-200'
+                              : 'bg-emerald-500/10 border-emerald-500/25'
+                          }`}
+                        >
+                          <span
+                            className={`font-bold truncate text-[11px] min-w-0 ${
+                              isLightTv ? 'text-emerald-800' : 'text-emerald-300'
+                            }`}
+                            title={`${a.area_name || a.area_code} (${a.area_code})`}
+                          >
+                            {idx === 0 ? '🏆 1.' : idx === 1 ? '🥈 2.' : '🥉 3.'} {a.area_name || a.area_code}
+                          </span>
+                          <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${passTextCls}`}>
+                            {formatScore(a.month_avg, lang)}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('noData')}</div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Bottom 3 Needs Improvement */}
-              <div className="flex-1 flex flex-col justify-around gap-1 min-h-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center justify-between px-0.5">
-                  <span>{t('bottom_lagging_title')}</span>
-                </span>
-                {bottom_areas && bottom_areas.length > 0 ? (
-                  bottom_areas.slice(0, 3).map((a: any) => (
-                    <div
-                      key={a.area_id}
-                      className={`flex items-center justify-between px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border min-w-0 transition-all ${
-                        isLightTv
-                          ? 'bg-rose-50 border-rose-200'
-                          : 'bg-rose-500/15 border-rose-500/35'
-                      }`}
-                    >
-                      <span
-                        className={`font-bold truncate text-[11px] min-w-0 ${
-                          isLightTv ? 'text-rose-800' : 'text-rose-300'
-                        }`}
-                        title={`${a.area_name || a.area_code} (${a.area_code})`}
-                      >
-                        ⚠️ {a.area_name || a.area_code}
-                      </span>
-                      <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${failTextCls}`}>
-                        {formatScore(a.month_avg, lang)}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('noData')}</div>
-                )}
+                {/* Bottom 3 Needs Improvement */}
+                <div className="flex flex-col min-h-0 overflow-hidden justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5">
+                    {t('bottom_lagging_title')}
+                  </span>
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-y-auto pr-0.5">
+                    {bottom_areas && bottom_areas.length > 0 ? (
+                      bottom_areas.slice(0, 3).map((a: any) => (
+                        <div
+                          key={a.area_id}
+                          className={`flex items-center justify-between px-2 py-0.5 sm:py-1 rounded-lg border min-w-0 transition-all shrink-0 ${
+                            isLightTv
+                              ? 'bg-rose-50 border-rose-200'
+                              : 'bg-rose-500/15 border-rose-500/35'
+                          }`}
+                        >
+                          <span
+                            className={`font-bold truncate text-[11px] min-w-0 ${
+                              isLightTv ? 'text-rose-800' : 'text-rose-300'
+                            }`}
+                            title={`${a.area_name || a.area_code} (${a.area_code})`}
+                          >
+                            ⚠️ {a.area_name || a.area_code}
+                          </span>
+                          <span className={`font-mono font-black text-xs shrink-0 ml-1.5 ${failTextCls}`}>
+                            {formatScore(a.month_avg, lang)}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`text-xs italic py-1 ${mutedTextCls}`}>{t('noData')}</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
