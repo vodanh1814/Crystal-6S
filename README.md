@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.7`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.8`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.7`
+## 1. Điểm nổi bật của phiên bản `v2.11.8`
+
+### 📱 Layout 3 Tầng Tự Co Giãn Theo Mật Độ & Kế Thừa Điểm Lịch Sử Cho Sparkline
+- **Layout 3 Tầng Nén Thông Minh**: Tái cấu trúc thẻ khu vực thành 3 hàng tinh gọn (Tên KV + Sparkline; Số liệu Tuần & Tháng nằm ngang; Huy hiệu trạng thái + Open/Verify), xóa bỏ hoàn toàn tình trạng chữ chồng chéo.
+- **Tự Co Giãn Theo Mật Độ Hiển Thị**: Tích hợp `min-h-0`, `overflow-hidden` và padding/gap fluid giúp các container tự động căn chỉnh hoàn hảo trên mọi kích thước màn hình TV và máy tính.
+- **Kế Thừa Điểm Lịch Sử Tháng**: Tự động lấy điểm lịch sử đã nhập cho các tuần chưa audit, giúp Mini Sparkline 6 tuần và Modal 12 tuần hiển thị đường cong liên tục, đầy đủ dữ liệu.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.7`
 
 ### 🛠️ Khắc Phục Lỗi Truy Vấn SQL Xu Hướng 12 Tuần
 - **Khắc phục lỗi 500 API Dashboard**: Điều chỉnh chuẩn xác cấu trúc truy vấn SQL lấy điểm 12 tuần của từng khu vực qua bảng `audit_area_scores`, xử lý triệt để lỗi `no such column: area_id` trên SQLite D1.

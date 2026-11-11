@@ -7,6 +7,23 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.8] - 2026-11-11
+
+### Added & Improved (Fluid Adaptive 3-Tier Layout for Density Auto-Fit & Historical Data Inheritance for Sparklines)
+- **Fluid Adaptive 3-Tier Card Layout**:
+  - **Tier 1 (Header)**: Area Name (left) + 6-Week Mini Sparkline with dynamic trend arrow `↗`/`↘`/`➔` (right). Moving sparkline to the header completely eliminates an unnecessary vertical row.
+  - **Tier 2 (Dual Telemetry Baseline)**: Week & Month metrics aligned horizontally on a single baseline (`W46: PEND` | `Nov: 87.0% ▲+2.5`), eradicating vertical stacking.
+  - **Tier 3 (Status & Action Footer)**: Status badge (`W46 Pend` / `Pass` / `Warn` / `Fail`) on the left; action telemetry (`Open: 0` · `Verify: 0`) on the right, integrated with a 2px ultra-slim progress bar.
+- **Display Density Auto-Fit Container Tuning**:
+  - Integrated `min-h-0`, `overflow-hidden`, fluid padding `p-1.5 sm:p-2`, and scaled gaps `gap-1 sm:gap-1.5` across both **Classic Matrix View** ([Dashboard.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx)) and **Zone Focus View** ([DashboardZoneFocus.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/DashboardZoneFocus.tsx)).
+  - Completely eradicated card overlap and text collision across all display modes (Full TV 1080p, 2K, Laptops, Mobile).
+- **Historical Monthly Scores Inheritance for Area Trends**:
+  - Backend automatically falls back to area monthly historical scores (`historical_monthly_scores`) when a week does not have an audited weekly session.
+  - 6-Week Mini Sparkline draws a rich, continuous performance curve with week tooltips instead of a solitary dot.
+  - Area Trend Inspector Modal ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx)) displays a complete 12-week trajectory.
+
+---
+
 ## [2.11.7] - 2026-11-11
 
 ### Fixed (Resolved 12-Week SQL Query Bug Causing API 500 Error)

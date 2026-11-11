@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.8] - 2026-11-11
+
+### Added & Improved (Layout 3 Tầng Tự Co Giãn Theo Mật Độ & Kế Thừa Điểm Lịch Sử Cho Mini Sparkline)
+- **Tái Cấu Trúc Thẻ Khu Vực Thành Layout 3 Tầng Nén Thông Minh (Fluid Adaptive 3-Tier Layout)**:
+  - **Tầng 1 (Header)**: Tên khu vực (trái) + Mini Sparkline 6 tuần kèm icon xu hướng `↗`/`↘`/`➔` (phải). Đưa sparkline lên đầu giúp triệt tiêu hoàn toàn hàng dọc dư thừa.
+  - **Tầng 2 (Dual Telemetry Baseline)**: Cặp số liệu Tuần & Tháng nằm ngang trên cùng một dòng baseline (`W46: PEND` | `Nov: 87.0% ▲+2.5`), loại bỏ hoàn toàn việc chia dòng trên/dưới gây chiếm diện tích.
+  - **Tầng 3 (Status & Action Footer)**: Huy hiệu trạng thái tuần (`W46 Pend` / `Pass` / `Warn` / `Fail`) đặt ở góc trái; bộ đếm hành động (`Open: 0` · `Verify: 0`) đặt ở góc phải. Kẹp giữa là thanh progress bar siêu mỏng 2px.
+- **Tự Động Co Giãn Container Theo Mật Độ Hiển Thị (Display Density Auto-Fit)**:
+  - Áp dụng `min-h-0`, `overflow-hidden`, padding co giãn `p-1.5 sm:p-2`, gap `gap-1 sm:gap-1.5` trên cả **Classic Matrix View** ([Dashboard.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx)) và **Zone Focus View** ([DashboardZoneFocus.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/DashboardZoneFocus.tsx)).
+  - Triệt tiêu 100% tình trạng tràn chữ, chồng chéo nhãn trên tất cả các độ phân giải (Full TV 1080p, 2K, Laptop, Mobile).
+- **Kế Thừa Dữ Liệu Điểm Lịch Sử Tháng (`historical_monthly_scores`) Cho Chuỗi Xu Hướng Khu Vực**:
+  - Khi một tuần chưa có dữ liệu chấm tuần (`audit_area_scores`), hệ thống tự động kế thừa điểm số lịch sử tháng của chính khu vực đó (`historicalByYearMonth`).
+  - Mini Sparkline 6 tuần hiển thị trọn vẹn đường cong phong độ liên tục kèm tooltip từng tuần thay vì chỉ hiển thị một điểm chấm cô lập.
+  - Modal chi tiết khu vực ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx)) hiển thị đầy đủ quỹ đạo 12 tuần Recharts.
+
+---
+
 ## [2.11.7] - 2026-11-11
 
 ### Fixed (Khắc Phục Lỗi Truy Vấn SQL Xu Hướng 12 Tuần Khiến API Bị 500)

@@ -559,93 +559,94 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-sky-400 transition cursor-pointer group min-h-[78px]`}
+                  className={`rounded-lg border ${cardBorder} p-1.5 sm:p-2 flex flex-col justify-between hover:border-sky-400 transition cursor-pointer group min-h-0 overflow-hidden`}
                   title={t('click_to_inspect_area')}
                 >
+                  {/* Row 1: Area Name & Sparkline */}
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className="font-bold text-xs truncate group-hover:text-sky-300 transition text-slate-100"
+                      className="font-bold text-xs truncate group-hover:text-sky-300 transition text-slate-100 max-w-[58%]"
                       title={`${area.area_name} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
-                    {isOverdue ? (
-                      <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
-                        🚨{area.overdue_count}
-                      </span>
-                    ) : isSubmitted ? (
-                      isPass ? (
-                        <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
-                      ) : isWarning ? (
-                        <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {delta !== null && delta > 0 ? (
+                        <span className="text-emerald-400 font-bold text-[10px]">↗</span>
+                      ) : delta !== null && delta < 0 ? (
+                        <span className="text-rose-400 font-bold text-[10px]">↘</span>
                       ) : (
-                        <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
-                      )
-                    ) : (
-                      <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
-                        {t('badge_pending_week', { week: current_week.iso_week })}
-                      </span>
-                    )}
+                        <span className="text-slate-500 font-bold text-[10px]">➔</span>
+                      )}
+                      <AreaSparkline
+                        data={area.sparkline_6 || []}
+                        target={target}
+                        warningTarget={warningTarget}
+                        width={44}
+                        height={12}
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
-                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
+                  {/* Row 2: Dual Telemetry Baseline */}
+                  <div className="flex items-baseline justify-between gap-1 my-0.5 min-w-0">
+                    <div className="flex items-baseline gap-1 min-w-0 truncate">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 shrink-0">
+                        {`W${current_week.iso_week}`}:
                       </span>
-                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
                         isSubmitted ? (isPass ? passTextCls : isWarning ? warnTextCls : failTextCls) : 'text-slate-400 text-[10px] font-bold'
                       }`}>
                         {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
                       </span>
                     </div>
 
-                    <div className="flex flex-col items-end text-right min-w-0">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
-                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                    <div className="flex items-baseline gap-1 justify-end min-w-0 truncate text-right">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 shrink-0">
+                        {getMonthShortName(month_info?.display_month || current_week.month)}:
                       </span>
-                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
-                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
-                          area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
-                        }`}>
-                          {formatScore(area.month_avg, lang)}
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
+                        area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
+                      }`}>
+                        {formatScore(area.month_avg, lang)}
+                      </span>
+                      {delta !== null && (
+                        <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
+                          {delta > 0 ? `+${delta}` : delta}
                         </span>
-                        {delta !== null && (
-                          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
-                            {delta > 0 ? `+${delta}` : delta}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-1 py-0.5">
-                    <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
-                      <span>{t('trend_6_weeks')}:</span>
-                      {delta !== null && delta > 0 ? (
-                        <span className="text-emerald-400 font-bold">↗</span>
-                      ) : delta !== null && delta < 0 ? (
-                        <span className="text-rose-400 font-bold">↘</span>
-                      ) : (
-                        <span className="text-slate-500 font-bold">➔</span>
-                      )}
-                    </span>
-                    <AreaSparkline
-                      data={area.sparkline_6 || []}
-                      target={target}
-                      warningTarget={warningTarget}
-                      width={48}
-                      height={13}
-                    />
-                  </div>
-
+                  {/* Row 3: Status Badge & Footer */}
                   <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-0.5 text-slate-400">
-                    <span>
-                      {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
-                    </span>
-                    <span>
-                      {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
-                    </span>
+                    <div className="shrink-0">
+                      {isOverdue ? (
+                        <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
+                          🚨{area.overdue_count}
+                        </span>
+                      ) : isSubmitted ? (
+                        isPass ? (
+                          <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
+                        ) : isWarning ? (
+                          <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                        )
+                      ) : (
+                        <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                          {t('badge_pending_week', { week: current_week.iso_week })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] shrink-0 font-mono">
+                      <span>
+                        {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
+                      </span>
+                      <span>
+                        {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -726,93 +727,94 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-amber-400 transition cursor-pointer group min-h-[78px]`}
+                  className={`rounded-lg border ${cardBorder} p-1.5 sm:p-2 flex flex-col justify-between hover:border-amber-400 transition cursor-pointer group min-h-0 overflow-hidden`}
                   title={t('click_to_inspect_area')}
                 >
+                  {/* Row 1: Area Name & Sparkline */}
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className="font-bold text-xs truncate group-hover:text-amber-300 transition text-slate-100"
+                      className="font-bold text-xs truncate group-hover:text-amber-300 transition text-slate-100 max-w-[58%]"
                       title={`${area.area_name} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
-                    {isOverdue ? (
-                      <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
-                        🚨{area.overdue_count}
-                      </span>
-                    ) : isSubmitted ? (
-                      isPass ? (
-                        <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
-                      ) : isWarning ? (
-                        <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {delta !== null && delta > 0 ? (
+                        <span className="text-emerald-400 font-bold text-[10px]">↗</span>
+                      ) : delta !== null && delta < 0 ? (
+                        <span className="text-rose-400 font-bold text-[10px]">↘</span>
                       ) : (
-                        <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
-                      )
-                    ) : (
-                      <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
-                        {t('badge_pending_week', { week: current_week.iso_week })}
-                      </span>
-                    )}
+                        <span className="text-slate-500 font-bold text-[10px]">➔</span>
+                      )}
+                      <AreaSparkline
+                        data={area.sparkline_6 || []}
+                        target={target}
+                        warningTarget={warningTarget}
+                        width={44}
+                        height={12}
+                      />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
-                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
+                  {/* Row 2: Dual Telemetry Baseline */}
+                  <div className="flex items-baseline justify-between gap-1 my-0.5 min-w-0">
+                    <div className="flex items-baseline gap-1 min-w-0 truncate">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 shrink-0">
+                        {`W${current_week.iso_week}`}:
                       </span>
-                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
                         isSubmitted ? (isPass ? passTextCls : isWarning ? warnTextCls : failTextCls) : 'text-slate-400 text-[10px] font-bold'
                       }`}>
                         {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
                       </span>
                     </div>
 
-                    <div className="flex flex-col items-end text-right min-w-0">
-                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
-                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                    <div className="flex items-baseline gap-1 justify-end min-w-0 truncate text-right">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 shrink-0">
+                        {getMonthShortName(month_info?.display_month || current_week.month)}:
                       </span>
-                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
-                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
-                          area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
-                        }`}>
-                          {formatScore(area.month_avg, lang)}
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
+                        area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
+                      }`}>
+                        {formatScore(area.month_avg, lang)}
+                      </span>
+                      {delta !== null && (
+                        <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
+                          {delta > 0 ? `+${delta}` : delta}
                         </span>
-                        {delta !== null && (
-                          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
-                            {delta > 0 ? `+${delta}` : delta}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-1 py-0.5">
-                    <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
-                      <span>{t('trend_6_weeks')}:</span>
-                      {delta !== null && delta > 0 ? (
-                        <span className="text-emerald-400 font-bold">↗</span>
-                      ) : delta !== null && delta < 0 ? (
-                        <span className="text-rose-400 font-bold">↘</span>
-                      ) : (
-                        <span className="text-slate-500 font-bold">➔</span>
-                      )}
-                    </span>
-                    <AreaSparkline
-                      data={area.sparkline_6 || []}
-                      target={target}
-                      warningTarget={warningTarget}
-                      width={48}
-                      height={13}
-                    />
-                  </div>
-
+                  {/* Row 3: Status Badge & Footer */}
                   <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-0.5 text-slate-400">
-                    <span>
-                      {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
-                    </span>
-                    <span>
-                      {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
-                    </span>
+                    <div className="shrink-0">
+                      {isOverdue ? (
+                        <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
+                          🚨{area.overdue_count}
+                        </span>
+                      ) : isSubmitted ? (
+                        isPass ? (
+                          <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
+                        ) : isWarning ? (
+                          <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                        )
+                      ) : (
+                        <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                          {t('badge_pending_week', { week: current_week.iso_week })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] shrink-0 font-mono">
+                      <span>
+                        {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
+                      </span>
+                      <span>
+                        {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
               );

@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.7`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.8`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.7`
+## 1. Highlights of Version `v2.11.8`
+
+### 📱 Fluid Adaptive 3-Tier Layout for Density Auto-Fit & Historical Trend Inheritance
+- **Fluid Adaptive 3-Tier Card Layout**: Restructured area cards into 3 compact rows (Area Name + Sparkline; Week & Month on single horizontal baseline; Status Badge + Open/Verify), completely eliminating card overlap.
+- **Display Density Auto-Fit Containers**: Integrated `min-h-0`, `overflow-hidden`, and fluid spacing allowing containers to automatically adapt to screen resolution in Full TV mode.
+- **Historical Monthly Scores Inheritance**: Backend seamlessly falls back to historical monthly scores for weeks without weekly audits, rendering complete 6-week sparklines and 12-week trajectories.
+
+---
+
+## 2. Highlights of Version `v2.11.7`
 
 ### 🛠️ Resolved 12-Week SQL Query Bug Causing Dashboard 500
 - **Eliminated 500 API Error**: Corrected SQL queries to fetch area-specific 12-week scores via `audit_area_scores`, thoroughly resolving `no such column: area_id` on SQLite D1.

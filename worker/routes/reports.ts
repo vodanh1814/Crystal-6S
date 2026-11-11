@@ -878,11 +878,34 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
 
     const areaTrend12 = trendWeeks.map((tw) => {
       const s = areaScoreByYearWeek.get(`${area.id}_${tw.isoYear}_${tw.isoWeek}`);
+      if (s !== undefined && s !== null) {
+        return {
+          week: tw.label,
+          iso_year: tw.isoYear,
+          iso_week: tw.isoWeek,
+          score: Math.round(s * 10) / 10,
+          source: 'audited' as const,
+        };
+      }
+
+      // Fallback to area's historical monthly score for that week's month if available
+      const histScore = historicalByYearMonth.get(tw.ymKey)?.get(area.id);
+      if (histScore !== undefined && histScore !== null) {
+        return {
+          week: tw.label,
+          iso_year: tw.isoYear,
+          iso_week: tw.isoWeek,
+          score: Math.round(histScore * 10) / 10,
+          source: 'historical' as const,
+        };
+      }
+
       return {
         week: tw.label,
         iso_year: tw.isoYear,
         iso_week: tw.isoWeek,
-        score: s !== undefined && s !== null ? Math.round(s * 10) / 10 : null,
+        score: null,
+        source: null,
       };
     });
     const sparkline6 = areaTrend12.slice(-6);

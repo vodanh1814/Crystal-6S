@@ -703,7 +703,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Grid of 16 area cards: 2 cols on mobile, 4 cols on tablet & desktop */}
-          <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 flex-1 auto-rows-fr">
+          <div className="mt-1 sm:mt-1.5 grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 flex-1 min-h-0 auto-rows-fr">
             {current_week_status.map((area: any) => {
               const isSubmitted = area.status === 'submitted' && area.score !== null;
               // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
@@ -803,15 +803,15 @@ export const Dashboard: React.FC = () => {
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} px-2 py-1.5 sm:px-2.5 sm:py-2 flex flex-col justify-between h-full min-h-[76px] sm:min-h-[82px] lg:min-h-[88px] ${
+                  className={`${boxCls} p-1.5 sm:p-2 flex flex-col justify-between h-full min-h-0 overflow-hidden ${
                     isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
                   } transition cursor-pointer group`}
                   title={t('click_to_inspect_area')}
                 >
-                  {/* Row 1: Area Name & Status Badge */}
+                  {/* Row 1: Area Name & Mini Sparkline with Trend Arrow */}
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} ${
+                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[58%] ${headingTextCls} ${
                         isClassic
                           ? 'group-hover:text-emerald-400'
                           : isLightTv
@@ -822,37 +822,32 @@ export const Dashboard: React.FC = () => {
                     >
                       {area.area_name || area.area_code}
                     </span>
-                    {isOverdue ? (
-                      <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] sm:text-[10px] font-bold shrink-0">
-                        {t('tag_overdue', { n: area.overdue_count })}
-                      </span>
-                    ) : isSubmitted ? (
-                      isPass ? (
-                        <span className={`text-[10px] sm:text-xs font-bold shrink-0 ${passTextCls}`}>{t('tag_pass')}</span>
-                      ) : isWarning ? (
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
-                          {t('tag_warning')}
-                        </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {area.delta_prev_week !== null && area.delta_prev_week > 0 ? (
+                        <span className={`text-[10px] font-bold ${passTextCls}`} title={`${t('vs_prev_week')}: +${area.delta_prev_week}%`}>↗</span>
+                      ) : area.delta_prev_week !== null && area.delta_prev_week < 0 ? (
+                        <span className={`text-[10px] font-bold ${failTextCls}`} title={`${t('vs_prev_week')}: ${area.delta_prev_week}%`}>↘</span>
                       ) : (
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-bold shrink-0 ${failBadgeCls}`}>
-                          {t('tag_fail')}
-                        </span>
-                      )
-                    ) : (
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 ${warnBadgeCls}`}>
-                        {t('badge_pending_week', { week: current_week.iso_week })}
-                      </span>
-                    )}
+                        <span className={`text-[10px] font-bold ${mutedTextCls}`}>➔</span>
+                      )}
+                      <AreaSparkline
+                        data={area.sparkline_6 || []}
+                        target={target}
+                        warningTarget={warningTarget}
+                        width={44}
+                        height={12}
+                      />
+                    </div>
                   </div>
 
-                  {/* Row 2: Dual Telemetry (Tuần W46 vs Tháng Nov) */}
-                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
+                  {/* Row 2: Dual Telemetry Baseline (Week & Month side-by-side) */}
+                  <div className="flex items-baseline justify-between gap-1 my-0.5 min-w-0">
                     {/* Cột Trái: Tuần */}
-                    <div className="flex flex-col min-w-0">
-                      <span className={`text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
-                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
+                    <div className="flex items-baseline gap-1 min-w-0 truncate">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider shrink-0 ${mutedTextCls}`}>
+                        {`W${current_week.iso_week}`}:
                       </span>
-                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
                         isSubmitted
                           ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
                           : `${mutedTextCls} text-[10px] font-bold`
@@ -862,57 +857,34 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Cột Phải: Tháng */}
-                    <div className="flex flex-col items-end text-right min-w-0">
-                      <span className={`text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
-                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                    <div className="flex items-baseline gap-1 justify-end min-w-0 truncate text-right">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider shrink-0 ${mutedTextCls}`}>
+                        {getMonthShortName(month_info?.display_month || current_week.month)}:
                       </span>
-                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
-                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
-                          area.month_avg !== null
-                            ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
-                            : mutedTextCls
-                        }`}>
-                          {formatScore(area.month_avg, lang)}
+                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
+                        area.month_avg !== null
+                          ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
+                          : mutedTextCls
+                      }`}>
+                        {formatScore(area.month_avg, lang)}
+                      </span>
+                      {area.delta_prev_month !== null && (
+                        <span
+                          className={`text-[9px] font-mono font-bold shrink-0 ${
+                            area.delta_prev_month > 0 ? passTextCls : area.delta_prev_month < 0 ? failTextCls : mutedTextCls
+                          }`}
+                          title={t('vs_prev_month')}
+                        >
+                          {area.delta_prev_month > 0 ? `+${area.delta_prev_month}` : area.delta_prev_month}
                         </span>
-                        {area.delta_prev_month !== null && (
-                          <span
-                            className={`text-[9px] font-mono font-bold shrink-0 ${
-                              area.delta_prev_month > 0 ? passTextCls : area.delta_prev_month < 0 ? failTextCls : mutedTextCls
-                            }`}
-                            title={t('vs_prev_month')}
-                          >
-                            {area.delta_prev_month > 0 ? `+${area.delta_prev_month}${t('pts_unit')}` : `${area.delta_prev_month}${t('pts_unit')}`}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Row 3: Mini Sparkline & Trend Indicator */}
-                  <div className="flex items-center justify-between gap-1 py-0.5">
-                    <div className={`text-[9px] font-semibold flex items-center gap-1 ${mutedTextCls}`}>
-                      <span>{t('trend_6_weeks')}:</span>
-                      {area.delta_prev_month !== null && area.delta_prev_month > 0 ? (
-                        <span className={`font-bold ${passTextCls}`}>↗</span>
-                      ) : area.delta_prev_month !== null && area.delta_prev_month < 0 ? (
-                        <span className={`font-bold ${failTextCls}`}>↘</span>
-                      ) : (
-                        <span className={`font-bold ${mutedTextCls}`}>➔</span>
                       )}
                     </div>
-                    <AreaSparkline
-                      data={area.sparkline_6 || []}
-                      target={target}
-                      warningTarget={warningTarget}
-                      width={52}
-                      height={14}
-                    />
                   </div>
 
-                  {/* Signature Sample 4 Slim Progress Bar */}
+                  {/* Row 3: Signature Sample 4 Slim Progress Bar */}
                   {isHybrid && (
                     <div
-                      className={`h-1 w-full rounded-full overflow-hidden mb-0.5 ${
+                      className={`h-0.5 w-full rounded-full overflow-hidden my-0.5 ${
                         isLightTv ? 'bg-slate-200/90' : 'bg-white/10'
                       }`}
                     >
@@ -923,29 +895,54 @@ export const Dashboard: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Row 4: Footer */}
-                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] border-t pt-0.5 sm:pt-1 ${mutedTextCls} ${innerRowDividerCls}`}>
-                    <span className="truncate">
-                      {t('open_short')}:{' '}
-                      <strong
-                        className={
-                          area.open_count > 0
-                            ? isLightTv
-                              ? 'text-amber-700'
-                              : 'text-amber-400'
-                            : subTextCls
-                        }
-                      >
-                        {area.open_count}
-                      </strong>
-                    </span>
-                    {area.repeat_count > 0 ? (
-                      <span className={`font-bold shrink-0 ${purpleValTextCls}`}>{t('repeat_short')}</span>
-                    ) : (
-                      <span className="truncate shrink-0">
-                        {t('verify_short')}: <strong className={subTextCls}>{area.fixed_count}</strong>
+                  {/* Row 4: Status Badge (left) & Action Counters (right) */}
+                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-0.5 ${mutedTextCls} border-t ${innerRowDividerCls}`}>
+                    <div className="shrink-0">
+                      {isOverdue ? (
+                        <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold">
+                          {t('tag_overdue', { n: area.overdue_count })}
+                        </span>
+                      ) : isSubmitted ? (
+                        isPass ? (
+                          <span className={`text-[10px] font-bold ${passTextCls}`}>{t('tag_pass')}</span>
+                        ) : isWarning ? (
+                          <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${warnBadgeCls}`}>
+                            {t('tag_warning')}
+                          </span>
+                        ) : (
+                          <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${failBadgeCls}`}>
+                            {t('tag_fail')}
+                          </span>
+                        )
+                      ) : (
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${warnBadgeCls}`}>
+                          {t('badge_pending_week', { week: current_week.iso_week })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] shrink-0 font-mono">
+                      <span>
+                        {t('open_short')}:{' '}
+                        <strong
+                          className={
+                            area.open_count > 0
+                              ? isLightTv
+                                ? 'text-amber-700'
+                                : 'text-amber-400'
+                              : subTextCls
+                          }
+                        >
+                          {area.open_count}
+                        </strong>
                       </span>
-                    )}
+                      {area.repeat_count > 0 ? (
+                        <span className={`font-bold shrink-0 ${purpleValTextCls}`}>{t('repeat_short')}</span>
+                      ) : (
+                        <span className="truncate shrink-0">
+                          {t('verify_short')}: <strong className={subTextCls}>{area.fixed_count}</strong>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
