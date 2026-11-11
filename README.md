@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.9`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.10`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,19 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.9`
+## 1. Điểm nổi bật của phiên bản `v2.11.10`
+
+### 🎨 Kiến Trúc UI/UX Pro Max: Tự Động Co Giãn Container & Chống Chồng Đè 100% Trên Trình Duyệt Web
+- **Tự Co Giãn Theo Chiều Cao Tự Nhiên (Natural Fluid Density Architecture)**: Loại bỏ triệt để các thuộc tính ép cứng chiều cao như `h-full` và `auto-rows-fr` trong giao diện web thông thường. Cho phép các thẻ khu vực và biểu đồ tự định hình kích thước (`min-h-[102px]` cho thẻ khu vực, `min-h-[220px]` cho biểu đồ), tự động kích hoạt thanh cuộn dọc mượt mà trên trình duyệt khi chiều cao màn hình hạn chế do tabs, bookmarks và thanh tác vụ Windows.
+- **Tái Thiết Kế Thẻ Khu Vực Chuẩn Bento 3 Tầng**:
+  - *Tầng 1*: Tên khu vực nổi bật bên trái kèm Huy hiệu trạng thái Pill bo tròn (`PASS`, `WARN`, `FAIL`, `W46 PEND` hoặc `🚨 Overdue`) bên phải, có gạch phân cách tinh tế.
+  - *Tầng 2*: Cụm điểm số Tuần/Tháng monospace bên trái kết hợp Khối xu hướng nổi bật (`bg-slate-950/80`) chứa Mũi tên to rõ nét và Mini Sparkline `58x22` px bên phải.
+  - *Tầng 3*: Thống kê vi phạm mở (`Open: {n}`) và kiểm tra khắc phục (`Verify: {n}` / `Repeat`) cách biệt rõ ràng ở chân thẻ.
+- **Mở Rộng Không Gian Phân Tích (Row 3 Analytics)**: Nâng chiều cao biểu đồ xu hướng 12 tuần (`min-h-[160px]`), bố cục lưới 12 cột co giãn linh hoạt 1 cột (Mobile), 2 cột (Tablet) và 3 cột (Desktop).
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.9`
 
 ### 📈 Mũi Tên & Trend To Rõ Ràng, Chuẩn Hóa Duy Nhất Theme Andon & Tự Điều Chỉnh Container Đa Thiết Bị
 - **Mũi Tên & Mini Sparkline To Rõ Nét**: Tăng kích thước SVG [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx) lên 56x20 px, nét vẽ dày 1.8px; thuật toán Dynamic Auto-Scale phản ánh chính xác biên độ dao động điểm số (1-3 điểm tạo sóng rõ nét). Cụm mũi tên và delta (`▲ +2.5` / `▼ -1.0` / `➔ 0`) hiển thị to đậm, dễ quan sát từ xa trên TV.

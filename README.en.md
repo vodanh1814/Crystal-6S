@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.9`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.10`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,19 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.9`
+## 1. Highlights of Version `v2.11.10`
+
+### 🎨 UI/UX Pro Max Architecture: Natural Fluid Density & Zero Overlap on Web Browsers
+- **Natural Fluid Density Architecture**: Eliminated rigid `h-full` and `auto-rows-fr` constraints in standard browser mode. Allows area cards and analytics panels to size intrinsically (`min-h-[102px]` for area cards, `min-h-[220px]` for bottom charts), activating smooth vertical scrolling whenever viewport height is constrained by tabs, bookmarks, and OS taskbars.
+- **Redesigned UI/UX Pro Max 3-Tier Bento Area Cards**:
+  - *Tier 1 (Header)*: High-contrast area title on left and full rounded Status Pill Badge on right (`PASS`, `WARN`, `FAIL`, `W46 PEND`, or `🚨 Overdue`) with clean divider.
+  - *Tier 2 (Telemetry Body)*: Week & Month scores on left paired with a dedicated Trend Pill container on right featuring bold directional arrows (`▲ +2.5` / `▼ -1.0` / `➔ 0`) and dynamic `58x22` px mini sparklines.
+  - *Tier 3 (Action Footer)*: Open findings count (`Open: {n}`) and verification status (`Verify: {n}` / `Repeat`) cleanly arranged along the footer baseline.
+- **Enhanced Bottom Analytics Strip (Row 3)**: Expanded 12-week trend chart height (`min-h-[160px]`) and spacious containers (`min-h-[220px]`) with responsive 12-column grid scaling across mobile, tablet, and desktop displays.
+
+---
+
+## 2. Highlights of Version `v2.11.9`
 
 ### 📈 High-Visibility Trend Telemetry, Default Andon Standardization & Responsive Auto-Fit Containers
 - **High-Visibility Trend Arrow & Dynamic Mini Sparklines**: Expanded SVG canvas in [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx) to 56x20 px with `strokeWidth="1.8"`, `r="2.8"` dot, and dynamic auto-scaling. Bold arrows and telemetry (`▲ +2.5` / `▼ -1.0` / `➔ 0`) are immediately readable across the factory floor.

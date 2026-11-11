@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.10] - 2026-11-11
+
+### Fixed & Improved (Áp Dụng Kiến Trúc UI/UX Pro Max - Tự Động Co Giãn Container & Chống Chồng Đè 100% Trên Trình Duyệt Web)
+- **Tự Động Co Giãn Container Theo Dòng Chảy Tự Nhiên (Natural Fluid Density Architecture)**:
+  - Khắc phục triệt để lỗi ép cứng chiều cao `h-full` và `auto-rows-fr` trên màn hình trình duyệt laptop/desktop khi có thanh tiêu đề, tab, bookmarks và thanh tác vụ Windows.
+  - Chuyển đổi toàn bộ thẻ khu vực và biểu đồ phân tích sang chiều cao co giãn tự nhiên (`h-auto min-h-[102px]` cho thẻ khu vực, `min-h-[220px]` cho cụm biểu đồ), cho phép trình duyệt tự động kích hoạt thanh cuộn mượt mà (`overflow-y-auto`) khi viewport không đủ diện tích, chấm dứt 100% hiện tượng các thẻ bị co rút và đè chữ lên nhau.
+- **Tái Thiết Kế Thẻ Khu Vực Chuẩn UI/UX Pro Max 3 Tầng Bento**:
+  - **Tầng 1 (Header)**: Tên khu vực nổi bật bên trái (`font-black text-sm text-white truncate max-w-[65%]`) và Thẻ trạng thái dạng Pill bo tròn đầy đủ bên phải (`PASS`, `WARN`, `FAIL`, `W46 PEND` hoặc `🚨 Overdue`) có đường kẻ phân cách tinh tế (`pb-1.5 border-b border-slate-800/60`).
+  - **Tầng 2 (Telemetry Body)**: Chia đôi 2 cột cân xứng:
+    - *Bên trái*: Điểm Tuần hiện tại (`W46: PEND` hoặc `87.0%`) và Điểm Trung Bình Tháng (`Nov: 87.0%`) hiển thị kiểu monospace in đậm nổi bật.
+    - *Bên phải*: Khối Pill chỉ số xu hướng chất lượng cao (`bg-slate-950/80 border border-slate-700/60 rounded-lg px-2 py-1 shadow-xs`) gồm Mũi tên to rõ kèm độ biến động (`▲ +2.5` / `▼ -1.0` / `➔ 0`) và Mini Sparkline SVG kích thước `58x22` px.
+  - **Tầng 3 (Action Footer)**: Đường viền phân cách `border-t border-slate-800/80 pt-1.5 text-xs text-slate-400 font-mono`: Số lượng lỗi mở (`Open: {n}`) bên trái, Tình trạng xác nhận hoặc lỗi lặp lại (`Verify: {n}` / `Repeat`) bên phải.
+- **Cải Tiến Hàng 3 Phân Tích (Bottom Analytics Strip)**:
+  - Nâng chiều cao biểu đồ xu hướng 12 tuần (`min-h-[160px]`) và vùng chứa (`min-h-[220px]`) giúp đường xu hướng, vạch tham chiếu 95% / 90% và chú giải dữ liệu hiển thị rõ ràng, không bị nén.
+  - Cải tiến lưới hiển thị co giãn linh hoạt: 1 cột trên Mobile (`col-span-12`), 2 cột trên Tablet (`md:col-span-6`), 3 cột trên Desktop (`lg:col-span-5 / 4 / 3`).
+
+---
+
 ## [2.11.9] - 2026-11-11
 
 ### Added & Improved (Mũi Tên & Trend To Rõ Ràng, Chuẩn Hóa Duy Nhất Theme Andon & Tự Điều Chỉnh Container Đa Thiết Bị)

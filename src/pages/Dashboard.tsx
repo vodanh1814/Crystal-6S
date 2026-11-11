@@ -315,11 +315,7 @@ export const Dashboard: React.FC = () => {
     isHybrid ? `border-l-4 ${tierColor}` : '';
 
   return (
-    <div
-      className={`flex-1 min-h-0 h-full px-2 pt-2 sm:px-2.5 sm:pt-2.5 flex flex-col gap-2 sm:gap-2.5 select-none overflow-y-auto overflow-x-hidden ${
-        isHybrid ? 'pb-20 md:pb-2.5' : 'pb-2 sm:pb-2.5'
-      }`}
-    >
+    <div className="flex-1 w-full p-2.5 sm:p-3.5 flex flex-col gap-3 select-none">
       {/* TOOLBAR: Month Selector & Status */}
       <div className="shrink-0 flex items-center justify-between gap-2 px-1 text-xs">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -600,10 +596,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="flex-1 min-h-0 lg:flex-[1.25] grid grid-cols-12 gap-2 sm:gap-2.5">
-        {/* 16 AREAS 4x4 MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+      <div className="grid grid-cols-12 gap-2.5 sm:gap-3">
+        {/* 16 AREAS STATUS MATRIX WALL */}
+        <div className={`col-span-12 lg:col-span-8 ${panelCls} p-3 sm:p-3.5 flex flex-col justify-between`}>
+          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
@@ -635,8 +631,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Grid of 16 area cards: 2 cols on mobile, 3 on tablet, 4 on desktop/TV */}
-          <div className="mt-1 sm:mt-1.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2 flex-1 min-h-0 auto-rows-auto lg:auto-rows-fr">
+          {/* Grid of area cards: 1 col on mobile, 2 cols on small tablet, 3 cols on medium, 4 cols on desktop */}
+          <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5">
             {current_week_status.map((area: any) => {
               const isSubmitted = area.status === 'submitted' && area.score !== null;
               // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
@@ -660,65 +656,65 @@ export const Dashboard: React.FC = () => {
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} p-2 sm:p-2.5 flex flex-col justify-between h-auto min-h-[82px] sm:min-h-[88px] lg:h-full min-h-0 overflow-hidden hover:border-slate-400 transition cursor-pointer group`}
+                  className={`${boxCls} p-3 flex flex-col justify-between h-auto min-h-[102px] sm:min-h-[108px] transition-all duration-150 cursor-pointer group hover:border-slate-400`}
                   title={t('click_to_inspect_area')}
                 >
-                  {/* Row 1: Area Name & Status Badge */}
-                  <div className="flex items-center justify-between gap-1 min-w-0">
+                  {/* Tier 1: Header (Area Name on Left, Status Badge on Right) */}
+                  <div className="flex items-center justify-between gap-2 min-w-0 pb-1.5 border-b border-slate-800/60">
                     <span
-                      className={`font-black text-xs sm:text-sm tracking-wide transition-colors truncate max-w-[62%] ${headingTextCls} group-hover:text-emerald-400`}
+                      className={`font-black text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
                     <div className="shrink-0">
                       {isOverdue ? (
-                        <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black">
+                        <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs shadow-rose-950">
                           🚨 {area.overdue_count}
                         </span>
                       ) : isSubmitted ? (
                         isPass ? (
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${passBadgeCls}`}>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/35">
                             {t('tag_pass')}
                           </span>
                         ) : isWarning ? (
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${warnBadgeCls}`}>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${failBadgeCls}`}>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/35">
                             {t('tag_fail')}
                           </span>
                         )
                       ) : (
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold ${warnBadgeCls}`}>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
                           {t('badge_pending_week', { week: current_week.iso_week })}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Row 2: Metrics (Left) & Trend Sparkline + Big Arrow (Right) */}
-                  <div className="flex items-center justify-between gap-1.5 my-1 min-w-0">
-                    {/* Left: Week & Month scores */}
-                    <div className="flex flex-col justify-center min-w-0 truncate">
-                      <div className="flex items-baseline gap-1 text-[10px] font-mono leading-tight">
-                        <span className="text-[9px] uppercase font-bold text-slate-400">
+                  {/* Tier 2: Telemetry Body (Left: Scores | Right: Big Trend Arrow & Dynamic Sparkline) */}
+                  <div className="flex items-center justify-between gap-2 py-2 min-w-0">
+                    {/* Left: Week & Month Metrics */}
+                    <div className="flex flex-col justify-center min-w-0 space-y-1">
+                      <div className="flex items-baseline gap-1.5 text-xs font-mono leading-none">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
                           {`W${current_week.iso_week}`}:
                         </span>
-                        <span className={`text-xs sm:text-[13px] font-black ${
+                        <span className={`font-black text-sm ${
                           isSubmitted
                             ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
-                            : `${mutedTextCls} text-[10px]`
+                            : `${mutedTextCls} text-xs font-bold`
                         }`}>
                           {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1 text-[10px] font-mono leading-tight mt-0.5">
-                        <span className="text-[9px] uppercase font-bold text-slate-400">
+                      <div className="flex items-baseline gap-1.5 text-xs font-mono leading-none">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
                           {getMonthShortName(month_info?.display_month || current_week.month)}:
                         </span>
-                        <span className={`text-xs sm:text-[13px] font-black ${
+                        <span className={`font-black text-sm ${
                           area.month_avg !== null
                             ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
@@ -728,45 +724,45 @@ export const Dashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Right: High-Visibility Trend Telemetry (Big Arrow & Dynamic Sparkline) */}
-                    <div className="flex items-center gap-1.5 shrink-0 bg-slate-900/70 rounded-lg px-1.5 py-0.5 border border-slate-700/50">
-                      {/* Prominent Trend Arrow & Delta */}
+                    {/* Right: High-Visibility Trend Pill (Big Arrow & Sparkline) */}
+                    <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-700/60 rounded-lg px-2 py-1 shrink-0 shadow-xs">
+                      {/* Prominent Bold Arrow & Delta */}
                       <div className="flex flex-col items-center justify-center leading-none">
                         {area.delta_prev_week !== null && area.delta_prev_week > 0 ? (
                           <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${passTextCls}`} title={`${t('vs_prev_week')}: +${area.delta_prev_week}%`}>
-                            ▲<span className="text-[10px] sm:text-[11px] font-bold ml-0.5">+{area.delta_prev_week}</span>
+                            ▲<span className="text-[11px] font-bold ml-0.5">+{area.delta_prev_week}</span>
                           </span>
                         ) : area.delta_prev_week !== null && area.delta_prev_week < 0 ? (
                           <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${failTextCls}`} title={`${t('vs_prev_week')}: ${area.delta_prev_week}%`}>
-                            ▼<span className="text-[10px] sm:text-[11px] font-bold ml-0.5">{area.delta_prev_week}</span>
+                            ▼<span className="text-[11px] font-bold ml-0.5">{area.delta_prev_week}</span>
                           </span>
                         ) : (
-                          <span className={`text-[11px] sm:text-xs font-mono font-bold ${mutedTextCls}`} title="Không đổi">
-                            ➔<span className="text-[10px] ml-0.5">0</span>
+                          <span className={`text-xs font-mono font-bold ${mutedTextCls}`} title="Không đổi">
+                            ➔<span className="text-[11px] ml-0.5">0</span>
                           </span>
                         )}
                       </div>
 
-                      {/* Dynamic Sparkline */}
+                      {/* Dynamic Mini Sparkline Curve */}
                       <AreaSparkline
                         data={area.sparkline_6 || []}
                         target={target}
                         warningTarget={warningTarget}
-                        width={56}
-                        height={20}
+                        width={58}
+                        height={22}
                       />
                     </div>
                   </div>
 
-                  {/* Row 3: Action Telemetry Footer */}
-                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-1 text-slate-400 border-t ${innerRowDividerCls}`}>
-                    <div className="flex items-center gap-1 font-mono">
+                  {/* Tier 3: Action Telemetry Footer */}
+                  <div className={`flex items-center justify-between text-xs pt-1.5 border-t border-slate-800/80 text-slate-400 font-mono`}>
+                    <div className="flex items-center gap-1.5">
                       <span>{t('open_short')}:</span>
                       <strong className={area.open_count > 0 ? 'text-amber-400 font-bold' : subTextCls}>
                         {area.open_count}
                       </strong>
                     </div>
-                    <div className="flex items-center gap-1 font-mono">
+                    <div className="flex items-center gap-1.5">
                       {area.repeat_count > 0 ? (
                         <span className={`font-bold shrink-0 ${purpleValTextCls}`}>{t('repeat_short')}</span>
                       ) : (
@@ -783,7 +779,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
+        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-3 sm:p-3.5 flex flex-col min-w-0 justify-between gap-2.5`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
@@ -978,10 +974,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="flex-1 min-h-0 lg:min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="grid grid-cols-12 gap-2.5 sm:gap-3">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-5 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-5 min-h-[220px] ${panelCls} p-3 sm:p-3.5 flex flex-col justify-between`}>
+          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
             </span>
@@ -995,7 +991,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-[140px] pt-0.5">
+          <div className="flex-1 min-h-[160px] pt-1">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trend_12_weeks}
@@ -1032,8 +1028,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[220px] ${panelCls} p-3 sm:p-3.5 flex flex-col justify-between gap-2`}>
+          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
@@ -1104,8 +1100,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 lg:col-span-3 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-3 min-h-[220px] ${panelCls} p-3 sm:p-3.5 flex flex-col justify-between gap-2`}>
+          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
                 ? t('continuous_improvement_title')
