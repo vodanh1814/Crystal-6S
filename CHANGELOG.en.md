@@ -7,6 +7,32 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.6] - 2026-11-11
+
+### Added & Improved (6-Week Mini Sparkline Trend & Area 5S Performance Inspector Modal)
+- **Distinct Dual Telemetry Columns on Each Production Area Card**:
+  - The middle section of each area card is partitioned into **two distinct labeled columns**:
+    - **Left Column (Week)**: Permanently displays `W{w}` label with the submitted audit score or `Pending` if pending audit.
+    - **Right Column (Month)**: Permanently displays `Month {m}` (e.g. `Nov`) with the monthly average and MoM delta (`▲+2.5pts`).
+  - Top card badge: Displays `Pending W{w}` when weekly audit is not yet submitted, avoiding any confusion with completed audits.
+- **Pure SVG 6-Week Mini Sparkline Performance Curve ([AreaSparkline.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx))**:
+  - Visualizes the 6-week historical score trajectory for each individual area using ultra-lightweight inline SVG.
+  - Dynamic 3-tier semantic coloring: Green (`≥95%`), Yellow (`≥90%`), Red (`<90%`).
+  - Dynamic trend indicator: `↗` (Improving), `↘` (Declining), `➔` (Stable).
+  - Hover tooltip displays week-by-week performance: `W41: 90% · W42: 92% · ...`
+- **Area Trend & 5S Performance Inspector Modal ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx))**:
+  - Clicking any area card opens an in-depth analytics popup without navigating away or losing Andon TV context:
+    - Header: Area name, area code, Area Manager, and designated Auditor.
+    - 4 Telemetry KPIs: Week Score, Month Average (MoM), Week-over-Week delta (WoW), and Open/Overdue/Verify counts.
+    - Expanded 12-week Recharts LineChart with Target (95%) and Warning (90%) reference lines.
+    - Detailed 5S Pillars breakdown (S1 - S5) showing area-specific violation counts and penalty deductions.
+    - Direct CTA button linking to area findings.
+- **Backend Optimization & Symmetrical Internationalization**:
+  - 12-week query unified across plant-wide and area-level data with **zero extra database queries**.
+  - Added 18 symmetric translation keys across Vietnamese and English.
+
+---
+
 ## [2.11.5] - 2026-11-10
 
 ### Added & Improved (Automatic Fallback to Latest Completed Week When Weekly Audit Is Pending)

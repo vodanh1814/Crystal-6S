@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import { formatScore, formatDelta } from '../../lib/format';
 import type { TranslationKey } from '../../i18n/context';
+import { AreaSparkline } from './AreaSparkline';
+import { AreaTrendModal } from './AreaTrendModal';
 
 interface Props {
   data: any;
@@ -43,10 +45,12 @@ export const DashboardZoneFocus: React.FC<Props> = ({
     month_info,
     remediation,
     improvement_analysis,
+    area_s_matrix = {},
     counts = { open: 0, overdue: 0, not_improved: 0, waiting_verify: 0 },
   } = data;
 
   const [leftTab, setLeftTab] = useState<'improvement' | '5s' | 'leaderboard'>('improvement');
+  const [selectedTrendArea, setSelectedTrendArea] = useState<any | null>(null);
 
   const isCurrentWeekAudited = kpi?.weekly_avg !== null && kpi?.weekly_avg !== undefined;
   const isFallbackWeek = !isCurrentWeekAudited && kpi?.latest_completed_avg !== null && kpi?.latest_completed_avg !== undefined;
@@ -534,10 +538,10 @@ export const DashboardZoneFocus: React.FC<Props> = ({
           {/* Area Cards Grid: 2 cols on mobile, 5 cols on desktop */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {productionAreas.map((area) => {
-              const displayScore = area.status === 'submitted' && area.score !== null ? area.score : area.month_avg;
-              const isPass = displayScore !== null && displayScore >= target;
-              const isWarning = displayScore !== null && displayScore >= warningTarget && displayScore < target;
-              const isFail = displayScore !== null && displayScore < warningTarget;
+              const isSubmitted = area.status === 'submitted' && area.score !== null;
+              const isPass = area.score !== null && area.score >= target;
+              const isWarning = area.score !== null && area.score >= warningTarget && area.score < target;
+              const isFail = area.score !== null && area.score < warningTarget;
               const isOverdue = area.overdue_count > 0;
               const delta = area.delta_prev_month;
 
@@ -552,10 +556,11 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 : 'border-slate-800 bg-slate-900/60';
 
               return (
-                <Link
+                <div
                   key={area.area_id}
-                  to={`/findings?area_id=${area.area_id}`}
-                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-sky-400 transition cursor-pointer group`}
+                  onClick={() => setSelectedTrendArea(area)}
+                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-sky-400 transition cursor-pointer group min-h-[78px]`}
+                  title={t('click_to_inspect_area')}
                 >
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
@@ -568,52 +573,81 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                       <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
                         🚨{area.overdue_count}
                       </span>
-                    ) : isPass ? (
-                      <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
-                    ) : isWarning ? (
-                      <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
-                    ) : isFail ? (
-                      <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                    ) : isSubmitted ? (
+                      isPass ? (
+                        <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
+                      ) : isWarning ? (
+                        <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                      )
                     ) : (
-                      <span className="text-[9px] text-slate-500 shrink-0">PEND</span>
+                      <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                        {t('badge_pending_week', { week: current_week.iso_week })}
+                      </span>
                     )}
                   </div>
 
-                  <div className="flex items-baseline justify-between my-1 gap-1">
-                    <span className={`text-base font-black font-mono leading-none ${
-                      isPass ? passTextCls : isWarning ? warnTextCls : isFail ? failTextCls : mutedTextCls
-                    }`}>
-                      {formatScore(displayScore, lang)}
-                    </span>
+                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
+                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
+                      </span>
+                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                        isSubmitted ? (isPass ? passTextCls : isWarning ? warnTextCls : failTextCls) : 'text-slate-400 text-[10px] font-bold'
+                      }`}>
+                        {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
+                      </span>
+                    </div>
 
-                    {/* MoM Delta Badge */}
-                    <span className={`text-[10px] font-mono font-bold shrink-0 ${
-                      delta !== null && delta > 0
-                        ? passTextCls
-                        : delta !== null && delta < 0
-                        ? failTextCls
-                        : mutedTextCls
-                    }`}>
-                      {delta !== null && delta > 0
-                        ? `▲+${delta}${t('pts_unit')}`
-                        : delta !== null && delta < 0
-                        ? `▼${delta}${t('pts_unit')}`
-                        : `▬ 0${t('pts_unit')}`}
-                    </span>
+                    <div className="flex flex-col items-end text-right min-w-0">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
+                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                      </span>
+                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
+                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                          area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
+                        }`}>
+                          {formatScore(area.month_avg, lang)}
+                        </span>
+                        {delta !== null && (
+                          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
+                            {delta > 0 ? `+${delta}` : delta}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-1 text-slate-400">
+                  <div className="flex items-center justify-between gap-1 py-0.5">
+                    <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
+                      <span>{t('trend_6_weeks')}:</span>
+                      {delta !== null && delta > 0 ? (
+                        <span className="text-emerald-400 font-bold">↗</span>
+                      ) : delta !== null && delta < 0 ? (
+                        <span className="text-rose-400 font-bold">↘</span>
+                      ) : (
+                        <span className="text-slate-500 font-bold">➔</span>
+                      )}
+                    </span>
+                    <AreaSparkline
+                      data={area.sparkline_6 || []}
+                      target={target}
+                      warningTarget={warningTarget}
+                      width={48}
+                      height={13}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-0.5 text-slate-400">
                     <span>
-                      {t('open_short')}:{' '}
-                      <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>
-                        {area.open_count}
-                      </strong>
+                      {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
                     </span>
                     <span>
                       {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
                     </span>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -671,10 +705,10 @@ export const DashboardZoneFocus: React.FC<Props> = ({
           {/* Area Cards Grid: 2 cols on mobile, 3/6 cols on desktop */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             {supportAreas.map((area) => {
-              const displayScore = area.status === 'submitted' && area.score !== null ? area.score : area.month_avg;
-              const isPass = displayScore !== null && displayScore >= target;
-              const isWarning = displayScore !== null && displayScore >= warningTarget && displayScore < target;
-              const isFail = displayScore !== null && displayScore < warningTarget;
+              const isSubmitted = area.status === 'submitted' && area.score !== null;
+              const isPass = area.score !== null && area.score >= target;
+              const isWarning = area.score !== null && area.score >= warningTarget && area.score < target;
+              const isFail = area.score !== null && area.score < warningTarget;
               const isOverdue = area.overdue_count > 0;
               const delta = area.delta_prev_month;
 
@@ -689,10 +723,11 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                 : 'border-slate-800 bg-slate-900/60';
 
               return (
-                <Link
+                <div
                   key={area.area_id}
-                  to={`/findings?area_id=${area.area_id}`}
-                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-amber-400 transition cursor-pointer group`}
+                  onClick={() => setSelectedTrendArea(area)}
+                  className={`rounded-lg border ${cardBorder} p-2 flex flex-col justify-between hover:border-amber-400 transition cursor-pointer group min-h-[78px]`}
+                  title={t('click_to_inspect_area')}
                 >
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
@@ -705,52 +740,81 @@ export const DashboardZoneFocus: React.FC<Props> = ({
                       <span className="px-1 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold shrink-0">
                         🚨{area.overdue_count}
                       </span>
-                    ) : isPass ? (
-                      <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
-                    ) : isWarning ? (
-                      <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
-                    ) : isFail ? (
-                      <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                    ) : isSubmitted ? (
+                      isPass ? (
+                        <span className="text-[10px] font-bold text-emerald-400 shrink-0">PASS</span>
+                      ) : isWarning ? (
+                        <span className="text-[10px] font-bold text-amber-400 shrink-0">WARN</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-rose-400 shrink-0">FAIL</span>
+                      )
                     ) : (
-                      <span className="text-[9px] text-slate-500 shrink-0">PEND</span>
+                      <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                        {t('badge_pending_week', { week: current_week.iso_week })}
+                      </span>
                     )}
                   </div>
 
-                  <div className="flex items-baseline justify-between my-1 gap-1">
-                    <span className={`text-base font-black font-mono leading-none ${
-                      isPass ? passTextCls : isWarning ? warnTextCls : isFail ? failTextCls : mutedTextCls
-                    }`}>
-                      {formatScore(displayScore, lang)}
-                    </span>
+                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
+                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
+                      </span>
+                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                        isSubmitted ? (isPass ? passTextCls : isWarning ? warnTextCls : failTextCls) : 'text-slate-400 text-[10px] font-bold'
+                      }`}>
+                        {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
+                      </span>
+                    </div>
 
-                    {/* MoM Delta Badge */}
-                    <span className={`text-[10px] font-mono font-bold shrink-0 ${
-                      delta !== null && delta > 0
-                        ? passTextCls
-                        : delta !== null && delta < 0
-                        ? failTextCls
-                        : mutedTextCls
-                    }`}>
-                      {delta !== null && delta > 0
-                        ? `▲+${delta}${t('pts_unit')}`
-                        : delta !== null && delta < 0
-                        ? `▼${delta}${t('pts_unit')}`
-                        : `▬ 0${t('pts_unit')}`}
-                    </span>
+                    <div className="flex flex-col items-end text-right min-w-0">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 truncate">
+                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                      </span>
+                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
+                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                          area.month_avg !== null ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls) : 'text-slate-400'
+                        }`}>
+                          {formatScore(area.month_avg, lang)}
+                        </span>
+                        {delta !== null && (
+                          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? passTextCls : delta < 0 ? failTextCls : mutedTextCls}`}>
+                            {delta > 0 ? `+${delta}` : delta}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-1 text-slate-400">
+                  <div className="flex items-center justify-between gap-1 py-0.5">
+                    <span className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
+                      <span>{t('trend_6_weeks')}:</span>
+                      {delta !== null && delta > 0 ? (
+                        <span className="text-emerald-400 font-bold">↗</span>
+                      ) : delta !== null && delta < 0 ? (
+                        <span className="text-rose-400 font-bold">↘</span>
+                      ) : (
+                        <span className="text-slate-500 font-bold">➔</span>
+                      )}
+                    </span>
+                    <AreaSparkline
+                      data={area.sparkline_6 || []}
+                      target={target}
+                      warningTarget={warningTarget}
+                      width={48}
+                      height={13}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] border-t border-slate-800/80 pt-0.5 text-slate-400">
                     <span>
-                      {t('open_short')}:{' '}
-                      <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>
-                        {area.open_count}
-                      </strong>
+                      {t('open_short')}: <strong className={area.open_count > 0 ? 'text-amber-400' : 'text-slate-300'}>{area.open_count}</strong>
                     </span>
                     <span>
                       {t('verify_short')}: <strong className="text-slate-300">{area.fixed_count}</strong>
                     </span>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -794,6 +858,20 @@ export const DashboardZoneFocus: React.FC<Props> = ({
           </div>
         </div>
       </div>
+
+      {/* Area Trend Inspector Modal */}
+      <AreaTrendModal
+        isOpen={!!selectedTrendArea}
+        onClose={() => setSelectedTrendArea(null)}
+        area={selectedTrendArea}
+        target={target}
+        warningTarget={warningTarget}
+        currentWeek={current_week}
+        monthInfo={month_info}
+        areaSMatrix={area_s_matrix}
+        lang={lang}
+        t={t}
+      />
     </div>
   );
 };

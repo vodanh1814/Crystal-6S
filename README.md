@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.5`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.6`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.5`
+## 1. Điểm nổi bật của phiên bản `v2.11.6`
+
+### 📈 Mini Sparkline Xu Hướng 6 Tuần & Modal Phân Tích Phong Độ 5S Khu Vực
+- **Phân Tách Rõ Ràng Cột Tuần & Tháng Trên Từng Thẻ Khu Vực**: Phân chia thành 2 cột số liệu có nhãn vĩnh viễn (`W46` - `Chờ`/Điểm tuần | `Nov` - Điểm tháng & delta MoM `▲+2.5đ`), loại bỏ hoàn toàn việc nhầm lẫn giữa tuần và tháng.
+- **Biểu Đồ Sóng Mini Sparkline 6 Tuần Thuần SVG ([AreaSparkline.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx))**: Vẽ đường cong phong độ 6 tuần trực quan cho từng khu vực, tự động đổi màu theo phân hạng Xanh/Vàng/Đỏ kèm icon xu hướng động (`↗`, `↘`, `➔`) và tooltip tuần.
+- **Modal Thanh Tra Xu Hướng & Trụ Cột 5S ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx))**: Bấm vào thẻ khu vực để mở ngay popup phân tích chuyên sâu: thông tin phụ trách (Manager, Auditor), 4 chỉ số KPI (Tuần, Tháng, WoW, Lỗi), biểu đồ 12 tuần Recharts phóng to và bảng phân rã lỗi theo 5 trụ cột S1 - S5.
+- **Hiệu Suất Cao & 0 Query Phụ**: Tận dụng triệt để dữ liệu truy vấn 12 tuần sẵn có, 0 phát sinh query database mới.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.5`
 
 ### 📊 Tự Động Hiển Thị Tuần Gần Nhất Khi Tuần Hiện Tại Chưa Có Đánh Giá Mới
 - **Cơ Chế Fallback Thông Minh Cho Thẻ Điểm TB Tuần**: Khi tuần hiện tại chưa hoàn thành đánh giá, hệ thống tự động kế thừa và hiển thị điểm số cùng tên tuần đã hoàn thành gần nhất (`WEEKLY AVG W45` / `ĐIỂM TB TUẦN W45`).

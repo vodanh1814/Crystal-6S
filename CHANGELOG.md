@@ -7,6 +7,32 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.6] - 2026-11-11
+
+### Added & Improved (Tích Hợp Mini Sparkline Xu Hướng 6 Tuần & Modal Phân Tích Phong Độ 5S Chi Tiết)
+- **Phân Tách Rõ Ràng Số Liệu Tuần & Tháng Trên Từng Thẻ Khu Vực**:
+  - Hàng giữa thẻ được phân tách thành **2 cột số liệu có nhãn vĩnh viễn**:
+    - **Cột Trái (Tuần)**: Hiển thị nhãn `W{w}` kèm điểm số tuần đã chấm hoặc nhãn `Chờ` nếu đang chờ chấm.
+    - **Cột Phải (Tháng)**: Hiển thị nhãn `Tháng {m}` (ví dụ `Nov`) kèm điểm TB Tháng và delta biến động MoM (`▲+2.5đ`).
+  - Huy hiệu góc trên: Khi tuần chưa chấm, hiển thị rõ ràng `Chờ W{w}` thay vì gây nhầm lẫn là tuần đã chấm.
+- **Biểu Đồ Sóng Mini Sparkline 6 Tuần Trực Quan ([AreaSparkline.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx))**:
+  - Vẽ đường cong phong độ 6 tuần gần nhất của riêng khu vực bằng SVG thuần siêu nhẹ.
+  - Tự động đổi màu theo phân hạng chuẩn: Xanh (`≥95%`), Vàng (`≥90%`), Đỏ (`<90%`).
+  - Tích hợp icon xu hướng động: `↗` (Tiến bộ), `↘` (Suy giảm), `➔` (Ổn định).
+  - Hover chuột hiển thị tooltip chi tiết điểm số từng tuần: `W41: 90% · W42: 92% · ...`
+- **Modal Phân Tích Xu Hướng & Phong Độ 5S Chuyên Sâu ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx))**:
+  - Khi click vào bất kỳ thẻ khu vực nào: Mở ngay cửa sổ popup phân tích chuyên sâu mà **không bị chuyển trang hay mất ngữ cảnh Andon TV**:
+    - Header: Tên khu vực, mã KV, Manager quản lý và Auditor phụ trách.
+    - 4 Khối Telemetry: Điểm Tuần, Điểm Tháng (MoM), Biến động tuần qua tuần (WoW), Số lỗi mở/quá hạn.
+    - Biểu đồ đường 12 tuần Recharts phóng to kèm 2 đường chuẩn Target 95% và Cảnh báo 90%.
+    - Phân tích chi tiết lỗi vi phạm và điểm phạt của 5 Trụ cột 5S (S1 - S5) của riêng khu vực.
+    - Nút liên kết trực tiếp sang danh mục lỗi của khu vực.
+- **Tối Ưu Hóa Backend & Đa Ngôn Ngữ**:
+  - Query 12 tuần được tích hợp chung cho cả toàn nhà máy và từng khu vực, **không phát sinh thêm truy vấn database nào**.
+  - Bổ sung 18 khóa dịch đa ngôn ngữ đối xứng 100% cho Tiếng Việt và Tiếng Anh.
+
+---
+
 ## [2.11.5] - 2026-11-10
 
 ### Added & Improved (Tự Động Hiển Thị Tuần Gần Nhất Khi Tuần Hiện Tại Chưa Có Đánh Giá Mới)

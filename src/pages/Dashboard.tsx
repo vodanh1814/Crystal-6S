@@ -28,6 +28,8 @@ import type { DashboardLayoutId } from '../api/types';
 import { DashboardZoneFocus } from '../components/dashboard/DashboardZoneFocus';
 import { DashboardBento } from '../components/dashboard/DashboardBento';
 import { DashboardHud } from '../components/dashboard/DashboardHud';
+import { AreaSparkline } from '../components/dashboard/AreaSparkline';
+import { AreaTrendModal } from '../components/dashboard/AreaTrendModal';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
   'S1.1': { vi: 'Vật dụng cá nhân / không cần thiết', en: 'Unnecessary / personal items in work area' },
@@ -83,6 +85,7 @@ export const Dashboard: React.FC = () => {
 
   const [row3Tab, setRow3Tab] = useState<'improvement' | 'leaderboard'>('improvement');
   const [expandedAlarmId, setExpandedAlarmId] = useState<number | null>(null);
+  const [selectedTrendArea, setSelectedTrendArea] = useState<any | null>(null);
 
   // Automatically sync with Admin's plant-wide default dashboard layout from settings
   useEffect(() => {
@@ -157,6 +160,7 @@ export const Dashboard: React.FC = () => {
     s_group_breakdown = [],
     urgent_alarms,
     improvement_analysis,
+    area_s_matrix = {},
     counts,
   } = data;
 
@@ -796,16 +800,18 @@ export const Dashboard: React.FC = () => {
                 displayScore !== null ? Math.min(100, Math.max(8, Number(displayScore))) : 0;
 
               return (
-                <Link
+                <div
                   key={area.area_id}
-                  to={`/findings?area_id=${area.area_id}`}
-                  className={`${boxCls} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between h-full min-h-[56px] sm:min-h-[62px] lg:min-h-[66px] ${
+                  onClick={() => setSelectedTrendArea(area)}
+                  className={`${boxCls} px-2 py-1.5 sm:px-2.5 sm:py-2 flex flex-col justify-between h-full min-h-[76px] sm:min-h-[82px] lg:min-h-[88px] ${
                     isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
                   } transition cursor-pointer group`}
+                  title={t('click_to_inspect_area')}
                 >
+                  {/* Row 1: Area Name & Status Badge */}
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[68%] ${headingTextCls} ${
+                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} ${
                         isClassic
                           ? 'group-hover:text-emerald-400'
                           : isLightTv
@@ -820,7 +826,7 @@ export const Dashboard: React.FC = () => {
                       <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] sm:text-[10px] font-bold shrink-0">
                         {t('tag_overdue', { n: area.overdue_count })}
                       </span>
-                    ) : (isSubmitted || displayScore !== null) ? (
+                    ) : isSubmitted ? (
                       isPass ? (
                         <span className={`text-[10px] sm:text-xs font-bold shrink-0 ${passTextCls}`}>{t('tag_pass')}</span>
                       ) : isWarning ? (
@@ -833,51 +839,74 @@ export const Dashboard: React.FC = () => {
                         </span>
                       )
                     ) : (
-                      <span className={`text-[9px] sm:text-[10px] font-medium shrink-0 ${warnTextCls}`}>
-                        {t('tag_pending')}
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 ${warnBadgeCls}`}>
+                        {t('badge_pending_week', { week: current_week.iso_week })}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-baseline justify-between my-0.5 gap-1">
-                    <span className={`text-sm sm:text-base lg:text-lg font-black font-mono leading-none ${scoreCls}`}>
-                      {scoreTxt}
-                    </span>
-                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                      {/* MoM Delta Badge */}
-                      <span
-                        className={`text-[9px] sm:text-[10px] font-mono font-bold shrink-0 ${
-                          area.delta_prev_month !== null && area.delta_prev_month > 0
-                            ? passTextCls
-                            : area.delta_prev_month !== null && area.delta_prev_month < 0
-                            ? failTextCls
-                            : mutedTextCls
-                        }`}
-                        title={t('vs_prev_month')}
-                      >
-                        {area.delta_prev_month !== null && area.delta_prev_month > 0
-                          ? `▲+${area.delta_prev_month}${t('pts_unit')}`
-                          : area.delta_prev_month !== null && area.delta_prev_month < 0
-                          ? `▼${area.delta_prev_month}${t('pts_unit')}`
-                          : `▬ 0${t('pts_unit')}`}
+                  {/* Row 2: Dual Telemetry (Tuần W46 vs Tháng Nov) */}
+                  <div className="grid grid-cols-2 gap-1 my-0.5 items-center">
+                    {/* Cột Trái: Tuần */}
+                    <div className="flex flex-col min-w-0">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
+                        {t('col_week_label', { week: `W${current_week.iso_week}` })}
                       </span>
-                      <span className={`text-[9px] sm:text-[10px] font-mono truncate ${mutedTextCls}`}>
-                        {isSubmitted ? (
-                          <>
-                            {getMonthShortName(month_info?.display_month || current_week.month)}:{' '}
-                            <strong className={subTextCls}>
-                              {formatScore(area.month_avg, lang)}
-                            </strong>
-                          </>
-                        ) : (
-                          <strong className={subTextCls}>
-                            {area.month_source === 'historical'
-                              ? t('source_historical')
-                              : getMonthShortName(month_info?.display_month || current_week.month)}
-                          </strong>
-                        )}
+                      <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                        isSubmitted
+                          ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
+                          : `${mutedTextCls} text-[10px] font-bold`
+                      }`}>
+                        {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
                       </span>
                     </div>
+
+                    {/* Cột Phải: Tháng */}
+                    <div className="flex flex-col items-end text-right min-w-0">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
+                        {t('col_month_label', { month: getMonthShortName(month_info?.display_month || current_week.month) })}
+                      </span>
+                      <div className="flex items-baseline gap-1 justify-end flex-nowrap">
+                        <span className={`text-xs sm:text-sm font-black font-mono leading-none ${
+                          area.month_avg !== null
+                            ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
+                            : mutedTextCls
+                        }`}>
+                          {formatScore(area.month_avg, lang)}
+                        </span>
+                        {area.delta_prev_month !== null && (
+                          <span
+                            className={`text-[9px] font-mono font-bold shrink-0 ${
+                              area.delta_prev_month > 0 ? passTextCls : area.delta_prev_month < 0 ? failTextCls : mutedTextCls
+                            }`}
+                            title={t('vs_prev_month')}
+                          >
+                            {area.delta_prev_month > 0 ? `+${area.delta_prev_month}${t('pts_unit')}` : `${area.delta_prev_month}${t('pts_unit')}`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Mini Sparkline & Trend Indicator */}
+                  <div className="flex items-center justify-between gap-1 py-0.5">
+                    <div className={`text-[9px] font-semibold flex items-center gap-1 ${mutedTextCls}`}>
+                      <span>{t('trend_6_weeks')}:</span>
+                      {area.delta_prev_month !== null && area.delta_prev_month > 0 ? (
+                        <span className={`font-bold ${passTextCls}`}>↗</span>
+                      ) : area.delta_prev_month !== null && area.delta_prev_month < 0 ? (
+                        <span className={`font-bold ${failTextCls}`}>↘</span>
+                      ) : (
+                        <span className={`font-bold ${mutedTextCls}`}>➔</span>
+                      )}
+                    </div>
+                    <AreaSparkline
+                      data={area.sparkline_6 || []}
+                      target={target}
+                      warningTarget={warningTarget}
+                      width={52}
+                      height={14}
+                    />
                   </div>
 
                   {/* Signature Sample 4 Slim Progress Bar */}
@@ -894,6 +923,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Row 4: Footer */}
                   <div className={`flex items-center justify-between text-[10px] sm:text-[11px] border-t pt-0.5 sm:pt-1 ${mutedTextCls} ${innerRowDividerCls}`}>
                     <span className="truncate">
                       {t('open_short')}:{' '}
@@ -917,7 +947,7 @@ export const Dashboard: React.FC = () => {
                       </span>
                     )}
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -1465,6 +1495,20 @@ export const Dashboard: React.FC = () => {
       </div>
         </>
       )}
+
+      {/* Area Trend & 5S Performance Inspector Modal */}
+      <AreaTrendModal
+        isOpen={!!selectedTrendArea}
+        onClose={() => setSelectedTrendArea(null)}
+        area={selectedTrendArea}
+        target={target}
+        warningTarget={warningTarget}
+        currentWeek={current_week}
+        monthInfo={month_info}
+        areaSMatrix={area_s_matrix}
+        lang={lang}
+        t={t}
+      />
     </div>
   );
 };

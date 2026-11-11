@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.5`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.6`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.5`
+## 1. Highlights of Version `v2.11.6`
+
+### 📈 6-Week Mini Sparkline Trend & Area 5S Performance Inspector Modal
+- **Distinct Dual Telemetry Columns on Each Area Card**: Split each area card into two permanently labeled columns (`W46` - Pending/Score | `Nov` - Monthly Avg & MoM delta `▲+2.5pts`), eliminating ambiguity between weekly and monthly data.
+- **Pure SVG 6-Week Mini Sparkline ([AreaSparkline.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx))**: Visualizes area historical performance curves with dynamic Green/Yellow/Red tiers, trend arrows (`↗`, `↘`, `➔`), and week hover tooltips.
+- **Area Trend & 5S Pillars Inspector Modal ([AreaTrendModal.tsx](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaTrendModal.tsx))**: Click any area card to pop up in-depth telemetry without navigating away: Manager/Auditor metadata, 4 telemetry KPIs, 12-week Recharts LineChart, and S1-S5 5S pillar penalty breakdown.
+- **High Performance & 0 Extra DB Overhead**: Reuses the consolidated 12-week backend trend query with 0 extra database roundtrips.
+
+---
+
+## 2. Highlights of Version `v2.11.5`
 
 ### 📊 Automatic Fallback to Latest Completed Week When Weekly Audit Is Pending
 - **Smart Fallback Mechanism for Weekly Average KPI**: When the current week has not been completed, the system automatically displays the latest audited week's score and week label (`WEEKLY AVG W45` / `ĐIỂM TB TUẦN W45`).

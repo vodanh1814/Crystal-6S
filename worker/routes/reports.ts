@@ -732,6 +732,107 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     });
   }
 
+  // Pre-fetch area managers and auditors for area modal
+  const userAreasRes = await c.env.DB
+    .prepare(`
+      SELECT ua.area_id, ua.role, u.full_name
+      FROM user_areas ua
+      JOIN users u ON u.id = ua.user_id
+      WHERE ua.role IN ('manager', 'auditor')
+    `)
+    .all<{ area_id: number; role: string; full_name: string }>();
+
+  const areaManagersMap = new Map<number, string>();
+  const areaAuditorsMap = new Map<number, string>();
+  for (const r of userAreasRes.results || []) {
+    if (r.role === 'manager' && !areaManagersMap.has(r.area_id)) {
+      areaManagersMap.set(r.area_id, r.full_name);
+    } else if (r.role === 'auditor' && !areaAuditorsMap.has(r.area_id)) {
+      areaAuditorsMap.set(r.area_id, r.full_name);
+    }
+  }
+
+  // 12-week trend of average score & Area-level weekly scores
+  const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string; ymKey: string }[] = [];
+  let curDate = today;
+  if (displayMonth !== currentMonth) {
+    const [dy, dm] = displayMonth.split('-').map(Number);
+    const lastDayOfMonth = new Date(Date.UTC(dy, dm, 0)).toISOString().slice(0, 10);
+    curDate = lastDayOfMonth;
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const wInfo = getISOWeek(curDate);
+    const label = `W${wInfo.isoWeek < 10 ? '0' + wInfo.isoWeek : wInfo.isoWeek}`;
+    const mStr = wInfo.month.slice(5, 7);
+    trendWeeks.unshift({
+      label,
+      isoYear: wInfo.isoYear,
+      isoWeek: wInfo.isoWeek,
+      monthStr: mStr,
+      ymKey: `${wInfo.isoYear}_${mStr}`,
+    });
+    curDate = addDays(wInfo.weekStart, -7);
+  }
+
+  const conditions = trendWeeks.map(() => '(iso_year = ? AND iso_week = ?)').join(' OR ');
+  const trendParams: number[] = [];
+  for (const tw of trendWeeks) {
+    trendParams.push(tw.isoYear, tw.isoWeek);
+  }
+
+  const allWeeksRes = await c.env.DB
+    .prepare(`
+      SELECT area_id, iso_year, iso_week, score FROM audits
+      WHERE status = 'submitted' AND score IS NOT NULL AND (${conditions})
+    `)
+    .bind(...trendParams)
+    .all<{ area_id: number; iso_year: number; iso_week: number; score: number }>();
+
+  const scoresByYearWeek = new Map<string, number[]>();
+  const areaScoreByYearWeek = new Map<string, number>();
+  for (const r of allWeeksRes.results || []) {
+    const key = `${r.iso_year}_${r.iso_week}`;
+    if (!scoresByYearWeek.has(key)) {
+      scoresByYearWeek.set(key, []);
+    }
+    scoresByYearWeek.get(key)!.push(r.score);
+    areaScoreByYearWeek.set(`${r.area_id}_${r.iso_year}_${r.iso_week}`, r.score);
+  }
+
+  const trendData = trendWeeks.map((tw) => {
+    const scores = scoresByYearWeek.get(`${tw.isoYear}_${tw.isoWeek}`) || [];
+
+    if (scores.length > 0) {
+      return {
+        week: tw.label,
+        avg_score: calculateMonthlyScore(scores),
+        source: 'audited' as const,
+        month: tw.monthStr,
+        target,
+      };
+    }
+
+    const histAvg = historicalAvgByYearMonth.get(tw.ymKey);
+    if (histAvg !== undefined) {
+      return {
+        week: tw.label,
+        avg_score: histAvg,
+        source: 'historical' as const,
+        month: tw.monthStr,
+        target,
+      };
+    }
+
+    return {
+      week: tw.label,
+      avg_score: null,
+      source: null,
+      month: tw.monthStr,
+      target,
+    };
+  });
+
   // Area status for current week and matrix wall with MoM delta & trend
   const currentWeekStatus = areas.map((area) => {
     const audit = currentWeekAuditMap.get(area.id);
@@ -759,6 +860,24 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       repeat_count: 0,
     };
 
+    const areaTrend12 = trendWeeks.map((tw) => {
+      const s = areaScoreByYearWeek.get(`${area.id}_${tw.isoYear}_${tw.isoWeek}`);
+      return {
+        week: tw.label,
+        iso_year: tw.isoYear,
+        iso_week: tw.isoWeek,
+        score: s !== undefined && s !== null ? Math.round(s * 10) / 10 : null,
+      };
+    });
+    const sparkline6 = areaTrend12.slice(-6);
+
+    const completedWeeks = areaTrend12.filter((p) => p.score !== null);
+    const lastScore = completedWeeks.length > 0 ? completedWeeks[completedWeeks.length - 1].score : null;
+    const prevScoreWeek = completedWeeks.length > 1 ? completedWeeks[completedWeeks.length - 2].score : null;
+    const deltaPrevWeek = lastScore !== null && prevScoreWeek !== null
+      ? Math.round((lastScore - prevScoreWeek) * 10) / 10
+      : null;
+
     return {
       area_id: area.id,
       area_code: area.code,
@@ -772,7 +891,12 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
       month_source: mInfo.source,
       prev_month_avg: prevScore,
       delta_prev_month: deltaPrevMonth,
+      delta_prev_week: deltaPrevWeek,
       trend_status: trendStatus,
+      trend_12_weeks: areaTrend12,
+      sparkline_6: sparkline6,
+      manager_name: areaManagersMap.get(area.id) || null,
+      auditor_name: areaAuditorsMap.get(area.id) || null,
       open_count: fCounts.open_count,
       fixed_count: fCounts.fixed_count,
       overdue_count: fCounts.overdue_count,
@@ -860,87 +984,6 @@ reportsRouter.get('/dashboard', optionalAuthMiddleware, async (c) => {
     stagnant_count: improvementTracked.filter((a) => a.status === 'stagnant').length,
     total_tracked: improvementTracked.length,
   };
-
-  // 7. 12-week trend of average score (connected with historical monthly data)
-  const trendWeeks: { label: string; isoYear: number; isoWeek: number; monthStr: string; ymKey: string }[] = [];
-  let curDate = today;
-  if (displayMonth !== currentMonth) {
-    const [dy, dm] = displayMonth.split('-').map(Number);
-    // Last day of displayMonth
-    const lastDayOfMonth = new Date(Date.UTC(dy, dm, 0)).toISOString().slice(0, 10);
-    curDate = lastDayOfMonth;
-  }
-
-  for (let i = 0; i < 12; i++) {
-    const wInfo = getISOWeek(curDate);
-    const label = `W${wInfo.isoWeek < 10 ? '0' + wInfo.isoWeek : wInfo.isoWeek}`;
-    const mStr = wInfo.month.slice(5, 7);
-    trendWeeks.unshift({
-      label,
-      isoYear: wInfo.isoYear,
-      isoWeek: wInfo.isoWeek,
-      monthStr: mStr,
-      ymKey: `${wInfo.isoYear}_${mStr}`,
-    });
-    curDate = addDays(wInfo.weekStart, -7);
-  }
-
-  const conditions = trendWeeks.map(() => '(iso_year = ? AND iso_week = ?)').join(' OR ');
-  const trendParams: number[] = [];
-  for (const tw of trendWeeks) {
-    trendParams.push(tw.isoYear, tw.isoWeek);
-  }
-
-  const allWeeksRes = await c.env.DB
-    .prepare(`
-      SELECT iso_year, iso_week, score FROM audits
-      WHERE status = 'submitted' AND score IS NOT NULL AND (${conditions})
-    `)
-    .bind(...trendParams)
-    .all<{ iso_year: number; iso_week: number; score: number }>();
-
-  const scoresByYearWeek = new Map<string, number[]>();
-  for (const r of allWeeksRes.results || []) {
-    const key = `${r.iso_year}_${r.iso_week}`;
-    if (!scoresByYearWeek.has(key)) {
-      scoresByYearWeek.set(key, []);
-    }
-    scoresByYearWeek.get(key)!.push(r.score);
-  }
-
-  const trendData = trendWeeks.map((tw) => {
-    const scores = scoresByYearWeek.get(`${tw.isoYear}_${tw.isoWeek}`) || [];
-
-    if (scores.length > 0) {
-      return {
-        week: tw.label,
-        avg_score: calculateMonthlyScore(scores),
-        source: 'audited' as const,
-        month: tw.monthStr,
-        target,
-      };
-    }
-
-    // If no weekly audits, fallback to month historical average if available
-    const histAvg = historicalAvgByYearMonth.get(tw.ymKey);
-    if (histAvg !== undefined) {
-      return {
-        week: tw.label,
-        avg_score: histAvg,
-        source: 'historical' as const,
-        month: tw.monthStr,
-        target,
-      };
-    }
-
-    return {
-      week: tw.label,
-      avg_score: null,
-      source: null,
-      month: tw.monthStr,
-      target,
-    };
-  });
 
   // 8. Findings count & penalty by S group this month
   const sGroupRes = await c.env.DB
