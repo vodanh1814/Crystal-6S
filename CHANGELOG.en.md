@@ -7,6 +7,23 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.9] - 2026-11-11
+
+### Added & Improved (High-Visibility Trend Telemetry, Default Andon Standardization & Responsive Auto-Fit Containers)
+- **High-Visibility Trend Arrow & Dynamic Mini Sparklines**:
+  - Expanded SVG canvas to `56x20` px with `strokeWidth="1.8"` and an enlarged `r="2.8"` latest score dot in [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx).
+  - Implemented dynamic local auto-scaling (`scoreRange = Math.max(maxScore - minScore, 4)`), allowing subtle 1-3 point variations to form a vivid 8-12px curve rather than a flat line.
+  - Prominent bold trend arrow & delta telemetry (`▲ +2.5` / `▼ -1.0` / `➔ 0`) rendered in high-contrast `text-xs sm:text-sm font-black font-mono` for effortless readability from across the factory floor.
+- **Removed Alternative Themes - Standardized on Default Factory Dark Andon**:
+  - Stripped out experimental layout branchings (`bento`, `hud`, `zone`) from [`Dashboard.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx).
+  - Firmly established the single canonical **Standard Factory Dark Andon Board** as the permanent, rock-solid default.
+  - Streamlined Admin Targets ([`AdminTargets.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/AdminTargets.tsx)) to display an informative Andon active status card with a direct TV link.
+- **Fluid Responsive Density Containers Across All Devices**:
+  - **Large TV / Desktop Displays (`lg:` and up)**: Fluid 1-screen auto-fit with zero scrollbars (`lg:h-full lg:auto-rows-fr`, 4 columns x 4 rows).
+  - **Mobile & Tablet Devices (`< lg`)**: Fluid natural height (`h-auto`) with silky vertical scrolling (`overflow-y-auto`). Card heights comfortably set to `h-auto min-h-[82px] p-2 sm:p-2.5`, eradicating any overlap or text clipping on mobile.
+
+---
+
 ## [2.11.8] - 2026-11-11
 
 ### Added & Improved (Fluid Adaptive 3-Tier Layout for Density Auto-Fit & Historical Data Inheritance for Sparklines)

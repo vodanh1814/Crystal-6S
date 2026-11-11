@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.8`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.9`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.8`
+## 1. Điểm nổi bật của phiên bản `v2.11.9`
+
+### 📈 Mũi Tên & Trend To Rõ Ràng, Chuẩn Hóa Duy Nhất Theme Andon & Tự Điều Chỉnh Container Đa Thiết Bị
+- **Mũi Tên & Mini Sparkline To Rõ Nét**: Tăng kích thước SVG [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx) lên 56x20 px, nét vẽ dày 1.8px; thuật toán Dynamic Auto-Scale phản ánh chính xác biên độ dao động điểm số (1-3 điểm tạo sóng rõ nét). Cụm mũi tên và delta (`▲ +2.5` / `▼ -1.0` / `➔ 0`) hiển thị to đậm, dễ quan sát từ xa trên TV.
+- **Chuẩn Hóa Duy Nhất Theme Factory Andon Mặc Định**: Gỡ bỏ các layout phụ thử nghiệm (`bento`, `hud`, `zone`), cố định duy nhất giao diện nền tối Andon công nghiệp tiêu chuẩn nhà máy, đồng thời tinh giản trang Cài đặt quản trị.
+- **Container Tự Điều Chỉnh Linh Hoạt Trên Mọi Dạng Thiết Bị**: Màn hình lớn/TV tự động fit 100% không cần thanh cuộn (`lg:h-full lg:auto-rows-fr`); trên điện thoại và máy tính bảng tự động chuyển sang chiều cao tự nhiên (`h-auto`, thẻ `min-h-[82px]`), cuộn mượt mà không bao giờ bị đè chữ.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.8`
 
 ### 📱 Layout 3 Tầng Tự Co Giãn Theo Mật Độ & Kế Thừa Điểm Lịch Sử Cho Sparkline
 - **Layout 3 Tầng Nén Thông Minh**: Tái cấu trúc thẻ khu vực thành 3 hàng tinh gọn (Tên KV + Sparkline; Số liệu Tuần & Tháng nằm ngang; Huy hiệu trạng thái + Open/Verify), xóa bỏ hoàn toàn tình trạng chữ chồng chéo.

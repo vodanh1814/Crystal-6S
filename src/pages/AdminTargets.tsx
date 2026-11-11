@@ -41,8 +41,7 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { Modal } from '../components/Modal';
 import { fileToLogoDataUrl } from '../lib/imageCompression';
-import { DASHBOARD_LAYOUT_CATALOG } from '../lib/theme';
-import type { DashboardLayoutId, YearlyTarget } from '../api/types';
+import type { YearlyTarget } from '../api/types';
 import {
   APP_VERSION,
   APP_RELEASE_DATE,
@@ -146,46 +145,6 @@ export const AdminTargets: React.FC = () => {
     setColorModeOverride,
   } = useAuth();
 
-  // ── 0. Dashboard Layout Studio State ──
-  const [selectedLayoutDraft, setSelectedLayoutDraft] = useState<DashboardLayoutId>(() => {
-    try {
-      const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone' || saved === 'bento' || saved === 'hud') return saved;
-    } catch {}
-    return 'matrix';
-  });
-  const [savingLayout, setSavingLayout] = useState(false);
-  const [layoutSuccess, setLayoutSuccess] = useState<string | null>(null);
-  const [layoutError, setLayoutError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api.get<{ settings: any }>('/settings').then((res) => {
-      const layout = res?.settings?.dashboard_layout;
-      if (layout === 'matrix' || layout === 'zone' || layout === 'bento' || layout === 'hud') {
-        setSelectedLayoutDraft(layout);
-        try {
-          localStorage.setItem('crystal_5s_dashboard_layout', layout);
-        } catch {}
-      }
-    }).catch(() => {});
-  }, []);
-
-  const handleSaveDashboardLayout = async (targetLayout: DashboardLayoutId) => {
-    if (!isAdmin) return;
-    setSavingLayout(true);
-    setLayoutSuccess(null);
-    setLayoutError(null);
-    try {
-      await api.put('/settings', { dashboard_layout: targetLayout });
-      localStorage.setItem('crystal_5s_dashboard_layout', targetLayout);
-      setLayoutSuccess(t('dashboard_layout_saved_success'));
-      setTimeout(() => setLayoutSuccess(null), 5000);
-    } catch (err: any) {
-      setLayoutError(err.message || t('dashboard_layout_save_error'));
-    } finally {
-      setSavingLayout(false);
-    }
-  };
 
   // ── 1. System Version & Admin-Only Git Auto-Update State ──
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -641,226 +600,37 @@ export const AdminTargets: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      {/* SECTION 0: DASHBOARD PRESENTATION LAYOUT STUDIO (ADMIN ONLY) */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
+      {/* SECTION 0: STANDARDIZED FACTORY ANDON BOARD INFO (ADMIN ONLY) */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-emerald-600 to-sky-600 text-white flex items-center justify-center shrink-0 shadow-sm">
               <LayoutTemplate className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                  {t('dashboard_layout_studio_title')}
+                  {lang === 'en' ? 'Standard Factory Andon Dashboard' : 'Giao diện Bảng Andon Nhà xưởng Chuẩn'}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold">
-                  {DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)
-                    ? t(DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)!.nameKey)
-                    : selectedLayoutDraft}
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                  {lang === 'en' ? 'Default Active' : 'Mặc định Chuẩn hóa'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {t('dashboard_layout_studio_desc')}
+                {lang === 'en'
+                  ? 'High-contrast industrial dark mode optimized for factory Andon TV displays and mobile inspection.'
+                  : 'Giao diện nền tối Andon tương phản cao, số to rõ ràng, tự động co giãn tối ưu cho màn hình TV nhà xưởng và thiết bị di động.'}
               </p>
             </div>
           </div>
-        </div>
 
-        {layoutSuccess && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-            <span>{layoutSuccess}</span>
-          </div>
-        )}
-
-        {layoutError && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-            {layoutError}
-          </div>
-        )}
-
-        {/* 4 Dashboard Layout Selector Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {DASHBOARD_LAYOUT_CATALOG.map((item) => {
-            const isDraftSelected = selectedLayoutDraft === item.id;
-
-            return (
-              <div
-                key={item.id}
-                className={`rounded-2xl border-2 p-4 flex flex-col justify-between gap-4 transition-all ${
-                  isDraftSelected
-                    ? 'border-blue-600 ring-2 ring-blue-500/20 bg-blue-50/40'
-                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedLayoutDraft(item.id)}
-                  aria-pressed={isDraftSelected}
-                  className="space-y-3 text-left w-full cursor-pointer rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  {/* Miniature Mockup Illustration */}
-                  <div
-                    aria-hidden="true"
-                    className="h-28 rounded-xl border border-slate-700 bg-slate-900 p-2 flex flex-col justify-between overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-800">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-mono">{item.icon}</span>
-                        <span className="text-[9px] font-bold font-mono tracking-tight text-slate-200">
-                          {item.id === 'matrix' ? '3-ROW MATRIX' : item.id === 'zone' ? 'PROD & SUPPORT' : item.id === 'bento' ? 'BENTO TELEMETRY' : 'INDUSTRIAL HUD'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                      </div>
-                    </div>
-
-                    {/* Miniature Layout Representation */}
-                    {item.id === 'matrix' && (
-                      <div className="space-y-1 py-1">
-                        <div className="grid grid-cols-6 gap-0.5 h-3">
-                          {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="rounded-2xs bg-slate-800 border border-slate-700" />
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-12 gap-1 h-7">
-                          <div className="col-span-8 rounded-xs bg-slate-950 border border-emerald-500/30 p-0.5 grid grid-cols-4 gap-0.5">
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
-                              <div key={k} className="rounded-2xs bg-emerald-500/20" />
-                            ))}
-                          </div>
-                          <div className="col-span-4 rounded-xs bg-slate-950 border border-rose-500/30" />
-                        </div>
-                        <div className="grid grid-cols-12 gap-1 h-4">
-                          <div className="col-span-5 rounded-xs bg-slate-800" />
-                          <div className="col-span-4 rounded-xs bg-slate-800" />
-                          <div className="col-span-3 rounded-xs bg-slate-800" />
-                        </div>
-                      </div>
-                    )}
-
-                    {item.id === 'zone' && (
-                      <div className="grid grid-cols-12 gap-1 py-1 h-16">
-                        <div className="col-span-4 rounded-xs bg-slate-950 border border-sky-400/30 p-1 flex flex-col items-center justify-center">
-                          <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center text-[7px] text-white font-mono font-bold">
-                            92%
-                          </div>
-                        </div>
-                        <div className="col-span-8 rounded-xs bg-slate-950 border border-slate-700 p-0.5 grid grid-cols-2 gap-1">
-                          <div className="rounded-2xs bg-slate-800 border-l-2 border-sky-400 p-0.5 flex flex-col justify-around">
-                            <span className="text-[6px] text-sky-300 font-bold">PROD</span>
-                            <div className="h-1 bg-emerald-500/40 rounded-full" />
-                          </div>
-                          <div className="rounded-2xs bg-slate-800 border-l-2 border-amber-400 p-0.5 flex flex-col justify-around">
-                            <span className="text-[6px] text-amber-300 font-bold">SUPP</span>
-                            <div className="h-1 bg-amber-500/40 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {item.id === 'bento' && (
-                      <div className="space-y-1 py-1 h-16 flex flex-col justify-between">
-                        <div className="grid grid-cols-12 gap-1 h-11">
-                          <div className="col-span-5 rounded-xs bg-slate-950 border border-sky-400/30 p-0.5 flex flex-col items-center justify-center">
-                            <div className="w-5 h-5 rounded-full border border-sky-400/60 flex items-center justify-center text-[6px] text-sky-300 font-mono">
-                              RADAR
-                            </div>
-                          </div>
-                          <div className="col-span-7 rounded-xs bg-slate-950 border border-slate-800 p-0.5 grid grid-cols-3 gap-0.5">
-                            {[1, 2, 3, 4, 5, 6].map((k) => (
-                              <div key={k} className="rounded-2xs bg-emerald-500/20 border border-emerald-500/30" />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="h-2 rounded-2xs bg-slate-800 border border-slate-700 flex items-center px-1">
-                          <div className="w-3/4 h-1 bg-sky-400 rounded-full" />
-                        </div>
-                      </div>
-                    )}
-
-                    {item.id === 'hud' && (
-                      <div className="grid grid-cols-12 gap-0.5 py-1 h-16">
-                        <div className="col-span-4 rounded-xs bg-[#050811] border border-emerald-500/40 p-0.5 grid grid-cols-2 gap-0.5">
-                          {[1, 2, 3, 4].map((k) => (
-                            <div key={k} className="rounded-2xs bg-emerald-500/30" />
-                          ))}
-                        </div>
-                        <div className="col-span-4 rounded-xs bg-[#050811] border border-cyan-400/50 p-0.5 flex flex-col items-center justify-center">
-                          <span className="text-[6px] text-cyan-300 font-bold">ALARM</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse mt-0.5" />
-                        </div>
-                        <div className="col-span-4 rounded-xs bg-[#050811] border border-amber-500/40 p-0.5 grid grid-cols-2 gap-0.5">
-                          {[1, 2, 3, 4].map((k) => (
-                            <div key={k} className="rounded-2xs bg-amber-500/30" />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Layout Meta Info */}
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black text-slate-900 pt-0.5">
-                      {t(item.nameKey)}
-                    </h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      {t(item.descKey)}
-                    </p>
-                  </div>
-                </button>
-
-                {/* Card Actions */}
-                <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.setItem('crystal_5s_dashboard_layout', item.id);
-                      window.location.href = '/';
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>{t('theme_preview_btn')}</span>
-                  </button>
-
-                  {isDraftSelected && (
-                    <span className="inline-flex items-center gap-1 text-xs font-black text-blue-600">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>{lang === 'en' ? 'Selected' : 'Đã chọn'}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Apply Default Layout Bar */}
-        <div className="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-xs text-slate-500 font-medium">
-            {lang === 'en' ? 'Selected Default Layout:' : 'Mẫu bố cục Dashboard đã chọn:'}{' '}
-            <strong className="text-slate-900 font-bold">
-              {t(DASHBOARD_LAYOUT_CATALOG.find((item) => item.id === selectedLayoutDraft)?.nameKey || 'dashboard_layout_matrix_name')}
-            </strong>
-          </div>
-
-          <button
-            type="button"
-            disabled={savingLayout}
-            onClick={() => handleSaveDashboardLayout(selectedLayoutDraft)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm shadow-blue-600/25 transition cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition"
           >
-            {savingLayout ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span>{savingLayout ? t('theme_saving') : t('theme_save_apply_btn')}</span>
-          </button>
+            <Eye className="w-4 h-4 text-emerald-400" />
+            <span>{lang === 'en' ? 'View Live Andon TV' : 'Xem Bảng Andon TV'}</span>
+          </a>
         </div>
       </div>
 

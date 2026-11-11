@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.8`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.9`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.8`
+## 1. Highlights of Version `v2.11.9`
+
+### 📈 High-Visibility Trend Telemetry, Default Andon Standardization & Responsive Auto-Fit Containers
+- **High-Visibility Trend Arrow & Dynamic Mini Sparklines**: Expanded SVG canvas in [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx) to 56x20 px with `strokeWidth="1.8"`, `r="2.8"` dot, and dynamic auto-scaling. Bold arrows and telemetry (`▲ +2.5` / `▼ -1.0` / `➔ 0`) are immediately readable across the factory floor.
+- **Removed Alternative Themes - Standardized on Default Factory Dark Andon**: Deprecated experimental layout branchings (`bento`, `hud`, `zone`) to establish the single canonical Factory Dark Andon board as the rock-solid default, streamlining Admin Settings.
+- **Fluid Responsive Density Containers Across All Devices**: Full TV mode fits 100% without scrollbars (`lg:h-full lg:auto-rows-fr`); mobile and tablet views adapt dynamically with natural heights (`h-auto`, cards `min-h-[82px]`) and smooth scrolling without text overlap.
+
+---
+
+## 2. Highlights of Version `v2.11.8`
 
 ### 📱 Fluid Adaptive 3-Tier Layout for Density Auto-Fit & Historical Trend Inheritance
 - **Fluid Adaptive 3-Tier Card Layout**: Restructured area cards into 3 compact rows (Area Name + Sparkline; Week & Month on single horizontal baseline; Status Badge + Open/Verify), completely eliminating card overlap.

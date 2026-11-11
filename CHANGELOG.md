@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.9] - 2026-11-11
+
+### Added & Improved (Mũi Tên & Trend To Rõ Ràng, Chuẩn Hóa Duy Nhất Theme Andon & Tự Điều Chỉnh Container Đa Thiết Bị)
+- **Cải Tiến Mũi Tên & Biểu Đồ Mini Sparkline To Rõ Ràng (High-Visibility Trend Telemetry)**:
+  - Nâng cấp kích thước SVG [`AreaSparkline.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/components/dashboard/AreaSparkline.tsx) lên `56x20` px, độ dày nét vẽ `strokeWidth="1.8"`, chấm điểm cuối `r="2.8"` to rõ.
+  - Thuật toán Dynamic Auto-Scale tự động co giãn theo biên độ điểm thực tế của từng khu vực (`scoreRange = Math.max(maxScore - minScore, 4)`), giúp mọi biến động tăng/giảm từ 1-3 điểm tạo nên đường lượn sóng rõ rệt (8-12px) thay vì bị bẹp phẳng.
+  - Cụm mũi tên và độ lệch (`▲ +2.5` / `▼ -1.0` / `➔ 0`) hiển thị đậm nét (`text-xs sm:text-sm font-black font-mono`), màu sắc tương phản cao, dễ dàng nhận biết từ khoảng cách xa trên màn hình TV.
+- **Loại Bỏ Các Theme Khác - Chuẩn Hóa Duy Nhất Theme Andon Mặc Định**:
+  - Gỡ bỏ hoàn toàn logic chuyển đổi của các layout phụ (`bento`, `hud`, `zone`) khỏi [`Dashboard.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/Dashboard.tsx).
+  - Cố định duy nhất 1 giao diện chuẩn: **Standard Factory Dark Andon Board** (nền tối chuyên dụng nhà xưởng, chống mỏi mắt, tương phản cao, số to).
+  - Tinh giản mục Layout Studio trong trang Cài đặt [`AdminTargets.tsx`](file:///c:/Users/cevtsduong/Documents/CETVN%205S%20Audit/src/pages/AdminTargets.tsx), hiển thị thẻ trạng thái chuẩn hóa duy nhất kèm liên kết trực tiếp xem TV.
+- **Container Tự Điều Chỉnh Linh Hoạt Trên Mọi Dạng Thiết Bị (Fluid Responsive Density)**:
+  - **Trên TV / Desktop lớn (`lg:` trở lên)**: Tự động dàn trải vừa vặn 100% màn hình không cần thanh cuộn (`lg:h-full lg:auto-rows-fr`, 4 cột x 4 hàng).
+  - **Trên Điện thoại & Tablet (`< lg`)**: Chuyển đổi linh hoạt sang chiều cao tự nhiên (`h-auto`), thanh cuộn mượt mà (`overflow-y-auto`). Chiều cao thẻ thoải mái (`h-auto min-h-[82px] p-2 sm:p-2.5`), xóa bỏ hoàn toàn tình trạng chữ đè lên nhau trên điện thoại.
+
+---
+
 ## [2.11.8] - 2026-11-11
 
 ### Added & Improved (Layout 3 Tầng Tự Co Giãn Theo Mật Độ & Kế Thừa Điểm Lịch Sử Cho Mini Sparkline)

@@ -24,10 +24,6 @@ import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 import { formatScore, formatDelta } from '../lib/format';
 import { resolveColorMode } from '../lib/theme';
-import type { DashboardLayoutId } from '../api/types';
-import { DashboardZoneFocus } from '../components/dashboard/DashboardZoneFocus';
-import { DashboardBento } from '../components/dashboard/DashboardBento';
-import { DashboardHud } from '../components/dashboard/DashboardHud';
 import { AreaSparkline } from '../components/dashboard/AreaSparkline';
 import { AreaTrendModal } from '../components/dashboard/AreaTrendModal';
 
@@ -75,27 +71,9 @@ export const Dashboard: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
-  const [activeLayout, setActiveLayout] = useState<DashboardLayoutId>(() => {
-    try {
-      const saved = localStorage.getItem('crystal_5s_dashboard_layout');
-      if (saved === 'matrix' || saved === 'zone' || saved === 'bento' || saved === 'hud') return saved;
-    } catch {}
-    return 'matrix';
-  });
-
   const [row3Tab, setRow3Tab] = useState<'improvement' | 'leaderboard'>('improvement');
   const [expandedAlarmId, setExpandedAlarmId] = useState<number | null>(null);
   const [selectedTrendArea, setSelectedTrendArea] = useState<any | null>(null);
-
-  // Automatically sync with Admin's plant-wide default dashboard layout from settings
-  useEffect(() => {
-    if (data?.dashboard_layout) {
-      setActiveLayout(data.dashboard_layout);
-      try {
-        localStorage.setItem('crystal_5s_dashboard_layout', data.dashboard_layout);
-      } catch {}
-    }
-  }, [data?.dashboard_layout]);
 
   const isClassic = true;
   const isGlass = false;
@@ -407,52 +385,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* RENDER LAYOUT 3: BENTO TELEMETRY 2.0 */}
-      {activeLayout === 'bento' && (
-        <DashboardBento
-          data={data}
-          lang={lang}
-          t={t}
-          is_authenticated={is_authenticated}
-          target={target}
-          warningTarget={warningTarget}
-          formatMonthYear={formatMonthYear}
-          getMonthShortName={getMonthShortName}
-        />
-      )}
-
-      {/* RENDER LAYOUT 4: INDUSTRIAL CYBERPUNK HUD */}
-      {activeLayout === 'hud' && (
-        <DashboardHud
-          data={data}
-          lang={lang}
-          t={t}
-          is_authenticated={is_authenticated}
-          target={target}
-          warningTarget={warningTarget}
-          formatMonthYear={formatMonthYear}
-          getMonthShortName={getMonthShortName}
-        />
-      )}
-
-      {/* RENDER LAYOUT 2: WORKSHOP ZONE FOCUS */}
-      {activeLayout === 'zone' && (
-        <DashboardZoneFocus
-          data={data}
-          lang={lang}
-          t={t}
-          is_authenticated={is_authenticated}
-          target={target}
-          warningTarget={warningTarget}
-          formatMonthYear={formatMonthYear}
-          getMonthShortName={getMonthShortName}
-        />
-      )}
-
-      {/* RENDER LAYOUT 1: CLASSIC 3-ROW MATRIX (DEFAULT) */}
-      {activeLayout === 'matrix' && (
-        <>
-          {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
+      {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
           <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
         {/* KPI 1: Weekly Average Score */}
         <div
@@ -667,9 +600,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="flex-[1.25] min-h-[290px] grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-1 min-h-0 lg:flex-[1.25] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 16 AREAS 4x4 MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
+        <div className={`col-span-12 lg:col-span-8 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
@@ -702,8 +635,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Grid of 16 area cards: 2 cols on mobile, 4 cols on tablet & desktop */}
-          <div className="mt-1 sm:mt-1.5 grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 flex-1 min-h-0 auto-rows-fr">
+          {/* Grid of 16 area cards: 2 cols on mobile, 3 on tablet, 4 on desktop/TV */}
+          <div className="mt-1 sm:mt-1.5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2 flex-1 min-h-0 auto-rows-auto lg:auto-rows-fr">
             {current_week_status.map((area: any) => {
               const isSubmitted = area.status === 'submitted' && area.score !== null;
               // If current week not submitted yet, fallback to month_avg for score evaluation & coloring
@@ -713,228 +646,127 @@ export const Dashboard: React.FC = () => {
               const isFail = displayScore !== null && displayScore < warningTarget;
               const isOverdue = area.overdue_count > 0;
 
-              let boxCls = '';
-              if (isClassic) {
-                boxCls = isOverdue
-                  ? 'rounded-md border border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
-                  : isPass
-                  ? 'rounded-md border border-emerald-500/35 bg-emerald-950/20'
-                  : isWarning
-                  ? 'rounded-md border border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
-                  : isFail
-                  ? 'rounded-md border border-rose-500/70 bg-rose-950/30'
-                  : 'rounded-md border border-slate-700 bg-slate-800/40 opacity-75';
-              } else if (isLightTv) {
-                const stripeCls = isHybrid
-                  ? isOverdue || isFail
-                    ? 'border-l-4 border-l-rose-500'
-                    : isPass
-                    ? 'border-l-4 border-l-emerald-500'
-                    : isWarning
-                    ? 'border-l-4 border-l-amber-400'
-                    : 'border-l-4 border-l-slate-400'
-                  : '';
-                boxCls = `${isHybrid ? 'rounded-xl' : 'rounded-xl backdrop-blur-sm'} border ${stripeCls} ${
-                  isOverdue
-                    ? 'border-rose-400 bg-rose-50/90 ring-1 ring-rose-300'
-                    : isPass
-                    ? 'border-emerald-200 bg-emerald-50/75'
-                    : isWarning
-                    ? 'border-amber-300 bg-amber-50/80 ring-1 ring-amber-200/70'
-                    : isFail
-                    ? 'border-rose-300 bg-rose-50/80'
-                    : 'border-slate-200 bg-slate-100/70 opacity-85'
-                }`;
-              } else if (isGlass) {
-                boxCls = `rounded-xl backdrop-blur-sm border ${
-                  isOverdue
-                    ? 'border-rose-400/75 bg-rose-950/35 ring-1 ring-rose-500/35'
-                    : isPass
-                    ? 'border-emerald-400/35 bg-emerald-950/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
-                    : isWarning
-                    ? 'border-amber-400/40 bg-amber-950/25 ring-1 ring-amber-400/20'
-                    : isFail
-                    ? 'border-rose-400/65 bg-rose-950/30'
-                    : 'border-white/15 bg-white/[0.04] opacity-80'
-                }`;
-              } else {
-                // Crystal Hybrid Dark (Sample 4 Obsidian Bento + vertical left status stripe)
-                const stripeCls =
-                  isOverdue || isFail
-                    ? 'border-l-4 border-l-rose-500'
-                    : isPass
-                    ? 'border-l-4 border-l-emerald-500'
-                    : isWarning
-                    ? 'border-l-4 border-l-amber-400'
-                    : 'border-l-4 border-l-slate-600';
-                boxCls = `rounded-xl border ${stripeCls} ${
-                  isOverdue
-                    ? 'border-rose-500/70 bg-rose-950/25 ring-1 ring-rose-500/30'
-                    : isPass
-                    ? 'border-white/10 bg-[#141d2e]/90'
-                    : isWarning
-                    ? 'border-amber-500/35 bg-amber-950/20'
-                    : isFail
-                    ? 'border-rose-500/55 bg-rose-950/25'
-                    : 'border-white/10 bg-[#121a2a]/60 opacity-80'
-                }`;
-              }
-
-              const scoreCls = isPass
-                ? passTextCls
+              const boxCls = isOverdue
+                ? 'rounded-xl border border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
+                : isPass
+                ? 'rounded-xl border border-emerald-500/35 bg-emerald-950/20'
                 : isWarning
-                ? warnTextCls
+                ? 'rounded-xl border border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
                 : isFail
-                ? failTextCls
-                : `${mutedTextCls} text-xs font-normal`;
-
-              const scoreTxt = displayScore !== null ? formatScore(displayScore, lang) : t('not_audited_yet');
-              const progressBarColor = isPass
-                ? 'bg-emerald-500'
-                : isWarning
-                ? 'bg-amber-400'
-                : isFail
-                ? 'bg-rose-500'
-                : 'bg-slate-500';
-              const clampedProgress =
-                displayScore !== null ? Math.min(100, Math.max(8, Number(displayScore))) : 0;
+                ? 'rounded-xl border border-rose-500/70 bg-rose-950/30'
+                : 'rounded-xl border border-slate-700 bg-slate-800/40 opacity-75';
 
               return (
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} p-1.5 sm:p-2 flex flex-col justify-between h-full min-h-0 overflow-hidden ${
-                    isLightTv ? 'hover:border-blue-400' : isClassic ? 'hover:border-slate-400' : 'hover:border-sky-400/60'
-                  } transition cursor-pointer group`}
+                  className={`${boxCls} p-2 sm:p-2.5 flex flex-col justify-between h-auto min-h-[82px] sm:min-h-[88px] lg:h-full min-h-0 overflow-hidden hover:border-slate-400 transition cursor-pointer group`}
                   title={t('click_to_inspect_area')}
                 >
-                  {/* Row 1: Area Name & Mini Sparkline with Trend Arrow */}
+                  {/* Row 1: Area Name & Status Badge */}
                   <div className="flex items-center justify-between gap-1 min-w-0">
                     <span
-                      className={`font-black text-[11px] sm:text-xs tracking-wide transition-colors truncate max-w-[58%] ${headingTextCls} ${
-                        isClassic
-                          ? 'group-hover:text-emerald-400'
-                          : isLightTv
-                          ? 'group-hover:text-blue-600'
-                          : 'group-hover:text-sky-400'
-                      }`}
+                      className={`font-black text-xs sm:text-sm tracking-wide transition-colors truncate max-w-[62%] ${headingTextCls} group-hover:text-emerald-400`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {area.delta_prev_week !== null && area.delta_prev_week > 0 ? (
-                        <span className={`text-[10px] font-bold ${passTextCls}`} title={`${t('vs_prev_week')}: +${area.delta_prev_week}%`}>↗</span>
-                      ) : area.delta_prev_week !== null && area.delta_prev_week < 0 ? (
-                        <span className={`text-[10px] font-bold ${failTextCls}`} title={`${t('vs_prev_week')}: ${area.delta_prev_week}%`}>↘</span>
-                      ) : (
-                        <span className={`text-[10px] font-bold ${mutedTextCls}`}>➔</span>
-                      )}
-                      <AreaSparkline
-                        data={area.sparkline_6 || []}
-                        target={target}
-                        warningTarget={warningTarget}
-                        width={44}
-                        height={12}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 2: Dual Telemetry Baseline (Week & Month side-by-side) */}
-                  <div className="flex items-baseline justify-between gap-1 my-0.5 min-w-0">
-                    {/* Cột Trái: Tuần */}
-                    <div className="flex items-baseline gap-1 min-w-0 truncate">
-                      <span className={`text-[9px] uppercase font-bold tracking-wider shrink-0 ${mutedTextCls}`}>
-                        {`W${current_week.iso_week}`}:
-                      </span>
-                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
-                        isSubmitted
-                          ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
-                          : `${mutedTextCls} text-[10px] font-bold`
-                      }`}>
-                        {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
-                      </span>
-                    </div>
-
-                    {/* Cột Phải: Tháng */}
-                    <div className="flex items-baseline gap-1 justify-end min-w-0 truncate text-right">
-                      <span className={`text-[9px] uppercase font-bold tracking-wider shrink-0 ${mutedTextCls}`}>
-                        {getMonthShortName(month_info?.display_month || current_week.month)}:
-                      </span>
-                      <span className={`text-xs sm:text-[13px] font-black font-mono leading-none ${
-                        area.month_avg !== null
-                          ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
-                          : mutedTextCls
-                      }`}>
-                        {formatScore(area.month_avg, lang)}
-                      </span>
-                      {area.delta_prev_month !== null && (
-                        <span
-                          className={`text-[9px] font-mono font-bold shrink-0 ${
-                            area.delta_prev_month > 0 ? passTextCls : area.delta_prev_month < 0 ? failTextCls : mutedTextCls
-                          }`}
-                          title={t('vs_prev_month')}
-                        >
-                          {area.delta_prev_month > 0 ? `+${area.delta_prev_month}` : area.delta_prev_month}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Row 3: Signature Sample 4 Slim Progress Bar */}
-                  {isHybrid && (
-                    <div
-                      className={`h-0.5 w-full rounded-full overflow-hidden my-0.5 ${
-                        isLightTv ? 'bg-slate-200/90' : 'bg-white/10'
-                      }`}
-                    >
-                      <div
-                        className={`h-full rounded-full ${progressBarColor}`}
-                        style={{ width: `${clampedProgress}%` }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 4: Status Badge (left) & Action Counters (right) */}
-                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-0.5 ${mutedTextCls} border-t ${innerRowDividerCls}`}>
                     <div className="shrink-0">
                       {isOverdue ? (
-                        <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[9px] font-bold">
-                          {t('tag_overdue', { n: area.overdue_count })}
+                        <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black">
+                          🚨 {area.overdue_count}
                         </span>
                       ) : isSubmitted ? (
                         isPass ? (
-                          <span className={`text-[10px] font-bold ${passTextCls}`}>{t('tag_pass')}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${passBadgeCls}`}>
+                            {t('tag_pass')}
+                          </span>
                         ) : isWarning ? (
-                          <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${warnBadgeCls}`}>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${warnBadgeCls}`}>
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${failBadgeCls}`}>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${failBadgeCls}`}>
                             {t('tag_fail')}
                           </span>
                         )
                       ) : (
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${warnBadgeCls}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold ${warnBadgeCls}`}>
                           {t('badge_pending_week', { week: current_week.iso_week })}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] shrink-0 font-mono">
-                      <span>
-                        {t('open_short')}:{' '}
-                        <strong
-                          className={
-                            area.open_count > 0
-                              ? isLightTv
-                                ? 'text-amber-700'
-                                : 'text-amber-400'
-                              : subTextCls
-                          }
-                        >
-                          {area.open_count}
-                        </strong>
-                      </span>
+                  </div>
+
+                  {/* Row 2: Metrics (Left) & Trend Sparkline + Big Arrow (Right) */}
+                  <div className="flex items-center justify-between gap-1.5 my-1 min-w-0">
+                    {/* Left: Week & Month scores */}
+                    <div className="flex flex-col justify-center min-w-0 truncate">
+                      <div className="flex items-baseline gap-1 text-[10px] font-mono leading-tight">
+                        <span className="text-[9px] uppercase font-bold text-slate-400">
+                          {`W${current_week.iso_week}`}:
+                        </span>
+                        <span className={`text-xs sm:text-[13px] font-black ${
+                          isSubmitted
+                            ? (area.score >= target ? passTextCls : area.score >= warningTarget ? warnTextCls : failTextCls)
+                            : `${mutedTextCls} text-[10px]`
+                        }`}>
+                          {isSubmitted ? formatScore(area.score, lang) : t('tag_pending')}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1 text-[10px] font-mono leading-tight mt-0.5">
+                        <span className="text-[9px] uppercase font-bold text-slate-400">
+                          {getMonthShortName(month_info?.display_month || current_week.month)}:
+                        </span>
+                        <span className={`text-xs sm:text-[13px] font-black ${
+                          area.month_avg !== null
+                            ? (area.month_avg >= target ? passTextCls : area.month_avg >= warningTarget ? warnTextCls : failTextCls)
+                            : mutedTextCls
+                        }`}>
+                          {formatScore(area.month_avg, lang)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: High-Visibility Trend Telemetry (Big Arrow & Dynamic Sparkline) */}
+                    <div className="flex items-center gap-1.5 shrink-0 bg-slate-900/70 rounded-lg px-1.5 py-0.5 border border-slate-700/50">
+                      {/* Prominent Trend Arrow & Delta */}
+                      <div className="flex flex-col items-center justify-center leading-none">
+                        {area.delta_prev_week !== null && area.delta_prev_week > 0 ? (
+                          <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${passTextCls}`} title={`${t('vs_prev_week')}: +${area.delta_prev_week}%`}>
+                            ▲<span className="text-[10px] sm:text-[11px] font-bold ml-0.5">+{area.delta_prev_week}</span>
+                          </span>
+                        ) : area.delta_prev_week !== null && area.delta_prev_week < 0 ? (
+                          <span className={`text-xs sm:text-sm font-black font-mono flex items-center ${failTextCls}`} title={`${t('vs_prev_week')}: ${area.delta_prev_week}%`}>
+                            ▼<span className="text-[10px] sm:text-[11px] font-bold ml-0.5">{area.delta_prev_week}</span>
+                          </span>
+                        ) : (
+                          <span className={`text-[11px] sm:text-xs font-mono font-bold ${mutedTextCls}`} title="Không đổi">
+                            ➔<span className="text-[10px] ml-0.5">0</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Dynamic Sparkline */}
+                      <AreaSparkline
+                        data={area.sparkline_6 || []}
+                        target={target}
+                        warningTarget={warningTarget}
+                        width={56}
+                        height={20}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Action Telemetry Footer */}
+                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-1 text-slate-400 border-t ${innerRowDividerCls}`}>
+                    <div className="flex items-center gap-1 font-mono">
+                      <span>{t('open_short')}:</span>
+                      <strong className={area.open_count > 0 ? 'text-amber-400 font-bold' : subTextCls}>
+                        {area.open_count}
+                      </strong>
+                    </div>
+                    <div className="flex items-center gap-1 font-mono">
                       {area.repeat_count > 0 ? (
                         <span className={`font-bold shrink-0 ${purpleValTextCls}`}>{t('repeat_short')}</span>
                       ) : (
@@ -951,7 +783,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
+        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col min-w-0 justify-between`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
@@ -1146,9 +978,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="flex-1 min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="flex-1 min-h-0 lg:min-h-[180px] grid grid-cols-12 gap-2 sm:gap-2.5">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-5 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
+        <div className={`col-span-12 lg:col-span-5 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
@@ -1200,7 +1032,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 lg:col-span-4 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
+        <div className={`col-span-12 lg:col-span-4 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
@@ -1272,7 +1104,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 lg:col-span-3 h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
+        <div className={`col-span-12 lg:col-span-3 h-auto lg:h-full ${panelCls} p-2 sm:p-2.5 flex flex-col justify-between gap-1.5`}>
           <div className={`shrink-0 flex items-center justify-between pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
@@ -1490,8 +1322,6 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
-        </>
-      )}
 
       {/* Area Trend & 5S Performance Inspector Modal */}
       <AreaTrendModal
