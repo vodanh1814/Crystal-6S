@@ -7,6 +7,13 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.12] - 2026-11-11
+
+### Changed & Improved (Dashboard Tự Vừa 1 Màn Hình Theo Từng Thiết Bị)
+- Thêm variant `fit` (màn ≥1024×640): khóa Dashboard theo chiều cao viewport, chia hàng giữa/dưới theo tỉ lệ, thẻ khu vực chia đều (`auto-rows-fr`), panel cảnh báo cuộn nội bộ, biểu đồ co giãn.
+- Laptop 14" dùng padding/gap gọn; TV lớn (`2xl`) dùng padding/gap rộng.
+- Điện thoại/tablet dọc và cửa sổ quá thấp vẫn cuộn dọc.
+
 ## [2.11.11] - 2026-11-11
 
 ### Changed & Improved (Tinh Giản Thẻ Khu Vực: Loại Bỏ Trend, Tối Ưu Điểm Tuần/Tháng Với Cơ Chế Kế Thừa Thông Minh)

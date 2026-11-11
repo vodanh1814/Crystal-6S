@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.11`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.12`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,13 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.11`
+## 1. Điểm nổi bật của phiên bản `v2.11.12`
+
+### 📐 Dashboard Tự Vừa 1 Màn Hình Theo Từng Thiết Bị
+- **TV xưởng & Laptop 14" (từ 1024×640)**: Dashboard khóa theo chiều cao màn hình, không cần cuộn; lưới thẻ khu vực, panel cảnh báo và biểu đồ tự co giãn. Laptop dùng khoảng cách gọn, TV lớn (`2xl`) dùng khoảng cách rộng.
+- **Điện thoại / tablet dọc**: giữ cuộn dọc tự nhiên để dễ đọc.
+
+### 🎯 Tinh Giản Thẻ Khu Vực (v2.11.11)
 
 ### 🎯 Tinh Giản Thẻ Khu Vực: Loại Bỏ Trend, Tối Ưu Điểm Tuần/Tháng Với Cơ Chế Kế Thừa Thông Minh
 - **Loại Bỏ Hoàn Toàn Phần Trend Khu Vực**: Gỡ bỏ cụm mũi tên delta và biểu đồ mini sparkline khỏi từng thẻ khu vực, loại bỏ hoàn toàn sự rườm rà, rối mắt, giúp thẻ khu vực thoáng đãng, tinh gọn và rộng rãi.

@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.11`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.12`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,13 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.11`
+## 1. Highlights of Version `v2.11.12`
+
+### 📐 Dashboard Auto-Fits One Screen Per Device
+- **Factory TV & 14" laptop (from 1024×640)**: the dashboard locks to viewport height with no scrolling; the area grid, alarm panel and charts resize automatically. Laptops use compact spacing, large TVs (`2xl`) use roomy spacing.
+- **Phones / portrait tablets**: natural vertical scrolling is kept for readability.
+
+### Previous: Highlights of v2.11.11
 
 ### 🎯 Streamlined Area Cards: Removed Trend Section, Smart Fallback for Weekly & Monthly Scores
 - **Removed Area Trend Telemetry**: Completely eliminated trend arrows and mini sparkline curves from each individual area card on the Factory Andon status matrix, eradicating clutter and opening up comfortable negative space.

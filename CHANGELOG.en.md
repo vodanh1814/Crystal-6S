@@ -7,6 +7,13 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.12] - 2026-11-11
+
+### Changed & Improved (Dashboard Auto-Fits One Screen Per Device)
+- Added `fit` variant (screens ≥1024×640): locks the Dashboard to viewport height, splits middle/bottom rows proportionally, evenly sized area cards (`auto-rows-fr`), internally scrolling alarm panel, flexible charts.
+- 14" laptops use compact padding/gap; large TVs (`2xl`) use roomy padding/gap.
+- Phones/portrait tablets and very short windows keep vertical scrolling.
+
 ## [2.11.11] - 2026-11-11
 
 ### Changed & Improved (Streamlined Area Cards: Removed Trend Section, Optimized Weekly & Monthly Scores with Smart Fallback)
