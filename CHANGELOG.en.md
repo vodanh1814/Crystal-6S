@@ -7,6 +7,20 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.16] - 2026-11-12
+
+### Fixed & Improved (Eliminated Excessive Spacing in 7-Day Alarms Board)
+- **Eliminated Awkward Vertical Gaps Between Alarm Cards**:
+  - Replaced `justify-between` with **`justify-start gap-1.5 2xl:gap-2`** on the alarms list container, aligning cards consecutively from top to bottom with uniform spacing.
+- **Maximized Vertical Space & Full Open Findings Visibility**:
+  - Expanded the displayed alarms limit from `slice(0, 3)` to **`slice(0, 6)`** with internal smooth scrolling (`overflow-y-auto pr-0.5`).
+  - Gracefully displays all 5 plant Open Findings without any blank space or layout distortion.
+- **Enhanced Legibility & Card Proportions**:
+  - Increased card padding to `px-2.5 py-1.5 sm:py-2`, providing optimal typography and metric breathing room on both laptops and plant-floor TV screens.
+  - Smooth expandable Accordion drawer for inspecting finding descriptions without breaking viewport constraints.
+
+---
+
 ## [2.11.15] - 2026-11-12
 
 ### Fixed & Improved (Eliminated Card Overlap in Zero-Scroll Dashboard Layout)

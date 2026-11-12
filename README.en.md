@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.15`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.16`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.15`
+## 1. Highlights of Version `v2.11.16`
+
+### 🔔 Eradicated Excessive Spacing in 7-Day Alarms Board
+- **Seamless Consecutive Alarm Stacking**: Switched to `justify-start gap-1.5 2xl:gap-2`, completely eliminating large black gaps between alarm cards.
+- **Display Up to 6 Urgent Findings**: Increased capacity from `slice(0, 3)` to `slice(0, 6)` with `overflow-y-auto pr-0.5`, allowing all 5 active Open Findings to be visible simultaneously without wasting frame space.
+- **Enhanced Typography & Readability**: Increased card padding to `px-2.5 py-1.5 sm:py-2` for crisp, easily readable metrics and effortless Accordion expansion.
+
+---
+
+## 2. Highlights of Version `v2.11.15`
 
 ### 🛡️ Eradicated Card Overlap in Zero-Scroll Dashboard Layout
 - **68% / 32% Flexbox Distribution (Row 2 / Row 3)**: Optimized vertical height distribution (`flex: 17 17 0%` and `flex: 8 8 0%`), gaining ~50px of vertical space for the 15 area cards on laptop displays.

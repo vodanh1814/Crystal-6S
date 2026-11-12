@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.15`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.16`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,16 @@
 
 ---
 
-## 1. Điểm nổi bật của phiên bản `v2.11.15`
+## 1. Điểm nổi bật của phiên bản `v2.11.16`
+
+### 🔔 Khắc Phục Triệt Để Khoảng Trống Thừa & Tối Ưu Bảng Cảnh Báo 7 Ngày
+- **Xóa Bỏ Khoảng Trống Giữa Các Thẻ Cảnh Báo**: Chuyển sang `justify-start` với khoảng cách cố định `gap-1.5 2xl:gap-2`, các thẻ cảnh báo xếp tầng liền mạch tự nhiên từ trên xuống dưới.
+- **Hiển Thị Tối Đa 6 Cảnh Báo Đang Chờ Xử Lý**: Mở rộng `slice(0, 6)` kết hợp `overflow-y-auto pr-0.5`, hiển thị trọn vẹn cả 5 lỗi đang mở của nhà máy thay vì chỉ hiện 3 lỗi và bỏ trống khung.
+- **Tăng Độ Đọc Rõ Cho Thẻ**: Tăng padding lên `px-2.5 py-1.5 sm:py-2`, chữ to rõ nét, tương tác xổ Accordion chi tiết hoạt động trơn tru.
+
+---
+
+## 2. Điểm nổi bật của phiên bản `v2.11.15`
 
 ### 🛡️ Khắc Phục Triệt Để Chồng Chéo Ô Thẻ Trong Giao Diện Zero-Scroll
 - **Tỷ Lệ Flexbox 68% / 32% (Row 2 / Row 3)**: Phân bổ lại chiều cao hợp lý giữa Ma trận khu vực (`flex: 17 17 0%`) và Analytics đáy (`flex: 8 8 0%`), cấp thêm ~50px chiều dọc cho 15 ô khu vực trên màn hình laptop.

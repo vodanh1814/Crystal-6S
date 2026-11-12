@@ -7,6 +7,20 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.16] - 2026-11-12
+
+### Fixed & Improved (Khắc Phục Triệt Để Khoảng Trống Thừa Tại Khung 7-Day Alarms)
+- **Loại Bỏ Khoảng Trống Lớn Giữa Các Thẻ Cảnh Báo**:
+  - Chuyển container danh sách cảnh báo từ `justify-between` sang **`justify-start gap-1.5 2xl:gap-2`**, giúp các thẻ cảnh báo xếp liền kề nhau gọn gàng, tự nhiên từ trên xuống dưới.
+- **Tối Ưu Không Gian & Hiển Thị Đầy Đủ Các Cảnh Báo Đang Mở**:
+  - Nâng số lượng thẻ cảnh báo hiển thị từ `slice(0, 3)` lên **`slice(0, 6)`** kết hợp thanh cuộn nội bộ mượt mà `overflow-y-auto pr-0.5`.
+  - Hiển thị vừa vặn cả 5 lỗi chưa đóng (`Open Findings`) của nhà máy mà không phát sinh khoảng trống đen thừa thãi hay vỡ bố cục trang.
+- **Tăng Độ Thoáng & Dễ Đọc Cho Thẻ Cảnh Báo**:
+  - Tinh chỉnh padding thẻ cảnh báo lên `px-2.5 py-1.5 sm:py-2`, chữ to rõ và dễ quan sát trên cả màn hình Laptop và TV nhà xưởng.
+  - Tương tác click mở rộng Accordion hiển thị chi tiết lỗi hoạt động êm ái, được cuộn nội bộ an toàn.
+
+---
+
 ## [2.11.15] - 2026-11-12
 
 ### Fixed & Improved (Khắc Phục Triệt Để Chồng Chéo Ô Thẻ Trong Màn Hình Zero-Scroll)

@@ -783,7 +783,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-2.5 sm:p-3.5 fit:p-1.5 fit:2xl:p-3 flex flex-col min-w-0 justify-between gap-1.5 fit:gap-1 2xl:fit:gap-2 fit:min-h-0 fit:overflow-hidden`}>
+        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-2.5 sm:p-3 fit:p-2 fit:2xl:p-3 flex flex-col min-w-0 justify-start gap-1.5 fit:gap-1.5 2xl:fit:gap-2 fit:min-h-0 fit:overflow-hidden`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
@@ -827,9 +827,9 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-0.5 flex-1 flex flex-col justify-between gap-1 min-w-0 fit:min-h-0 fit:overflow-hidden">
+          <div className="mt-1 flex-1 flex flex-col justify-start gap-1.5 2xl:gap-2 min-w-0 fit:min-h-0 overflow-y-auto pr-0.5">
             {urgent_alarms && urgent_alarms.length > 0 ? (
-              urgent_alarms.slice(0, 3).map((f: any) => {
+              urgent_alarms.slice(0, 6).map((f: any) => {
                 const isOverdue = f.is_overdue;
                 const isFixed = f.status === 'fixed';
                 const isRepeat = f.repeat_level > 1;
@@ -859,7 +859,7 @@ export const Dashboard: React.FC = () => {
                   <div
                     key={f.id}
                     onClick={() => setExpandedAlarmId(isExpanded ? null : f.id)}
-                    className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2 py-1 fit:py-0.5 2xl:py-1.5 flex flex-col justify-between ${
+                    className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2.5 py-1.5 sm:py-2 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
                     } transition-all cursor-pointer group`}
                   >
