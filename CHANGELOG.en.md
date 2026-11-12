@@ -7,6 +7,23 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.15] - 2026-11-12
+
+### Fixed & Improved (Eliminated Card Overlap in Zero-Scroll Dashboard Layout)
+- **Optimized 68% / 32% Flexbox Distribution Between Row 2 and Row 3**:
+  - Re-balanced the vertical flex ratio between Row 2 (Area Status Matrix + Alarms) and Row 3 (Bottom Analytics) from 60%/40% to **68.0% (`flex: 17 17 0%`) and 32.0% (`flex: 8 8 0%`)**.
+  - Reclaims ~50px of vital vertical height for the 15 Area Matrix cards on laptop screens (1366x768, 1920x1080 @ 125% DPI scale), providing ample room for all 3 rows of area cards.
+- **Explicit 3-Row x 5-Column CSS Grid Locking**:
+  - Replaced implicit `fit:auto-rows-fr` with explicit `fit:grid-rows-3 fit:grid-cols-5`, forcing all 15 area cards into exactly 3 equal rows that scale uniformly with zero track displacement.
+- **Protected All 3 Telemetry Tiers per Area Card (Zero Squashing / Zero Truncation)**:
+  - **Tier 1 (Header)**: Streamlined padding `fit:pb-0.5`, badge `fit:py-0 text-[9px]` with `shrink-0` protection.
+  - **Tier 2 (Telemetry Body)**: Dual symmetrical score tiles with `fit:py-0.5 px-1` and clean mono figures `fit:text-xs 2xl:fit:text-base leading-none`.
+  - **Tier 3 (Footer Action Telemetry)**: Protected by `shrink-0`, displaying Open and Verify/Repeat counts sharply without any vertical clipping or border collisions.
+- **Synchronized Fluid Spacing for 7-Day Alarms & Bottom Analytics**:
+  - Optimized internal padding across 7-Day Alarms (`fit:py-0.5`) and Row 3 Kaizen / Leaderboard cards (`fit:py-0.2`, `fit:gap-0.5`), ensuring the entire Andon Board fits into a single frame with zero scroll and zero overlap.
+
+---
+
 ## [2.11.14] - 2026-11-11
 
 ### Fixed & Improved (Single-Frame Zero-Scroll Dashboard Layout & Non-Overlapping Kaizen Card)

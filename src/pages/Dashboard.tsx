@@ -595,10 +595,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 2: MIDDLE MAIN WORKSPACE */}
-      <div className="dashboard-row-2 grid grid-cols-12 gap-2 2xl:gap-3 fit:flex-[3] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
+      <div className="dashboard-row-2 grid grid-cols-12 gap-2 2xl:gap-3 fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
         {/* 16 AREAS STATUS MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col justify-between fit:min-h-0 fit:overflow-hidden`}>
-          <div className={`shrink-0 flex items-center justify-between pb-2 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-8 ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-3 flex flex-col justify-between fit:min-h-0 fit:overflow-hidden`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-1 2xl:pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
                 total: current_week_status?.length || 16,
@@ -631,7 +631,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Grid of area cards: 2 cols mobile, 3 cols tablet, 4 cols md, 5 cols desktop (15 areas = EXACTLY 3 rows!) */}
-          <div className="mt-1.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 fit:flex-1 fit:min-h-0 fit:mt-1 fit:auto-rows-fr">
+          <div className="mt-1 fit:mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 fit:gap-1.5 fit:2xl:gap-2 fit:flex-1 fit:min-h-0 fit:grid-rows-3 fit:grid-cols-5">
             {current_week_status.map((area: any) => {
               const isCurrentWeekAudited = area.status === 'submitted' && area.score !== null;
 
@@ -679,38 +679,38 @@ export const Dashboard: React.FC = () => {
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between h-auto min-h-[96px] sm:min-h-[104px] fit:min-h-0 fit:h-full fit:overflow-hidden transition-all duration-150 cursor-pointer group hover:border-slate-400`}
+                  className={`${boxCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between h-auto min-h-[96px] sm:min-h-[104px] fit:min-h-0 fit:h-full fit:overflow-hidden transition-all duration-150 cursor-pointer group hover:border-slate-400`}
                   title={t('click_to_inspect_area')}
                 >
                   {/* Tier 1: Header (Area Name on Left, Status Badge on Right) */}
-                  <div className="flex items-center justify-between gap-1.5 min-w-0 pb-1 border-b border-slate-800/60 shrink-0">
+                  <div className="flex items-center justify-between gap-1 min-w-0 pb-0.5 fit:pb-0.5 2xl:pb-1 border-b border-slate-800/60 shrink-0">
                     <span
-                      className={`font-black text-xs sm:text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
+                      className={`font-black text-xs sm:text-sm fit:text-[11px] 2xl:fit:text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
                     <div className="shrink-0">
                       {isOverdue ? (
-                        <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs shadow-rose-950">
+                        <span className="px-1.5 py-0.2 fit:py-0 rounded-full bg-rose-600 text-white text-[9px] 2xl:text-[10px] font-black uppercase tracking-wider shadow-xs shadow-rose-950">
                           🚨 {area.overdue_count}
                         </span>
                       ) : isCurrentWeekAudited ? (
                         isPass ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/35">
+                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/35">
                             {t('tag_pass')}
                           </span>
                         ) : isWarning ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/35">
+                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/35">
                             {t('tag_fail')}
                           </span>
                         )
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-bold tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
                           {t('badge_pending_week', { week: current_week.iso_week })}
                         </span>
                       )}
@@ -718,17 +718,17 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Tier 2: Telemetry Body (2 Clean Symmetrical Tiles: Week Score & Month Score) */}
-                  <div className="grid grid-cols-2 gap-1.5 py-1 min-w-0 flex-1 items-center">
+                  <div className="grid grid-cols-2 gap-1 2xl:gap-1.5 py-0.5 fit:py-0.5 2xl:py-1 min-w-0 flex-1 items-center">
                     {/* Left Tile: Week Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 border border-slate-800/80">
-                      <div className="flex items-center gap-1 text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-md 2xl:rounded-lg py-0.5 fit:py-0.5 2xl:py-1 px-1 border border-slate-800/80 min-w-0">
+                      <div className="flex items-center gap-0.5 2xl:gap-1 text-[8.5px] 2xl:text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
                         <span>{t('week')}</span>
                         <span className={isWeekFallback ? 'text-amber-400/90 font-mono' : 'font-mono'}>
                           {weekLabel}
                         </span>
                       </div>
                       <span
-                        className={`font-black text-xs sm:text-sm 2xl:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                        className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
                           weekScore !== null
                             ? (weekScore >= target ? passTextCls : weekScore >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
@@ -739,15 +739,15 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Right Tile: Month Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-lg py-0.5 sm:py-1 px-1 sm:px-2 border border-slate-800/80">
-                      <div className="flex items-center gap-1 text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-md 2xl:rounded-lg py-0.5 fit:py-0.5 2xl:py-1 px-1 border border-slate-800/80 min-w-0">
+                      <div className="flex items-center gap-0.5 2xl:gap-1 text-[8.5px] 2xl:text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
                         <span>{t('month')}</span>
                         <span className={isMonthFallback ? 'text-sky-400/90 font-mono' : 'font-mono'}>
                           {monthDisplayLabel}
                         </span>
                       </div>
                       <span
-                        className={`font-black text-xs sm:text-sm 2xl:text-base font-mono tracking-tight leading-tight mt-0.5 ${
+                        className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
                           monthScore !== null
                             ? (monthScore >= target ? passTextCls : monthScore >= warningTarget ? warnTextCls : failTextCls)
                             : mutedTextCls
@@ -759,7 +759,7 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Tier 3: Action Telemetry Footer */}
-                  <div className={`flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-slate-800/80 text-slate-400 font-mono shrink-0`}>
+                  <div className={`flex items-center justify-between text-[9px] 2xl:text-[10px] pt-0.5 fit:pt-0.5 2xl:pt-1 border-t border-slate-800/80 text-slate-400 font-mono shrink-0`}>
                     <div className="flex items-center gap-1">
                       <span>{t('open_short')}:</span>
                       <strong className={area.open_count > 0 ? 'text-amber-400 font-bold' : subTextCls}>
@@ -783,8 +783,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-3 sm:p-3.5 fit:p-2 fit:2xl:p-3.5 flex flex-col min-w-0 justify-between gap-2.5 fit:min-h-0 fit:overflow-hidden`}>
-          <div className={`shrink-0 flex items-center justify-between gap-2 pb-1.5 border-b min-w-0 ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-2.5 sm:p-3.5 fit:p-1.5 fit:2xl:p-3 flex flex-col min-w-0 justify-between gap-1.5 fit:gap-1 2xl:fit:gap-2 fit:min-h-0 fit:overflow-hidden`}>
+          <div className={`shrink-0 flex items-center justify-between gap-2 pb-1 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
             </span>
@@ -797,7 +797,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Single-line Compact Remediation Effectiveness Strip */}
-          <div className="shrink-0 mt-1.5 grid grid-cols-3 gap-1 sm:gap-1.5 min-w-0">
+          <div className="shrink-0 mt-0.5 grid grid-cols-3 gap-1 min-w-0">
             <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('on_time')}
@@ -827,7 +827,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-1.5 flex-1 flex flex-col gap-1.5 min-w-0 fit:min-h-0 fit:overflow-y-auto">
+          <div className="mt-0.5 flex-1 flex flex-col justify-between gap-1 min-w-0 fit:min-h-0 fit:overflow-hidden">
             {urgent_alarms && urgent_alarms.length > 0 ? (
               urgent_alarms.slice(0, 3).map((f: any) => {
                 const isOverdue = f.is_overdue;
@@ -859,7 +859,7 @@ export const Dashboard: React.FC = () => {
                   <div
                     key={f.id}
                     onClick={() => setExpandedAlarmId(isExpanded ? null : f.id)}
-                    className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2 py-1 sm:px-2.5 sm:py-1.5 flex flex-col justify-between ${
+                    className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2 py-1 fit:py-0.5 2xl:py-1.5 flex flex-col justify-between ${
                       isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
                     } transition-all cursor-pointer group`}
                   >
@@ -978,10 +978,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: BOTTOM ANALYTICS STRIP */}
-      <div className="dashboard-row-3 grid grid-cols-12 gap-1.5 2xl:gap-2.5 fit:flex-[2] fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
+      <div className="dashboard-row-3 grid grid-cols-12 gap-1.5 2xl:gap-2.5 fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
         {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
             </span>
@@ -995,7 +995,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 min-h-[130px] fit:min-h-0 pt-0.5">
+          <div className="flex-1 min-h-[100px] fit:min-h-0 pt-0.5">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trend_12_weeks}
@@ -1032,8 +1032,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1.5`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
@@ -1044,7 +1044,7 @@ export const Dashboard: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex-1 flex flex-col justify-around py-0.5 text-xs gap-1">
+          <div className="flex-1 flex flex-col justify-around py-0.5 fit:py-0 text-xs gap-0.5">
             {(s_group_breakdown || []).map((group: any) => {
               const widthPct = Math.round(((group.count || 0) / maxGroupFindings) * 100);
               const barColor =
@@ -1081,7 +1081,7 @@ export const Dashboard: React.FC = () => {
                       {group.count} {t('findings_unit')} (-{group.penalty}{t('pts_unit')})
                     </span>
                   </div>
-                  <div className={`h-2 sm:h-2.5 rounded-full overflow-hidden ${barTrackCls}`}>
+                  <div className={`h-1.5 sm:h-2 2xl:h-2.5 rounded-full overflow-hidden ${barTrackCls}`}>
                     <div
                       className={`h-full ${barColor} rounded-full transition-all duration-500`}
                       style={{ width: `${Math.max(group.count > 0 ? 5 : 0, widthPct)}%` }}
@@ -1093,7 +1093,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Telemetry Summary Footer Strip */}
-          <div className={`shrink-0 pt-1 border-t ${subtleDividerCls} flex items-center justify-between text-[9px] sm:text-[10px] font-mono ${mutedTextCls}`}>
+          <div className={`shrink-0 pt-0.5 fit:pt-0.5 2xl:pt-1 border-t ${subtleDividerCls} flex items-center justify-between text-[9px] sm:text-[10px] font-mono ${mutedTextCls}`}>
             <span className="font-semibold text-rose-400">
               {t('total_penalty_month', { n: totalPenaltiesInMonth })}
             </span>
@@ -1104,8 +1104,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1.5`}>
-          <div className={`shrink-0 flex items-center justify-between pb-1 sm:pb-1.5 border-b ${subtleDividerCls}`}>
+        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}>
+          <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
                 ? t('continuous_improvement_title')
@@ -1142,9 +1142,9 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {row3Tab === 'improvement' ? (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1 min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 fit:py-0 gap-1 fit:gap-0.5 min-h-0 overflow-hidden">
               {/* Kaizen Status Micro-Strip: 1 clean horizontal row */}
-              <div className={`shrink-0 grid grid-cols-3 gap-1 p-0.5 sm:p-1 rounded-lg border ${
+              <div className={`shrink-0 grid grid-cols-3 gap-1 p-0.5 rounded-lg border ${
                 isLightTv ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-white/5'
               } text-[9px] sm:text-[10px] font-mono text-center whitespace-nowrap`}>
                 <div className="flex items-center justify-center gap-1">
@@ -1174,12 +1174,12 @@ export const Dashboard: React.FC = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('top_improvers_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
                     {improvement_analysis?.top_improvers && improvement_analysis.top_improvers.length > 0 ? (
                       improvement_analysis.top_improvers.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 fit:py-0.2 2xl:fit:py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-emerald-50 border-emerald-200'
                               : 'bg-emerald-500/10 border-emerald-500/25'
@@ -1214,12 +1214,12 @@ export const Dashboard: React.FC = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('stagnant_areas_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
                     {improvement_analysis?.stagnant_areas && improvement_analysis.stagnant_areas.length > 0 ? (
                       improvement_analysis.stagnant_areas.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 fit:py-0.2 2xl:fit:py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-rose-50 border-rose-200'
                               : 'bg-rose-500/15 border-rose-500/35'
@@ -1259,7 +1259,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 gap-1 min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col justify-between text-xs py-0.5 fit:py-0 gap-1 fit:gap-0.5 min-h-0 overflow-hidden">
               {/* Side-by-side 2 Columns for Leaderboard */}
               <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-hidden items-stretch">
                 {/* Col 1: Top 3 Leaders */}
@@ -1267,12 +1267,12 @@ export const Dashboard: React.FC = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('top_leaders_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
                     {top_areas && top_areas.length > 0 ? (
                       top_areas.slice(0, 3).map((a: any, idx: number) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 fit:py-0.2 2xl:fit:py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-emerald-50 border-emerald-200'
                               : 'bg-emerald-500/10 border-emerald-500/25'
@@ -1302,12 +1302,12 @@ export const Dashboard: React.FC = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
                     {t('bottom_lagging_title')}
                   </span>
-                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-1 overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
                     {bottom_areas && bottom_areas.length > 0 ? (
                       bottom_areas.slice(0, 3).map((a: any) => (
                         <div
                           key={a.area_id}
-                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
+                          className={`flex items-center justify-between px-1.5 py-0.5 fit:py-0.2 2xl:fit:py-0.5 rounded-lg border min-w-0 transition-all shrink-0 ${
                             isLightTv
                               ? 'bg-rose-50 border-rose-200'
                               : 'bg-rose-500/15 border-rose-500/35'

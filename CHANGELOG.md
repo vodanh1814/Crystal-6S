@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.15] - 2026-11-12
+
+### Fixed & Improved (Khắc Phục Triệt Để Chồng Chéo Ô Thẻ Trong Màn Hình Zero-Scroll)
+- **Tối Ưu Tỷ Lệ Flexbox 68% / 32% Giữa Hàng 2 Và Hàng 3**:
+  - Điều chỉnh tỷ lệ phân bổ chiều cao giữa Hàng 2 (Ma trận khu vực + Cảnh báo) và Hàng 3 (Analytics đáy) từ 60%/40% thành **68.0% (`flex: 17 17 0%`) và 32.0% (`flex: 8 8 0%`)**.
+  - Bổ sung thêm ~50px chiều cao cho Ma trận 15 khu vực trên màn hình laptop (1366x768, 1920x1080 @ 125% DPI scale), tạo không gian rộng rãi thoải mái cho 3 hàng thẻ khu vực.
+- **Khóa Chặt Cấu Trúc CSS Grid 3 Hàng x 5 Cột Tường Minh**:
+  - Thay thế `fit:auto-rows-fr` bằng `fit:grid-rows-3 fit:grid-cols-5`, ép 15 khu vực phân bổ chính xác thành 3 hàng đều nhau tuyệt đối theo chiều cao khả dụng.
+- **Bảo Vệ Đầy Đủ 3 Tầng Thông Số Thẻ Khu Vực (Không Bị Nén / Không Mất Chữ)**:
+  - **Tier 1 (Header)**: Đệm `fit:pb-0.5`, badge điểm `fit:py-0 text-[9px]` với bảo vệ `shrink-0`.
+  - **Tier 2 (Telemetry Điểm Tuần/Tháng)**: Hai ô điểm đối xứng đệm `fit:py-0.5 px-1`, số điểm font mono rõ nét `fit:text-xs 2xl:fit:text-base leading-none`.
+  - **Tier 3 (Footer Open / Verify)**: Có `shrink-0`, hiển thị sắc nét số lỗi chưa đóng (Open) và đã khắc phục/lặp lại (Verify/Repeat), loại bỏ hoàn toàn tình trạng bị cắt xén hay đè chữ.
+- **Đồng Bộ Co Giãn Khối Cảnh Báo 7 Ngày & 3 Khối Phân Tích Đáy**:
+  - Tinh chỉnh đệm nội bộ danh sách cảnh báo 7 ngày (`fit:py-0.5`) và các khối Kaizen / Leaderboard (`fit:py-0.2`, `fit:gap-0.5`), giúp toàn bộ bảng Andon vừa khít 1 khung hình với 0 thanh cuộn và 0 chồng chéo.
+
+---
+
 ## [2.11.14] - 2026-11-11
 
 ### Fixed & Improved (Giao Diện Toàn Màn Hình Trong 1 Khung Hình & Tái Cấu Trúc Card Kaizen Không Mất Chữ)

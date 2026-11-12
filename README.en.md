@@ -1,7 +1,7 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.14`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.15`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
@@ -9,7 +9,17 @@ An enterprise-grade web application & standalone Windows installer engineered fo
 
 ---
 
-## 1. Highlights of Version `v2.11.14`
+## 1. Highlights of Version `v2.11.15`
+
+### 🛡️ Eradicated Card Overlap in Zero-Scroll Dashboard Layout
+- **68% / 32% Flexbox Distribution (Row 2 / Row 3)**: Optimized vertical height distribution (`flex: 17 17 0%` and `flex: 8 8 0%`), gaining ~50px of vertical space for the 15 area cards on laptop displays.
+- **Explicit 3-Row x 5-Column Grid Locking**: `fit:grid-rows-3 fit:grid-cols-5` forces 15 factory areas into exactly 3 uniform rows, preventing any track shifting or border collision.
+- **Full 3-Tier Telemetry Protection**: Enforced `shrink-0` on Header (Tier 1) and Footer Open/Verify metrics (Tier 3), keeping Week & Month score tiles (Tier 2) crisp and completely visible without truncation.
+- **Harmonized Spacing for Alarms & Analytics**: Streamlined padding across 7-Day Alarms and Kaizen/Leaderboard cards, guaranteeing a 100% single-frame layout with zero scrolling.
+
+---
+
+## 2. Highlights of Version `v2.11.14`
 
 ### 🖥️ Single-Frame Zero-Scroll Dashboard Layout & Dual-Column Kaizen Card Without Text Loss
 - **Single-Frame Zero-Scroll Viewport Lock (100vh)**:
