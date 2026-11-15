@@ -1,1359 +1,1373 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft,
-  Calendar,
-  AlertTriangle,
-  CheckCircle,
   Plus,
-  Edit2,
   Trash2,
-  Lock,
-  Unlock,
-  Send,
-  Loader2,
   Camera,
   Image as ImageIcon,
-  X,
-  ExternalLink,
+  CheckCircle2,
+  Send,
+  RotateCcw,
+  Save,
+  Loader2,
+  AlertTriangle,
+  Columns2,
+  Table2,
+  Search,
+  Edit3,
+  ZoomIn,
   ChevronRight,
-  Filter,
-  Layers,
-  Sparkles,
+  Minus,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { useAuth } from '../context/AuthContext';
+import type { Audit, AuditAreaScore, ChecklistItem, Finding, Photo } from '../api/types';
 import { useI18n } from '../i18n/context';
-import { ScoreBadge } from '../components/ScoreBadge';
+import { formatScore } from '../lib/format';
+import { formatMonthYear } from '../lib/date';
+import { compressImage } from '../lib/imageCompression';
 import { StatusBadge } from '../components/StatusBadge';
+import { ScoreBadge } from '../components/ScoreBadge';
 import { Modal } from '../components/Modal';
 import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
-import { compressImage } from '../lib/imageCompression';
-import { formatMonthYear } from '../lib/date';
-import { formatScore } from '../lib/format';
-import type { Audit, Finding, ChecklistItem, AuditAreaScore } from '../api/types';
+
+interface AuditDetailPayload {
+  audit: Audit;
+  target: number;
+  warning_target: number;
+  area_scores: AuditAreaScore[];
+  checklist_items: ChecklistItem[];
+  na_matrix: Array<{ area_id: number; item_id: number }>;
+  findings: Finding[];
+  prev_weeks_counts?: Record<string, number>;
+  live_score?: { totalPenalty: number; score: number };
+  permissions: {
+    canEdit: boolean;
+    canSubmit: boolean;
+    canReopen: boolean;
+    canDelete: boolean;
+  };
+}
+
+const EXTERNAL_CODES = new Set(['S5.2-BOD', 'S5.2-CUS', 'S5.3']);
 
 export const AuditDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, canAudit } = useAuth();
-  const { lang, t } = useI18n();
   const navigate = useNavigate();
-  const stickyTableCls = 'sticky-matrix-table';
+  const { t, lang } = useI18n();
 
+  const [detail, setDetail] = useState<AuditDetailPayload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [note, setNote] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  // Finding filter by area
-  const [selectedFindingArea, setSelectedFindingArea] = useState<string>('');
+  // Sample A Workspace Mode: Split-Screen Inspector by default, Matrix table toggle available
+  const [workspaceMode, setWorkspaceMode] = useState<'split' | 'matrix'>('split');
+  const [activeAreaId, setActiveAreaId] = useState<number | null>(null);
+  const [areaSearch, setAreaSearch] = useState('');
+  const [checklistSearch, setChecklistSearch] = useState('');
+  const [sGroupFilter, setSGroupFilter] = useState<number | 'all'>('all');
 
-  // Add Finding Modal state
-  const [findingModalOpen, setFindingModalOpen] = useState(false);
+  // Action states
+  const [noteInput, setNoteInput] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [savingExternalAreaId, setSavingExternalAreaId] = useState<number | null>(null);
+  const [togglingKey, setTogglingKey] = useState<string | null>(null);
+  const [uploadingFindingId, setUploadingFindingId] = useState<number | null>(null);
+  const [savingDescId, setSavingDescId] = useState<number | null>(null);
+  const [inlineDescs, setInlineDescs] = useState<Record<number, string>>({});
+
+  // Add / Edit Finding Modal states
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalAreaId, setModalAreaId] = useState<number | ''>('');
   const [modalItemId, setModalItemId] = useState<number | ''>('');
-  const [modalDescription, setModalDescription] = useState('');
-  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  const [modalSubmitting, setModalSubmitting] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalDesc, setModalDesc] = useState('');
+  const [modalPhotos, setModalPhotos] = useState<Blob[]>([]);
+  const [savingModalFinding, setSavingModalFinding] = useState(false);
 
-  // Edit Finding Modal state
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingFinding, setEditingFinding] = useState<Finding | null>(null);
   const [editAreaId, setEditAreaId] = useState<number | ''>('');
   const [editItemId, setEditItemId] = useState<number | ''>('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editExistingPhotos, setEditExistingPhotos] = useState<any[]>([]);
-  const [editNewPhotos, setEditNewPhotos] = useState<File[]>([]);
-  const [editNewPhotoPreviews, setEditNewPhotoPreviews] = useState<string[]>([]);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  // Saving external audit inputs indicator
-  const [savingExternalAreaId, setSavingExternalAreaId] = useState<number | null>(null);
+  const [editDesc, setEditDesc] = useState('');
+  const [savingEditFinding, setSavingEditFinding] = useState(false);
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxPhotos, setLightboxPhotos] = useState<LightboxPhoto[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const fetchAuditData = useCallback(async () => {
+  const fetchAudit = useCallback(async (silent = false) => {
+    if (!id) return;
+    if (!silent) setLoading(true);
     try {
-      const res = await api.get<any>(`/audits/${id}`);
-      setData(res);
-      setNote(res.audit?.note || '');
-    } catch (err) {
-      console.error(err);
+      const res = await api.get<AuditDetailPayload>(`/audits/${id}`);
+      setDetail(res);
+      setNoteInput(res.audit.note || '');
+      const nextDescs: Record<number, string> = {};
+      for (const f of res.findings || []) {
+        nextDescs[f.id] = f.description || '';
+      }
+      setInlineDescs(nextDescs);
+      setActiveAreaId((prev) => {
+        if (prev && res.area_scores.some((a) => a.area_id === prev)) return prev;
+        return res.area_scores[0]?.area_id ?? null;
+      });
+      setError(null);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load audit');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
-    fetchAuditData();
-  }, [fetchAuditData]);
+    fetchAudit(false);
+  }, [fetchAudit]);
 
-  // Clean up object URLs on modal close / photo change
-  useEffect(() => {
-    return () => {
-      photoPreviews.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [photoPreviews]);
+  const naSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const pair of detail?.na_matrix || []) {
+      s.add(`${pair.area_id}_${pair.item_id}`);
+    }
+    return s;
+  }, [detail?.na_matrix]);
 
-  if (loading || !data) {
+  const fieldChecklistItems = useMemo(() => {
+    return (detail?.checklist_items || []).filter((item) => !EXTERNAL_CODES.has(item.code));
+  }, [detail?.checklist_items]);
+
+  const filteredAreas = useMemo(() => {
+    const q = areaSearch.trim().toLowerCase();
+    const list = detail?.area_scores || [];
+    if (!q) return list;
+    return list.filter(
+      (a) =>
+        String(a.area_code || '').toLowerCase().includes(q) ||
+        String(a.area_name || '').toLowerCase().includes(q)
+    );
+  }, [detail?.area_scores, areaSearch]);
+
+  const filteredChecklistItems = useMemo(() => {
+    const q = checklistSearch.trim().toLowerCase();
+    return fieldChecklistItems.filter((item) => {
+      if (sGroupFilter !== 'all' && Number(item.s_group) !== sGroupFilter) return false;
+      if (q) {
+        const hay = `${item.code} ${item.location_vi} ${item.location_en} ${item.content_vi} ${item.content_en}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [fieldChecklistItems, sGroupFilter, checklistSearch]);
+
+  if (loading && !detail) {
     return (
-      <div className="py-20 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      <div className="w-full h-full flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
       </div>
     );
   }
 
-  const {
-    audit,
-    target = 95,
-    warning_target: warningTarget = 90,
-    area_scores = [],
-    checklist_items = [],
-    na_matrix = [],
-    findings = [],
-    prev_weeks_counts = {},
-    live_score,
-    permissions,
-  } = data;
+  if (error || !detail) {
+    return (
+      <div className="surface-card p-6 text-center space-y-3 max-w-lg mx-auto mt-10">
+        <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto" />
+        <p className="text-sm font-semibold">{error || 'Audit not found'}</p>
+        <Link to="/audits" className="inline-block text-xs font-bold text-sky-400 hover:underline">
+          {t('back')}
+        </Link>
+      </div>
+    );
+  }
 
+  const { audit, target, warning_target: warningTarget, area_scores, findings, prev_weeks_counts, permissions } = detail;
   const isDraft = audit.status === 'draft';
   const canEdit = permissions.canEdit;
+  const currentPlantScore = detail.live_score?.score ?? audit.score ?? 100;
+  const currentPlantPenalty = detail.live_score?.totalPenalty ?? audit.total_penalty ?? 0;
 
-  // Filter out external items (S5.2-BOD, S5.2-CUS, S5.3) for field findings
-  const fieldChecklistItems: ChecklistItem[] = checklist_items.filter(
-    (item: ChecklistItem) => !['S5.2-BOD', 'S5.2-CUS', 'S5.3'].includes(item.code)
-  );
+  const activeAreaScore = area_scores.find((a) => a.area_id === activeAreaId) || area_scores[0] || null;
+  const activeAreaFindings = activeAreaScore
+    ? findings.filter((f) => f.area_id === activeAreaScore.area_id)
+    : [];
 
-  // NA Set for quick lookup `${area_id}_${item_id}`
-  const naSet = new Set<string>(
-    na_matrix.map((row: { area_id: number; item_id: number }) => `${row.area_id}_${row.item_id}`)
-  );
+  // Map findings by item_id for active area
+  const activeFindingsByItem = new Map<number, Finding[]>();
+  for (const f of activeAreaFindings) {
+    const arr = activeFindingsByItem.get(f.item_id) || [];
+    arr.push(f);
+    activeFindingsByItem.set(f.item_id, arr);
+  }
 
-  // Areas user can audit
-  const auditableAreas = area_scores.filter((as: AuditAreaScore) => canAudit(as.area_id));
-
-  // Handle external table input change (BOD, Customer, IE)
-  const handleExternalCountChange = async (
-    areaId: number,
+  const handleExternalStep = async (
+    areaScore: AuditAreaScore,
     field: 'bod_count' | 'customer_count' | 'ie_count',
-    val: number
+    delta: number
   ) => {
-    const current = area_scores.find((as: AuditAreaScore) => as.area_id === areaId);
-    if (!current) return;
+    if (!isDraft || !canEdit) return;
+    const nextVal = Math.max(0, Number(areaScore[field] || 0) + delta);
+    if (nextVal === Number(areaScore[field] || 0)) return;
 
-    const bodCount = field === 'bod_count' ? val : current.bod_count;
-    const customerCount = field === 'customer_count' ? val : current.customer_count;
-    const ieCount = field === 'ie_count' ? val : current.ie_count;
+    const payload = {
+      area_id: areaScore.area_id,
+      bod_count: field === 'bod_count' ? nextVal : areaScore.bod_count,
+      customer_count: field === 'customer_count' ? nextVal : areaScore.customer_count,
+      ie_count: field === 'ie_count' ? nextVal : areaScore.ie_count,
+    };
 
     try {
-      setSavingExternalAreaId(areaId);
-      const res = await api.put<any>(`/audits/${id}/external`, {
-        area_id: areaId,
-        bod_count: bodCount,
-        customer_count: customerCount,
-        ie_count: ieCount,
-      });
-      setData((prev: any) => ({
-        ...prev,
-        area_scores: res.area_scores,
-        live_score: res.live_score,
-        audit: {
-          ...prev.audit,
-          total_penalty: res.live_score.totalPenalty,
-          score: res.live_score.score,
-        },
-      }));
+      setSavingExternalAreaId(areaScore.area_id);
+      const res = await api.put<{ area_scores: AuditAreaScore[]; live_score: { totalPenalty: number; score: number } }>(
+        `/audits/${audit.id}/external`,
+        payload
+      );
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              area_scores: res.area_scores || prev.area_scores,
+              live_score: res.live_score || prev.live_score,
+            }
+          : prev
+      );
     } catch (err: any) {
-      alert(err.message || 'Failed to update external scores');
+      alert(err?.message || 'Failed to update external counts');
     } finally {
       setSavingExternalAreaId(null);
     }
   };
 
-  // Open Add Finding Modal (optionally pre-select area)
-  const openAddFindingModal = (preselectedAreaId?: number) => {
-    const initialAreaId =
-      preselectedAreaId ||
-      (auditableAreas.length > 0 ? auditableAreas[0].area_id : area_scores[0]?.area_id || '');
-    setModalAreaId(initialAreaId);
-    setModalItemId('');
-    setModalDescription('');
-    setSelectedPhotos([]);
-    setPhotoPreviews([]);
-    setModalError(null);
-    setFindingModalOpen(true);
-  };
-
-  // Photo file picker handler
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    const combined = [...selectedPhotos, ...files].slice(0, 6);
-    setSelectedPhotos(combined);
-
-    // Create object URLs
-    photoPreviews.forEach((url) => URL.revokeObjectURL(url));
-    const urls = combined.map((file) => URL.createObjectURL(file));
-    setPhotoPreviews(urls);
-  };
-
-  // Remove photo from selection
-  const handleRemovePhoto = (index: number) => {
-    const updated = selectedPhotos.filter((_, i) => i !== index);
-    setSelectedPhotos(updated);
-
-    URL.revokeObjectURL(photoPreviews[index]);
-    setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
-  };
-
-  // Submit Add Finding
-  const handleCreateFinding = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!modalAreaId || !modalItemId) {
-      setModalError(t('error_select_area_and_item'));
-      return;
+  const handleMarkPass = async (areaId: number, itemFindings: Finding[]) => {
+    if (!isDraft || !canEdit || itemFindings.length === 0) return;
+    const hasData = itemFindings.some((f) => (f.description || '').trim() !== '' || (f.photos || []).length > 0);
+    if (hasData) {
+      const ok = window.confirm(
+        lang === 'en'
+          ? 'Mark this criterion as PASS? Existing finding notes/photos on this row will be removed.'
+          : 'Chuyển tiêu chí này về ĐẠT? Các ghi chú/ảnh lỗi hiện tại trên dòng này sẽ bị xóa.'
+      );
+      if (!ok) return;
     }
-
-    setModalError(null);
-    setModalSubmitting(true);
 
     try {
-      // 1. Create finding in audit
-      const createRes = await api.post<{ finding: Finding }>(`/audits/${id}/findings`, {
-        area_id: Number(modalAreaId),
-        item_id: Number(modalItemId),
-        description: modalDescription,
-      });
-
-      const newFindingId = createRes.finding.id;
-
-      // 2. Upload selected Before photos
-      if (selectedPhotos.length > 0) {
-        for (const file of selectedPhotos) {
-          try {
-            const compressedBlob = await compressImage(file);
-            const formData = new FormData();
-            formData.append('file', compressedBlob, 'before.jpg');
-            formData.append('kind', 'before');
-            await api.post(`/findings/${newFindingId}/photos`, formData);
-          } catch (uploadErr) {
-            console.error('Failed to upload photo for finding:', uploadErr);
-          }
-        }
+      setTogglingKey(`${areaId}_${itemFindings[0].item_id}`);
+      for (const f of itemFindings) {
+        await api.delete(`/findings/${f.id}`);
       }
-
-      setFindingModalOpen(false);
-      await fetchAuditData();
+      await fetchAudit(true);
     } catch (err: any) {
-      setModalError(err.message || 'Failed to add finding');
+      alert(err?.message || 'Failed to clear finding');
     } finally {
-      setModalSubmitting(false);
+      setTogglingKey(null);
     }
   };
 
-  // Open Edit Finding Modal
-  const handleOpenEditModal = (f: Finding) => {
-    setEditingFinding(f);
-    setEditAreaId(f.area_id);
-    setEditItemId(f.item_id);
-    setEditDescription(f.description || '');
-    setEditExistingPhotos((f.photos || []).filter((p: any) => p.kind === 'before'));
-    setEditNewPhotos([]);
-    setEditNewPhotoPreviews([]);
-    setEditError(null);
-    setEditModalOpen(true);
+  const handleMarkFail = async (areaId: number, item: ChecklistItem, existing: Finding[]) => {
+    if (!isDraft || !canEdit) return;
+    if (existing.length > 0) return; // already marked fail; user can use + Add if needing another finding
+    try {
+      setTogglingKey(`${areaId}_${item.id}`);
+      await api.post(`/audits/${audit.id}/findings`, {
+        area_id: areaId,
+        item_id: item.id,
+        description: '',
+      });
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to record finding');
+    } finally {
+      setTogglingKey(null);
+    }
   };
 
-  // Edit photo file picker handler
-  const handleEditPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    const maxAllowed = Math.max(0, 6 - editExistingPhotos.length);
-    const combined = [...editNewPhotos, ...files].slice(0, maxAllowed);
-    setEditNewPhotos(combined);
+  const handleSaveInlineDesc = async (findingId: number) => {
+    try {
+      setSavingDescId(findingId);
+      await api.put(`/findings/${findingId}`, {
+        description: inlineDescs[findingId] ?? '',
+      });
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to save note');
+    } finally {
+      setSavingDescId(null);
+    }
+  };
 
-    // Create object URLs
-    editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
-    const urls = combined.map((file) => URL.createObjectURL(file));
-    setEditNewPhotoPreviews(urls);
+  const handleDeleteFinding = async (findingId: number) => {
+    const ok = window.confirm(t('confirm_delete_finding'));
+    if (!ok) return;
+    try {
+      await api.delete(`/findings/${findingId}`);
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete finding');
+    }
+  };
+
+  const handleInlinePhotoUpload = async (findingId: number, file: File | undefined) => {
+    if (!file) return;
+    try {
+      setUploadingFindingId(findingId);
+      const blob = await compressImage(file);
+      const form = new FormData();
+      form.append('file', blob, 'before.jpg');
+      form.append('kind', 'before');
+      await api.post(`/findings/${findingId}/photos`, form);
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to upload photo');
+    } finally {
+      setUploadingFindingId(null);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: number) => {
+    const ok = window.confirm(lang === 'en' ? 'Delete this photo?' : 'Xóa ảnh này?');
+    if (!ok) return;
+    try {
+      await api.delete(`/photos/${photoId}`);
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete photo');
+    }
+  };
+
+  const handleSaveNote = async () => {
+    try {
+      setSavingNote(true);
+      await api.put(`/audits/${audit.id}`, { note: noteInput });
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to save audit note');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleSubmitAudit = async () => {
+    const ok = window.confirm(
+      lang === 'en'
+        ? 'Submit this weekly audit? Scores will be finalized and published to the Dashboard.'
+        : 'Nộp kỳ chấm điểm tuần này? Điểm sẽ được chốt và công bố lên Bảng theo dõi.'
+    );
+    if (!ok) return;
+    try {
+      setSubmitting(true);
+      await api.put(`/audits/${audit.id}`, { note: noteInput });
+      await api.post(`/audits/${audit.id}/submit`);
+      await fetchAudit(false);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to submit audit');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReopenAudit = async () => {
+    const ok = window.confirm(
+      lang === 'en' ? 'Reopen this submitted audit back to Draft?' : 'Mở lại kỳ chấm điểm này về trạng thái Bản nháp?'
+    );
+    if (!ok) return;
+    try {
+      setSubmitting(true);
+      await api.post(`/audits/${audit.id}/reopen`);
+      await fetchAudit(false);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to reopen audit');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteAudit = async () => {
+    const ok = window.confirm(
+      lang === 'en' ? 'Delete this draft audit permanently?' : 'Xóa vĩnh viễn kỳ chấm bản nháp này?'
+    );
+    if (!ok) return;
+    try {
+      await api.delete(`/audits/${audit.id}`);
+      navigate('/audits');
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete audit');
+    }
+  };
+
+  const openAddFindingModal = (presetAreaId?: number, presetItemId?: number) => {
+    setModalAreaId(presetAreaId ?? activeAreaScore?.area_id ?? area_scores[0]?.area_id ?? '');
+    setModalItemId(presetItemId ?? fieldChecklistItems[0]?.id ?? '');
+    setModalDesc('');
+    setModalPhotos([]);
+    setAddModalOpen(true);
+  };
+
+  const handleModalPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const compressed: Blob[] = [];
+    for (const f of files.slice(0, 6 - modalPhotos.length)) {
+      compressed.push(await compressImage(f));
+    }
+    setModalPhotos((prev) => [...prev, ...compressed].slice(0, 6));
     e.target.value = '';
   };
 
-  // Remove newly staged photo in edit modal
-  const handleRemoveEditNewPhoto = (index: number) => {
-    const updated = editNewPhotos.filter((_, i) => i !== index);
-    setEditNewPhotos(updated);
-
-    URL.revokeObjectURL(editNewPhotoPreviews[index]);
-    setEditNewPhotoPreviews(editNewPhotoPreviews.filter((_, i) => i !== index));
-  };
-
-  // Delete existing before photo
-  const handleDeleteExistingPhoto = async (photoId: number) => {
-    if (!window.confirm(t('confirm_delete_photo'))) return;
-    try {
-      await api.delete(`/photos/${photoId}`);
-      setEditExistingPhotos((prev) => prev.filter((p) => p.id !== photoId));
-      await fetchAuditData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete photo');
-    }
-  };
-
-  // Submit Update Finding
-  const handleUpdateFinding = async (e: React.FormEvent) => {
+  const handleCreateFindingFromModal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingFinding || !editAreaId || !editItemId) {
-      setEditError(t('error_select_area_and_item'));
-      return;
-    }
-
-    setEditError(null);
-    setEditSubmitting(true);
-
+    if (!modalAreaId || !modalItemId) return;
     try {
-      // 1. Upload newly added Before photos
-      if (editNewPhotos.length > 0) {
-        for (const file of editNewPhotos) {
-          try {
-            const compressedBlob = await compressImage(file);
-            const formData = new FormData();
-            formData.append('file', compressedBlob, 'before.jpg');
-            formData.append('kind', 'before');
-            await api.post(`/findings/${editingFinding.id}/photos`, formData);
-          } catch (uploadErr) {
-            console.error('Failed to upload photo for finding:', uploadErr);
-          }
+      setSavingModalFinding(true);
+      const res = await api.post<{ finding: Finding }>(`/audits/${audit.id}/findings`, {
+        area_id: Number(modalAreaId),
+        item_id: Number(modalItemId),
+        description: modalDesc,
+      });
+      const createdId = res.finding?.id;
+      if (createdId && modalPhotos.length > 0) {
+        for (const blob of modalPhotos) {
+          const form = new FormData();
+          form.append('file', blob, 'before.jpg');
+          form.append('kind', 'before');
+          await api.post(`/findings/${createdId}/photos`, form);
         }
       }
+      setAddModalOpen(false);
+      await fetchAudit(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to create finding');
+    } finally {
+      setSavingModalFinding(false);
+    }
+  };
 
-      // 2. Update finding details
+  const openEditModal = (finding: Finding) => {
+    setEditingFinding(finding);
+    setEditAreaId(finding.area_id);
+    setEditItemId(finding.item_id);
+    setEditDesc(finding.description || '');
+  };
+
+  const handleUpdateFindingFromModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFinding || !editAreaId || !editItemId) return;
+    try {
+      setSavingEditFinding(true);
       await api.put(`/findings/${editingFinding.id}`, {
         area_id: Number(editAreaId),
         item_id: Number(editItemId),
-        description: editDescription,
+        description: editDesc,
       });
-
-      editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
-      setEditModalOpen(false);
       setEditingFinding(null);
-      await fetchAuditData();
+      await fetchAudit(true);
     } catch (err: any) {
-      setEditError(err.message || 'Failed to update finding');
+      alert(err?.message || 'Failed to update finding');
     } finally {
-      setEditSubmitting(false);
+      setSavingEditFinding(false);
     }
   };
 
-  // Delete Finding in Draft
-  const handleDeleteFinding = async (findingId: number) => {
-    if (!window.confirm(t('confirm_delete_finding'))) return;
-    try {
-      await api.delete(`/findings/${findingId}`);
-      await fetchAuditData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete finding');
-    }
+  const openPhotoLightbox = (photos: Photo[], targetId: number, f?: Finding) => {
+    const mapped: LightboxPhoto[] = photos.map((p) => ({
+      id: p.id,
+      kind: p.kind,
+      area_code: f?.area_code,
+      item_code: f?.item_code,
+      description: f?.description,
+      finding_id: f?.id,
+    }));
+    const idx = mapped.findIndex((p) => p.id === targetId);
+    setLightboxPhotos(mapped);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+    setLightboxOpen(true);
   };
-
-  // Submit Audit
-  const handleSubmitAudit = async () => {
-    if (!window.confirm(t('confirm_submit_audit'))) return;
-
-    try {
-      setActionLoading(true);
-      await api.post(`/audits/${id}/submit`);
-      await fetchAuditData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to submit audit');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Reopen Audit
-  const handleReopenAudit = async () => {
-    if (!window.confirm(t('confirm_reopen_audit'))) return;
-
-    try {
-      setActionLoading(true);
-      await api.post(`/audits/${id}/reopen`);
-      await fetchAuditData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to reopen audit');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Delete Draft Audit
-  const handleDeleteAudit = async () => {
-    if (!window.confirm(t('confirm_delete_draft_audit'))) return;
-
-    try {
-      setActionLoading(true);
-      await api.delete(`/audits/${id}`);
-      navigate('/audits');
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete audit');
-      setActionLoading(false);
-    }
-  };
-
-  // Save Note
-  const handleSaveNote = async () => {
-    try {
-      await api.put(`/audits/${id}`, { note });
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
-
-  // Filtered findings for display
-  const displayedFindings = selectedFindingArea
-    ? findings.filter((f: Finding) => f.area_id === Number(selectedFindingArea))
-    : findings;
-
-  // Selected item in modal for escalation info preview
-  const selectedItem = fieldChecklistItems.find((i) => i.id === Number(modalItemId));
-  const selectedAreaObj = area_scores.find((as: AuditAreaScore) => as.area_id === Number(modalAreaId));
-  const modalPrevCount =
-    modalAreaId && modalItemId
-      ? prev_weeks_counts[`${modalAreaId}_${modalItemId}`] || 0
-      : 0;
-
-  const modalRepeatLevel = selectedItem?.escalating === 1 ? 1 + modalPrevCount : 1;
-  const modalPenalty = selectedItem
-    ? selectedItem.escalating === 1
-      ? selectedItem.penalty + modalPrevCount
-      : selectedItem.penalty
-    : 0;
-
-  // Available criteria for selected area in modal (filter out NA items)
-  const applicableItemsForModal = fieldChecklistItems.filter(
-    (item) => !modalAreaId || !naSet.has(`${modalAreaId}_${item.id}`)
-  );
-
-  // Selected item in edit modal for escalation info preview
-  const selectedEditItem = fieldChecklistItems.find((i) => i.id === Number(editItemId));
-  const editPrevCount =
-    editAreaId && editItemId
-      ? prev_weeks_counts[`${editAreaId}_${editItemId}`] || 0
-      : 0;
-
-  const editRepeatLevel = selectedEditItem?.escalating === 1 ? 1 + editPrevCount : 1;
-  const editPenalty = selectedEditItem
-    ? selectedEditItem.escalating === 1
-      ? selectedEditItem.penalty + editPrevCount
-      : selectedEditItem.penalty
-    : 0;
-
-  // Available criteria for selected area in edit modal (filter out NA items)
-  const applicableItemsForEditModal = fieldChecklistItems.filter(
-    (item) => !editAreaId || !naSet.has(`${editAreaId}_${item.id}`)
-  );
-
-  const currentPlantScore = isDraft ? live_score.score : audit.score;
-  const currentPlantPenalty = isDraft ? live_score.totalPenalty : audit.total_penalty;
 
   return (
-    <div className="space-y-6 pb-36 md:pb-24">
-      {/* Top Header Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between">
+    <div className="w-full flex-1 flex flex-col gap-3 sm:gap-4 pb-24">
+      {/* ── TOP AUDIT COMMAND HEADER ─────────────────────────────────────────────────────── */}
+      <header className="surface-card p-3.5 sm:p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3 min-w-0">
           <Link
             to="/audits"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
+            className="surface-muted inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold hover:border-[var(--app-border-strong)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{t('back')}</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <StatusBadge status={audit.status} type="audit" />
-            {isDraft && permissions.canDelete && (
-              <button
-                onClick={handleDeleteAudit}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                title={t('delete')}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
+
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-black font-mono-kpi tracking-tight">
+                {audit.iso_year}-W{audit.iso_week < 10 ? `0${audit.iso_week}` : audit.iso_week}
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+                {formatMonthYear(audit.month)}
+              </span>
+              <StatusBadge status={audit.status} type="audit" />
+              {isDraft && permissions.canDelete && (
+                <button
+                  onClick={handleDeleteAudit}
+                  className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
+                  title={t('delete')}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-[var(--app-text-muted)] mt-0.5 truncate">
+              {audit.audit_date} · Auditor: <strong className="text-[var(--app-text)]">{audit.auditor_name}</strong> ·{' '}
+              <span className="font-mono-kpi">{findings.length} CAPA</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {audit.iso_year}-W{audit.iso_week < 10 ? `0${audit.iso_week}` : audit.iso_week}
-              </h1>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
-                {formatMonthYear(audit.month)}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 font-medium">
-              {t('audit_date')}: <strong className="text-slate-700">{audit.audit_date}</strong> · Auditor: <span className="font-bold text-slate-700">{audit.auditor_name}</span>
-            </p>
+        <div className="flex flex-wrap items-center justify-between xl:justify-end gap-2.5">
+          {/* Split-Screen vs Matrix Overview Switcher */}
+          <div className="surface-muted p-1 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setWorkspaceMode('split')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                workspaceMode === 'split'
+                  ? 'bg-sky-500 text-slate-950'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+              }`}
+            >
+              <Columns2 className="w-3.5 h-3.5" />
+              <span>{lang === 'en' ? 'Split Inspector' : 'Kiểm tra Split-Screen'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWorkspaceMode('matrix')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                workspaceMode === 'matrix'
+                  ? 'bg-sky-500 text-slate-950'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+              }`}
+            >
+              <Table2 className="w-3.5 h-3.5" />
+              <span>{lang === 'en' ? '15-Area Matrix' : 'Bảng 15 Khu vực'}</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
+          <div className="surface-elevated px-3 py-1.5 flex items-center gap-3">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {t('plant_score_label')}
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--app-text-muted)]">
+                {lang === 'en' ? 'PLANT SCORE' : 'ĐIỂM NHÀ MÁY'}
               </div>
-              <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="lg" showStatusText />
+              <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="sm" />
             </div>
-            <div className="pl-3.5 border-l border-slate-200 text-right">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="pl-3 border-l border-[var(--app-border)] text-right">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--app-text-muted)]">
                 {t('penalty')}
               </div>
-              <div className="text-lg font-black text-rose-600">
+              <div className="text-sm font-black font-mono-kpi text-rose-400">
                 -{currentPlantPenalty || 0}{t('pts_unit')}
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Section 1: BOD / Customer / IE Table & Weekly Score Summary by Area */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                {t('external_audit_summary_table')}
-              </h2>
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                {area_scores.length} {t('areas').toLowerCase()}
-              </span>
+      {/* ── WORKSPACE BODY: SPLIT-SCREEN INSPECTOR OR FULL MATRIX ────────────────────────── */}
+      {workspaceMode === 'split' ? (
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 flex-1 min-h-0">
+          {/* LEFT RAIL (4 Cols): 15-Area Switcher & Telemetry Mini Cards */}
+          <aside className="lg:col-span-4 flex flex-col min-h-0">
+            <div className="surface-card p-3 flex flex-col gap-2.5 lg:sticky lg:top-3 lg:max-h-[calc(100dvh-195px)]">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-xs font-black uppercase tracking-wider">
+                  {lang === 'en' ? 'AREAS INSPECTOR' : 'CHỌN KHU VỰC'} ({area_scores.length})
+                </h2>
+                <div className="relative flex-1 max-w-[160px]">
+                  <Search className="w-3.5 h-3.5 text-[var(--app-text-muted)] absolute left-2 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={areaSearch}
+                    onChange={(e) => setAreaSearch(e.target.value)}
+                    placeholder={lang === 'en' ? 'Find area...' : 'Tìm KV...'}
+                    className="surface-muted w-full pl-7 pr-2 py-1 text-[11px] focus:outline-none focus:border-[var(--app-accent)]"
+                  />
+                </div>
+              </div>
+
+              <div className="scroll-pane flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
+                {filteredAreas.map((a) => {
+                  const isActive = activeAreaScore?.area_id === a.area_id;
+                  const areaFindingCount = findings.filter((f) => f.area_id === a.area_id).length;
+                  const extTotal = (a.bod_count || 0) + (a.customer_count || 0) + (a.ie_count || 0);
+                  const tierColor =
+                    a.score >= target ? 'text-emerald-400' : a.score >= warningTarget ? 'text-amber-400' : 'text-rose-400';
+
+                  return (
+                    <button
+                      type="button"
+                      key={a.area_id}
+                      onClick={() => setActiveAreaId(a.area_id)}
+                      className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                        isActive
+                          ? 'bg-[var(--app-accent-soft)] border-[var(--app-accent)] shadow-sm'
+                          : 'surface-elevated hover:border-[var(--app-border-strong)]'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-black font-mono-kpi">{a.area_code}</span>
+                          {areaFindingCount > 0 && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono-kpi font-bold bg-rose-500/20 text-rose-300">
+                              {areaFindingCount} {lang === 'en' ? 'err' : 'lỗi'}
+                            </span>
+                          )}
+                          {extTotal > 0 && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono-kpi font-bold bg-amber-500/15 text-amber-300">
+                              EXT:{extTotal}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-[var(--app-text-muted)] truncate mt-0.5">
+                          {a.area_name}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`text-sm font-black font-mono-kpi ${tierColor}`}>
+                          {formatScore(a.score, lang)}
+                        </span>
+                        <ChevronRight className={`w-4 h-4 ${isActive ? 'text-[var(--app-accent)]' : 'opacity-30'}`} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
-              {t('external_audit_subtitle')}
-            </p>
+          </aside>
+
+          {/* RIGHT PANE (8 Cols): Active Area Steppers + Interactive 5S Checklist Cards */}
+          <div className="lg:col-span-8 flex flex-col gap-3 min-h-0">
+            {activeAreaScore && (
+              <>
+                {/* Active Area Command Banner & Inline BOD/CUS/IE Steppers */}
+                <div className="surface-card p-3.5 sm:p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-black font-mono-kpi bg-sky-500/20 text-sky-300">
+                          {activeAreaScore.area_code}
+                        </span>
+                        <h2 className="text-base sm:text-lg font-black tracking-tight">
+                          {activeAreaScore.area_name}
+                        </h2>
+                      </div>
+                      <p className="text-xs text-[var(--app-text-muted)] mt-0.5 font-mono-kpi">
+                        {lang === 'en' ? 'Field' : 'Hiện trường'}: -{activeAreaScore.finding_penalty || 0} ·{' '}
+                        {lang === 'en' ? 'External' : 'Ngoại quan'}: -{activeAreaScore.external_penalty || 0} ·{' '}
+                        {lang === 'en' ? 'Total Penalty' : 'Tổng trừ'}: -{activeAreaScore.total_penalty || 0}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      <ScoreBadge score={activeAreaScore.score} target={target} warningTarget={warningTarget} size="md" />
+                      {isDraft && canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => openAddFindingModal(activeAreaScore.area_id)}
+                          className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-black cursor-pointer min-h-[38px]"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{lang === 'en' ? 'Add Finding' : 'Thêm lỗi'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* External Audit Steppers (BOD, Customer, Internal IE) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[var(--app-border)]">
+                    {(
+                      [
+                        { field: 'bod_count' as const, label: 'BOD', val: activeAreaScore.bod_count || 0 },
+                        { field: 'customer_count' as const, label: 'Customer', val: activeAreaScore.customer_count || 0 },
+                        { field: 'ie_count' as const, label: 'IE Audit', val: activeAreaScore.ie_count || 0 },
+                      ] as const
+                    ).map((ext) => (
+                      <div
+                        key={ext.field}
+                        className="surface-muted px-3 py-2 flex items-center justify-between gap-2"
+                      >
+                        <span className="text-xs font-bold text-[var(--app-text-muted)]">{ext.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={!isDraft || !canEdit || ext.val <= 0 || savingExternalAreaId === activeAreaScore.area_id}
+                            onClick={() => handleExternalStep(activeAreaScore, ext.field, -1)}
+                            className="w-8 h-8 rounded-lg surface-elevated flex items-center justify-center disabled:opacity-35 cursor-pointer"
+                            aria-label={`Decrease ${ext.label}`}
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-7 text-center text-sm font-black font-mono-kpi">{ext.val}</span>
+                          <button
+                            type="button"
+                            disabled={!isDraft || !canEdit || savingExternalAreaId === activeAreaScore.area_id}
+                            onClick={() => handleExternalStep(activeAreaScore, ext.field, 1)}
+                            className="w-8 h-8 rounded-lg surface-elevated flex items-center justify-center disabled:opacity-35 cursor-pointer"
+                            aria-label={`Increase ${ext.label}`}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Checklist Filter Strip */}
+                <div className="surface-card p-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1">
+                    {(['all', 1, 2, 3, 4, 5] as const).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setSGroupFilter(g)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-mono-kpi font-bold cursor-pointer transition-colors ${
+                          sGroupFilter === g
+                            ? 'bg-sky-500 text-slate-950'
+                            : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+                        }`}
+                      >
+                        {g === 'all' ? (lang === 'en' ? 'All 5S' : 'Tất cả') : `S${g}`}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative flex-1 min-w-[160px] max-w-xs">
+                    <Search className="w-3.5 h-3.5 text-[var(--app-text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={checklistSearch}
+                      onChange={(e) => setChecklistSearch(e.target.value)}
+                      placeholder={lang === 'en' ? 'Search criterion...' : 'Tìm hạng mục...'}
+                      className="surface-muted w-full pl-8 pr-2.5 py-1.5 text-xs focus:outline-none focus:border-[var(--app-accent)]"
+                    />
+                  </div>
+                </div>
+
+                {/* Interactive Checklist Cards */}
+                <div className="space-y-2.5">
+                  {filteredChecklistItems.map((item) => {
+                    const isNA = naSet.has(`${activeAreaScore.area_id}_${item.id}`);
+                    const itemFindings = activeFindingsByItem.get(item.id) || [];
+                    const isFail = !isNA && itemFindings.length > 0;
+                    const busyKey = `${activeAreaScore.area_id}_${item.id}`;
+                    const prevWeeksCount = prev_weeks_counts?.[`${activeAreaScore.area_id}_${item.id}`] || 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`surface-card p-3.5 transition-colors ${
+                          isFail
+                            ? 'border-rose-500/45'
+                            : isNA
+                            ? 'opacity-65'
+                            : ''
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-mono-kpi font-black bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+                                {item.code}
+                              </span>
+                              <span className="text-[11px] font-bold text-[var(--app-text-muted)]">
+                                S{item.s_group} · {lang === 'en' ? item.location_en || item.location_vi : item.location_vi}
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono-kpi font-bold bg-rose-500/15 text-rose-400">
+                                -{item.penalty}{t('pts_unit')}
+                              </span>
+                              {prevWeeksCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300">
+                                  {t('repeat_week', { n: prevWeeksCount + (isFail ? 0 : 1) })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-semibold leading-snug">
+                              {lang === 'en' ? item.content_en || item.content_vi : item.content_vi}
+                            </p>
+                          </div>
+
+                          {/* Thumb-friendly Segmented Evaluation Controls */}
+                          <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-start">
+                            {isNA ? (
+                              <span className="px-3 py-2 rounded-xl surface-muted text-xs font-mono-kpi font-bold text-[var(--app-text-muted)] min-h-[40px] flex items-center">
+                                N/A
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={!isDraft || !canEdit || togglingKey === busyKey || !isFail}
+                                  onClick={() => handleMarkPass(activeAreaScore.area_id, itemFindings)}
+                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
+                                    !isFail
+                                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                                      : 'surface-muted text-[var(--app-text-muted)] hover:text-emerald-400'
+                                  }`}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>{lang === 'en' ? 'PASS' : 'ĐẠT'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!isDraft || !canEdit || togglingKey === busyKey}
+                                  onClick={() => handleMarkFail(activeAreaScore.area_id, item, itemFindings)}
+                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
+                                    isFail
+                                      ? 'bg-rose-500 text-white shadow-sm'
+                                      : 'surface-muted text-[var(--app-text-muted)] hover:text-rose-400'
+                                  }`}
+                                >
+                                  {togglingKey === busyKey ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <span>
+                                      {lang === 'en' ? `FAIL (-${item.penalty})` : `LỖI (-${item.penalty}đ)`}
+                                    </span>
+                                  )}
+                                </button>
+                                {isFail && isDraft && canEdit && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openAddFindingModal(activeAreaScore.area_id, item.id)}
+                                    className="p-2 rounded-xl surface-muted hover:border-[var(--app-border-strong)] min-h-[40px] cursor-pointer"
+                                    title={lang === 'en' ? 'Add another finding for this criterion' : 'Thêm thêm lỗi cho tiêu chí này'}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Inline Finding Evidence Drawer (when failed) */}
+                        {itemFindings.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-[var(--app-border)] space-y-2.5">
+                            {itemFindings.map((f) => {
+                              const beforePhotos = (f.photos || []).filter((p) => p.kind === 'before');
+                              return (
+                                <div key={f.id} className="surface-muted p-3 space-y-2.5">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                      <StatusBadge status={f.status} type="finding" />
+                                      <span className="font-mono-kpi font-bold text-rose-400">
+                                        -{f.applied_penalty}{t('pts_unit')}
+                                      </span>
+                                      {f.repeat_level > 1 && (
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300">
+                                          {t('repeat_week', { n: f.repeat_level })}
+                                        </span>
+                                      )}
+                                      <Link
+                                        to={`/findings/${f.id}`}
+                                        className="text-[11px] font-bold text-[var(--app-accent)] hover:underline ml-1"
+                                      >
+                                        CAPA #{f.id}
+                                      </Link>
+                                    </div>
+                                    {canEdit && (isDraft || f.status === 'open') && (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => openEditModal(f)}
+                                          className="p-1.5 rounded-lg surface-elevated hover:text-sky-400 cursor-pointer"
+                                          title={t('edit')}
+                                        >
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                        </button>
+                                        {isDraft && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteFinding(f.id)}
+                                            className="p-1.5 rounded-lg surface-elevated hover:text-rose-400 cursor-pointer"
+                                            title={t('delete')}
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Inline description editor */}
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <textarea
+                                      rows={2}
+                                      disabled={!canEdit || (!isDraft && f.status !== 'open')}
+                                      value={inlineDescs[f.id] ?? ''}
+                                      onChange={(e) =>
+                                        setInlineDescs((prev) => ({ ...prev, [f.id]: e.target.value }))
+                                      }
+                                      placeholder={
+                                        lang === 'en'
+                                          ? 'Describe specific violation & machine/line location...'
+                                          : 'Mô tả cụ thể lỗi vi phạm, vị trí máy/line...'
+                                      }
+                                      className="surface-elevated flex-1 px-3 py-2 text-xs focus:outline-none focus:border-[var(--app-accent)]"
+                                    />
+                                    {canEdit && (isDraft || f.status === 'open') && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSaveInlineDesc(f.id)}
+                                        disabled={savingDescId === f.id}
+                                        className="px-3 py-2 rounded-xl surface-elevated hover:border-[var(--app-accent)] text-xs font-bold flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                                      >
+                                        {savingDescId === f.id ? (
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                          <Save className="w-3.5 h-3.5 text-sky-400" />
+                                        )}
+                                        <span>{lang === 'en' ? 'Save Note' : 'Lưu mô tả'}</span>
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Inline Before Photo strip + 2K Camera Upload */}
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {beforePhotos.map((p) => (
+                                      <div
+                                        key={p.id}
+                                        className="relative w-16 h-16 rounded-xl overflow-hidden border border-[var(--app-border)] group"
+                                      >
+                                        <img
+                                          src={`/api/photos/${p.id}`}
+                                          alt="Before"
+                                          onClick={() => openPhotoLightbox(f.photos || [], p.id, f)}
+                                          className="w-full h-full object-cover cursor-pointer"
+                                        />
+                                        {canEdit && (isDraft || f.status === 'open') && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeletePhoto(p.id)}
+                                            className="absolute top-0.5 right-0.5 p-1 rounded bg-rose-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                            title={t('delete')}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+
+                                    {canEdit && (isDraft || f.status === 'open') && beforePhotos.length < 6 && (
+                                      <label className="w-24 h-16 rounded-xl border border-dashed border-[var(--app-border-strong)] flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] cursor-pointer">
+                                        {uploadingFindingId === f.id ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Camera className="w-4 h-4" />
+                                            <span>{lang === 'en' ? '+ 2K Photo' : '+ Chụp 2K'}</span>
+                                          </>
+                                        )}
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          capture="environment"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            handleInlinePhotoUpload(f.id, e.target.files?.[0]);
+                                            e.target.value = '';
+                                          }}
+                                        />
+                                      </label>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      ) : (
+        /* MATRIX OVERVIEW MODE: FULL 15-AREA TABLE + FINDINGS SUMMARY */
+        <section className="space-y-4">
+          <div className="surface-card overflow-hidden">
+            <div className="p-4 border-b border-[var(--app-border)] flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-wider">
+                  {t('external_audit_summary_table')}
+                </h2>
+                <p className="text-xs text-[var(--app-text-muted)]">{t('external_audit_subtitle')}</p>
+              </div>
+              {isDraft && canEdit && (
+                <button
+                  type="button"
+                  onClick={() => openAddFindingModal()}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500 text-slate-950 text-xs font-black cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('add_5s_finding')}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-x-auto scroll-pane">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--app-border)] text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)]">
+                    <th className="py-3 px-4">{t('area_column')}</th>
+                    <th className="py-3 px-3 text-center">BOD</th>
+                    <th className="py-3 px-3 text-center">Customer</th>
+                    <th className="py-3 px-3 text-center">IE Audit</th>
+                    <th className="py-3 px-3 text-center">{lang === 'en' ? 'Field Pen' : 'Trừ HT'}</th>
+                    <th className="py-3 px-3 text-center">{lang === 'en' ? 'Ext Pen' : 'Trừ NQ'}</th>
+                    <th className="py-3 px-4 text-right">{t('score')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--app-border)]">
+                  {area_scores.map((a) => (
+                    <tr key={a.area_id} className="hover:bg-[var(--app-surface-muted)] transition-colors">
+                      <td className="py-2.5 px-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveAreaId(a.area_id);
+                            setWorkspaceMode('split');
+                          }}
+                          className="font-bold hover:text-[var(--app-accent)] cursor-pointer text-left"
+                        >
+                          <span className="font-mono-kpi">{a.area_code}</span> · {a.area_name}
+                        </button>
+                      </td>
+                      {(['bod_count', 'customer_count', 'ie_count'] as const).map((field) => (
+                        <td key={field} className="py-2.5 px-3 text-center">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={!isDraft || !canEdit || (a[field] || 0) <= 0}
+                              onClick={() => handleExternalStep(a, field, -1)}
+                              className="w-6 h-6 rounded surface-muted flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 font-mono-kpi font-bold">{a[field] || 0}</span>
+                            <button
+                              type="button"
+                              disabled={!isDraft || !canEdit}
+                              onClick={() => handleExternalStep(a, field, 1)}
+                              className="w-6 h-6 rounded surface-muted flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                      ))}
+                      <td className="py-2.5 px-3 text-center font-mono-kpi text-rose-400 font-bold">
+                        -{a.finding_penalty || 0}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-mono-kpi text-amber-400 font-bold">
+                        -{a.external_penalty || 0}
+                      </td>
+                      <td className="py-2.5 px-4 text-right">
+                        <ScoreBadge score={a.score} target={target} warningTarget={warningTarget} size="sm" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
+          {/* All recorded findings list in matrix mode */}
+          <div className="surface-card p-4 space-y-3">
+            <h3 className="text-sm font-black">
+              {t('findings')} ({findings.length})
+            </h3>
+            {findings.length === 0 ? (
+              <p className="text-xs text-[var(--app-text-muted)]">{t('noData')}</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {findings.map((f) => (
+                  <div key={f.id} className="surface-muted p-3 flex items-start justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-mono-kpi font-black text-xs px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                          {f.area_code}
+                        </span>
+                        <span className="font-mono-kpi font-bold text-xs">{f.item_code}</span>
+                        <StatusBadge status={f.status} type="finding" />
+                        <span className="font-mono-kpi text-xs font-bold text-rose-400">
+                          -{f.applied_penalty}{t('pts_unit')}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold line-clamp-2">
+                        {lang === 'en' ? f.content_en || f.content_vi : f.content_vi}
+                      </p>
+                      {f.description && (
+                        <p className="text-xs text-[var(--app-text-muted)] italic line-clamp-2">
+                          {f.description}
+                        </p>
+                      )}
+                      {(f.photos || []).length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => openPhotoLightbox(f.photos || [], f.photos![0].id, f)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--app-accent)] hover:underline cursor-pointer"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                          <span>{f.photos!.length} photos</span>
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveAreaId(f.area_id);
+                        setWorkspaceMode('split');
+                      }}
+                      className="text-xs font-bold text-[var(--app-accent)] hover:underline shrink-0 cursor-pointer"
+                    >
+                      Inspect
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── AUDIT GENERAL NOTE CARD ──────────────────────────────────────────────────────── */}
+      <section className="surface-card p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-black uppercase tracking-wider text-[var(--app-text-muted)]">
+            {t('note')}
+          </label>
           {isDraft && canEdit && (
             <button
+              type="button"
+              onClick={handleSaveNote}
+              disabled={savingNote}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg surface-elevated text-xs font-bold cursor-pointer"
+            >
+              {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5 text-sky-400" />}
+              <span>{t('save')}</span>
+            </button>
+          )}
+        </div>
+        <textarea
+          rows={2}
+          disabled={!isDraft || !canEdit}
+          value={noteInput}
+          onChange={(e) => setNoteInput(e.target.value)}
+          placeholder={lang === 'en' ? 'Weekly shift summary / special observations...' : 'Ghi chú tổng kết tuần audit...'}
+          className="surface-muted w-full px-3 py-2 text-xs focus:outline-none focus:border-[var(--app-accent)]"
+        />
+      </section>
+
+      {/* ── FULL-WIDTH STICKY ACTION BAR (NO max-w-7xl) ─────────────────────────────────── */}
+      <div className="sticky bottom-2 z-20 surface-elevated px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-[var(--app-border-strong)]">
+        <div className="flex items-center gap-3 text-xs font-mono-kpi">
+          <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="md" showStatusText />
+          <span className="text-[var(--app-text-muted)]">
+            {findings.length} {lang === 'en' ? 'findings' : 'lỗi'} · -{currentPlantPenalty || 0}{t('pts_unit')}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isDraft && canEdit && (
+            <button
+              type="button"
               onClick={() => openAddFindingModal()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm shadow-blue-600/20 transition-all cursor-pointer shrink-0 min-h-[44px] sm:min-h-0"
+              className="px-3.5 py-2 rounded-xl surface-muted hover:border-[var(--app-border-strong)] text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer min-h-[40px]"
             >
               <Plus className="w-4 h-4" />
               <span>{t('add_5s_finding')}</span>
             </button>
           )}
-        </div>
 
-        <div
-          tabIndex={0}
-          role="region"
-          aria-label={t('external_audit_summary_table')}
-          className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-        >
-          <table className={`w-full text-left text-xs ${stickyTableCls}`}>
-            <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-              <tr>
-                <th className="py-3 px-4">{t('area_column')}</th>
-                <th className="py-3 px-4 text-center">{t('field_findings_count_penalty')}</th>
-                <th className="py-3 px-3 text-center">{t('bod_audit_col')}</th>
-                <th className="py-3 px-3 text-center">{t('customer_audit_col')}</th>
-                <th className="py-3 px-3 text-center">{t('ie_audit_col')}</th>
-                <th className="py-3 px-4 text-right">{t('penalty')}</th>
-                <th className="py-3 px-4 text-center">{t('weekly_score_col')}</th>
-                {isDraft && canEdit && <th className="py-3 px-4 text-center">{t('action')}</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {area_scores.map((as: AuditAreaScore) => {
-                const isAuditable = canAudit(as.area_id);
-                const areaFindings = findings.filter((f: Finding) => f.area_id === as.area_id);
-                const isSaving = savingExternalAreaId === as.area_id;
-
-                return (
-                  <tr
-                    key={as.area_id}
-                    className="hover:bg-slate-50/60 transition-colors"
-                  >
-                    {/* Area Code & Name */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black px-2 py-0.5 rounded bg-slate-900 text-white text-xs">
-                          {as.area_code}
-                        </span>
-                        <span className="font-semibold text-slate-700 truncate max-w-[140px] sm:max-w-[200px]">
-                          {as.area_name}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Field Findings */}
-                    <td className="py-3 px-4 text-center">
-                      <div className="font-semibold text-slate-800">
-                        {areaFindings.length > 0 ? (
-                          <span className="text-slate-800 font-bold">
-                            {t('findings_count_short', { n: areaFindings.length })}{' '}
-                            <span className="text-rose-600 font-black">
-                              (-{as.finding_penalty}{t('pts_unit')})
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">{t('zero_findings_short')}</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* BOD (-4đ) Stepper Input */}
-                    <td className="py-2.5 px-3 text-center">
-                      {isDraft && isAuditable ? (
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={as.bod_count}
-                          disabled={isSaving}
-                          onChange={(e) =>
-                            handleExternalCountChange(
-                              as.area_id,
-                              'bod_count',
-                              parseInt(e.target.value, 10) || 0
-                            )
-                          }
-                          className="w-14 text-center py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                      ) : (
-                        <span className="font-bold text-slate-700">{as.bod_count}</span>
-                      )}
-                    </td>
-
-                    {/* Customer (-6đ) Stepper Input */}
-                    <td className="py-2.5 px-3 text-center">
-                      {isDraft && isAuditable ? (
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={as.customer_count}
-                          disabled={isSaving}
-                          onChange={(e) =>
-                            handleExternalCountChange(
-                              as.area_id,
-                              'customer_count',
-                              parseInt(e.target.value, 10) || 0
-                            )
-                          }
-                          className="w-14 text-center py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                      ) : (
-                        <span className="font-bold text-slate-700">{as.customer_count}</span>
-                      )}
-                    </td>
-
-                    {/* Internal IE (-1đ) Stepper Input */}
-                    <td className="py-2.5 px-3 text-center">
-                      {isDraft && isAuditable ? (
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={as.ie_count}
-                          disabled={isSaving}
-                          onChange={(e) =>
-                            handleExternalCountChange(
-                              as.area_id,
-                              'ie_count',
-                              parseInt(e.target.value, 10) || 0
-                            )
-                          }
-                          className="w-14 text-center py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                      ) : (
-                        <span className="font-bold text-slate-700">{as.ie_count}</span>
-                      )}
-                    </td>
-
-                    {/* Total Penalty */}
-                    <td className="py-3 px-4 text-right">
-                      <span className="font-black text-rose-600">
-                        -{as.total_penalty || 0}{t('pts_unit')}
-                      </span>
-                    </td>
-
-                    {/* Weekly Score */}
-                    <td className="py-3 px-4 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-black text-xs ${
-                          as.score >= target
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : as.score >= warningTarget
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-rose-100 text-rose-800'
-                        }`}
-                      >
-                        {formatScore(as.score, lang)}
-                      </span>
-                    </td>
-
-                    {/* Action */}
-                    {isDraft && canEdit && (
-                      <td className="py-3 px-4 text-center">
-                        {isAuditable && (
-                          <button
-                            onClick={() => openAddFindingModal(as.area_id)}
-                            className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>{t('quick_add_finding')}</span>
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Section 2: Field Findings Recorded in This Weekly Audit */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-              {t('findings_list')} ({findings.length})
-            </h2>
-            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
-              {t('penalty')}: -{currentPlantPenalty || 0}{t('pts_unit')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Filter by Area */}
-            <div className="flex items-center gap-1.5 text-xs">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <select
-                value={selectedFindingArea}
-                onChange={(e) => setSelectedFindingArea(e.target.value)}
-                className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{t('all_areas')}</option>
-                {area_scores.map((as: AuditAreaScore) => (
-                  <option key={as.area_id} value={as.area_id}>
-                    {as.area_code} - {as.area_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {isDraft && canEdit && (
-              <button
-                onClick={() => openAddFindingModal()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t('add_5s_finding')}</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {displayedFindings.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-            {t('noData')}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {displayedFindings.map((f: Finding) => {
-              const isFindingAuditable = canAudit(f.area_id);
-
-              return (
-                <div
-                  key={f.id}
-                  className="bg-slate-50/70 hover:bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-black px-2 py-0.5 rounded bg-slate-900 text-white">
-                        {f.area_code}
-                      </span>
-                      <span className="text-xs font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                        {f.item_code}
-                      </span>
-                      {f.repeat_level > 1 ? (
-                        <span className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
-                          {t('repeat_level_badge', { w: f.repeat_level, pts: f.applied_penalty })}
-                        </span>
-                      ) : (
-                        <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
-                          -{f.applied_penalty}{t('pts_unit')}
-                        </span>
-                      )}
-                      <StatusBadge status={f.status} type="finding" />
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {isFindingAuditable && (isDraft || f.status === 'open') && (
-                        <button
-                          onClick={() => handleOpenEditModal(f)}
-                          className="p-1 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
-                          title={t('edit')}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      {isDraft && isFindingAuditable && (
-                        <button
-                          onClick={() => handleDeleteFinding(f.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                          title={t('delete')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 line-clamp-2">
-                      {lang === 'en' ? f.content_en || f.content_vi : f.content_vi}
-                    </p>
-                    {f.description && (
-                      <p className="text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 mt-2">
-                        {f.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Photo Thumbnails with 2K Lightbox */}
-                  {f.photos && f.photos.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto py-1">
-                      {f.photos.map((p) => (
-                        <div
-                          key={p.id}
-                          onClick={() => {
-                            setLightboxPhotos(
-                              (f.photos || []).map((item: any) => ({
-                                id: item.id,
-                                kind: item.kind,
-                                area_code: f.area_code,
-                                item_code: f.item_code,
-                                description: f.description,
-                                finding_id: f.id,
-                              }))
-                            );
-                            const idx = (f.photos || []).findIndex((item: any) => item.id === p.id);
-                            setLightboxIndex(idx >= 0 ? idx : 0);
-                            setLightboxOpen(true);
-                          }}
-                          className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 cursor-pointer group hover:border-blue-400 shrink-0"
-                          title={t('zoom_photo_2k')}
-                        >
-                          <img
-                            src={`/api/photos/${p.id}`}
-                            alt={p.kind}
-                            className="w-full h-full object-cover group-hover:scale-105 transition"
-                            loading="lazy"
-                          />
-                          <span
-                            className={`absolute bottom-0 inset-x-0 text-[8px] font-bold text-white text-center py-0.5 uppercase ${
-                              p.kind === 'before' ? 'bg-rose-600/80' : 'bg-emerald-600/80'
-                            }`}
-                          >
-                            {p.kind}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Action row & link to FindingDetail */}
-                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                    {f.status === 'fixed' ? (
-                      <Link
-                        to={`/findings/${f.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition-all"
-                      >
-                        <span>{t('verify_after_photo_action')}</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    ) : (
-                      <Link
-                        to={`/findings/${f.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        <span>{t('finding_detail')}</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    )}
-
-                    <span className="text-[11px] text-slate-400">
-                      {t('due_date')}: {f.due_date}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Section 3: Audit Note */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-3">
-        <label className="block text-sm font-bold text-slate-900">{t('note')}</label>
-        <textarea
-          rows={3}
-          value={note}
-          disabled={!isDraft || !canEdit}
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={handleSaveNote}
-          placeholder={t('audit_note_placeholder')}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm disabled:bg-slate-50"
-        />
-      </div>
-
-      {/* Floating Action Bar (Lifts above Mobile Bottom Nav) */}
-      <div className="fixed left-0 right-0 bottom-16 md:bottom-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 max-w-7xl mx-auto shadow-lg flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs text-slate-500 font-medium">
-            {isDraft ? t('live_score') : t('score')}:
-          </span>
-          <ScoreBadge score={currentPlantScore} target={target} warningTarget={warningTarget} size="md" showStatusText />
-          <span className="hidden sm:inline text-xs font-bold text-rose-600">
-            (-{currentPlantPenalty || 0}{t('pts_unit')})
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
           {isDraft && permissions.canSubmit && (
             <button
+              type="button"
               onClick={handleSubmitAudit}
-              disabled={actionLoading}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px] sm:min-h-0"
+              disabled={submitting}
+              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer min-h-[40px]"
             >
-              {actionLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               <span>{t('submit')}</span>
             </button>
           )}
 
           {!isDraft && permissions.canReopen && (
             <button
+              type="button"
               onClick={handleReopenAudit}
-              disabled={actionLoading}
-              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 font-bold text-xs text-white shadow-md shadow-amber-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 min-h-[44px] sm:min-h-0"
+              disabled={submitting}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer min-h-[40px]"
             >
-              <Unlock className="w-4 h-4" />
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
               <span>{t('reopen')}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Modal: Add 5S Finding (with Area, Criterion, Before Photos, Escalation Preview) */}
+      {/* Add Finding Modal */}
       <Modal
-        isOpen={findingModalOpen}
-        onClose={() => setFindingModalOpen(false)}
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
         title={t('add_5s_finding')}
+        maxWidth="lg"
       >
-        <form onSubmit={handleCreateFinding} className="space-y-4">
-          {modalError && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-              {modalError}
-            </div>
-          )}
-
-          {/* 1. Select Area */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('select_area')} <span className="text-rose-500">*</span>
-            </label>
-            <select
-              required
-              value={modalAreaId}
-              onChange={(e) => {
-                setModalAreaId(Number(e.target.value));
-                setModalItemId('');
-              }}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold"
-            >
-              <option value="">-- {t('select_area')} --</option>
-              {auditableAreas.map((as: AuditAreaScore) => (
-                <option key={as.area_id} value={as.area_id}>
-                  {as.area_code} - {as.area_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 2. Select 5S Criterion (Filtered by NA for this Area) */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('select_criterion')} <span className="text-rose-500">*</span>
-            </label>
-            <select
-              required
-              disabled={!modalAreaId}
-              value={modalItemId}
-              onChange={(e) => setModalItemId(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-400"
-            >
-              <option value="">-- {t('select_criterion')} --</option>
-              {[1, 2, 3, 4, 5].map((g) => {
-                const groupItems = applicableItemsForModal.filter((i) => i.s_group === g);
-                if (groupItems.length === 0) return null;
-                return (
-                  <optgroup key={g} label={`S${g}`}>
-                    {groupItems.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.code}: {lang === 'en' ? item.content_en || item.content_vi : item.content_vi} (-{item.penalty}{t('pts_unit')})
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* 3. Live Penalty Escalation Badge Preview */}
-          {selectedItem && (
-            <div
-              className={`p-3 rounded-2xl border text-xs space-y-1.5 ${
-                modalPrevCount > 0
-                  ? 'bg-purple-50/80 border-purple-200 text-purple-900'
-                  : 'bg-slate-50 border-slate-200 text-slate-800'
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span>{selectedItem.code}</span>
-                <span className={modalPrevCount > 0 ? 'text-purple-700' : 'text-rose-600'}>
-                  {modalPrevCount > 0
-                    ? t('repeat_level_badge', { w: modalRepeatLevel, pts: modalPenalty })
-                    : t('penalty_pts_badge', { pts: modalPenalty })}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-600">
-                {modalPrevCount > 0
-                  ? t('escalation_alert_text', {
-                      n: modalPrevCount,
-                      pts: modalPenalty,
-                      w: modalRepeatLevel,
-                    })
-                  : t('first_time_violation_text', { pts: modalPenalty })}
-              </p>
-            </div>
-          )}
-
-          {/* 4. Before Photo Upload (Camera / Pick, up to 6) */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                {t('before_photos')} ({photoPreviews.length}/6)
-              </label>
-              <span className="text-[11px] text-slate-400">{t('max_6_photos')}</span>
-            </div>
-
-            {/* Thumbnail previews */}
-            {photoPreviews.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-2.5">
-                {photoPreviews.map((url, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-                    <img src={url} alt={`preview-${idx}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center cursor-pointer hover:bg-rose-600 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
+        <form onSubmit={handleCreateFindingFromModal} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold mb-1">{t('area_column')}</label>
+              <select
+                required
+                value={modalAreaId}
+                onChange={(e) => setModalAreaId(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
+              >
+                {area_scores.map((a) => (
+                  <option key={a.area_id} value={a.area_id}>
+                    {a.area_code} - {a.area_name}
+                  </option>
                 ))}
-              </div>
-            )}
-
-            {photoPreviews.length < 6 && (
-              <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/30 text-xs font-bold text-slate-600 hover:text-blue-600 transition-all cursor-pointer">
-                <Camera className="w-4 h-4 text-slate-400" />
-                <span>{t('take_photo_or_upload')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handlePhotoSelect}
-                  className="hidden"
-                />
-              </label>
-            )}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold mb-1">{t('checklist')}</label>
+              <select
+                required
+                value={modalItemId}
+                onChange={(e) => setModalItemId(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
+              >
+                {fieldChecklistItems.map((ci) => (
+                  <option key={ci.id} value={ci.id}>
+                    [{ci.code}] {lang === 'en' ? ci.content_en || ci.content_vi : ci.content_vi} (-{ci.penalty})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* 5. Description */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('finding_description')}
-            </label>
+            <label className="block text-xs font-bold mb-1">{t('finding_description')}</label>
             <textarea
-              rows={2}
-              value={modalDescription}
-              onChange={(e) => setModalDescription(e.target.value)}
-              placeholder={t('finding_description_placeholder')}
-              className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
+              rows={3}
+              value={modalDesc}
+              onChange={(e) => setModalDesc(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
+              placeholder={lang === 'en' ? 'Describe location & issue...' : 'Mô tả chi tiết lỗi vi phạm...'}
             />
           </div>
 
-          {/* Modal Actions */}
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+          <div>
+            <label className="block text-xs font-bold mb-1">{t('before_photos')} ({modalPhotos.length}/6)</label>
+            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-slate-300 text-xs font-bold text-sky-700 cursor-pointer">
+              <ImageIcon className="w-4 h-4" />
+              <span>{lang === 'en' ? 'Select / Capture 2K Photos' : 'Chọn / Chụp ảnh 2K'}</span>
+              <input type="file" accept="image/*" multiple className="hidden" onChange={handleModalPhotoSelect} />
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={() => setFindingModalOpen(false)}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+              onClick={() => setAddModalOpen(false)}
+              className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              disabled={modalSubmitting || !modalAreaId || !modalItemId}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              disabled={savingModalFinding}
+              className="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-bold cursor-pointer"
             >
-              {modalSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{selectedPhotos.length > 0 ? t('uploading_photos') : t('loading')}</span>
-                </>
-              ) : (
-                <span>{t('save')}</span>
-              )}
+              {savingModalFinding ? t('loading') : t('save')}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal: Edit 5S Finding */}
+      {/* Edit Finding Modal */}
       <Modal
-        isOpen={editModalOpen}
-        onClose={() => {
-          if (!editSubmitting) {
-            editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
-            setEditModalOpen(false);
-            setEditingFinding(null);
-          }
-        }}
-        title={t('edit_5s_finding')}
+        isOpen={!!editingFinding}
+        onClose={() => setEditingFinding(null)}
+        title={t('edit')}
+        maxWidth="lg"
       >
-        <form onSubmit={handleUpdateFinding} className="space-y-4">
-          {editError && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
-              {editError}
+        <form onSubmit={handleUpdateFindingFromModal} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold mb-1">{t('area_column')}</label>
+              <select
+                required
+                value={editAreaId}
+                onChange={(e) => setEditAreaId(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
+              >
+                {area_scores.map((a) => (
+                  <option key={a.area_id} value={a.area_id}>
+                    {a.area_code} - {a.area_name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-
-          {/* 1. Select Area */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('select_area')} <span className="text-rose-500">*</span>
-            </label>
-            <select
-              required
-              value={editAreaId}
-              onChange={(e) => {
-                setEditAreaId(Number(e.target.value));
-                setEditItemId('');
-              }}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold"
-            >
-              <option value="">-- {t('select_area')} --</option>
-              {auditableAreas.map((as: AuditAreaScore) => (
-                <option key={as.area_id} value={as.area_id}>
-                  {as.area_code} - {as.area_name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-xs font-bold mb-1">{t('checklist')}</label>
+              <select
+                required
+                value={editItemId}
+                onChange={(e) => setEditItemId(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
+              >
+                {fieldChecklistItems.map((ci) => (
+                  <option key={ci.id} value={ci.id}>
+                    [{ci.code}] {lang === 'en' ? ci.content_en || ci.content_vi : ci.content_vi}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* 2. Select 5S Criterion (Filtered by NA for this Area) */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('select_criterion')} <span className="text-rose-500">*</span>
-            </label>
-            <select
-              required
-              disabled={!editAreaId}
-              value={editItemId}
-              onChange={(e) => setEditItemId(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm font-semibold disabled:bg-slate-100 disabled:text-slate-400"
-            >
-              <option value="">-- {t('select_criterion')} --</option>
-              {[1, 2, 3, 4, 5].map((g) => {
-                const groupItems = applicableItemsForEditModal.filter((i) => i.s_group === g);
-                if (groupItems.length === 0) return null;
-                return (
-                  <optgroup key={g} label={`S${g}`}>
-                    {groupItems.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.code}: {lang === 'en' ? item.content_en || item.content_vi : item.content_vi} (-{item.penalty}{t('pts_unit')})
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* 3. Live Penalty Escalation Badge Preview */}
-          {selectedEditItem && (
-            <div
-              className={`p-3 rounded-2xl border text-xs space-y-1.5 ${
-                editPrevCount > 0
-                  ? 'bg-purple-50/80 border-purple-200 text-purple-900'
-                  : 'bg-slate-50 border-slate-200 text-slate-800'
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span>{selectedEditItem.code}</span>
-                <span className={editPrevCount > 0 ? 'text-purple-700' : 'text-rose-600'}>
-                  {editPrevCount > 0
-                    ? t('repeat_level_badge', { w: editRepeatLevel, pts: editPenalty })
-                    : t('penalty_pts_badge', { pts: editPenalty })}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-600">
-                {editPrevCount > 0
-                  ? t('escalation_alert_text', {
-                      n: editPrevCount,
-                      pts: editPenalty,
-                      w: editRepeatLevel,
-                    })
-                  : t('first_time_violation_text', { pts: editPenalty })}
-              </p>
-            </div>
-          )}
-
-          {/* 4. Before Photo Management (Existing & New, up to 6 total) */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                {t('before_photos')} ({editExistingPhotos.length + editNewPhotos.length}/6)
-              </label>
-              <span className="text-[11px] text-slate-400">{t('max_6_photos')}</span>
-            </div>
-
-            {/* Existing photos with delete button */}
-            {editExistingPhotos.length > 0 && (
-              <div className="mb-2">
-                <p className="text-[11px] font-semibold text-slate-500 mb-1">{t('existing_photos')}:</p>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {editExistingPhotos.map((p) => (
-                    <div key={p.id} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
-                      <img src={`/api/photos/${p.id}`} alt="existing before" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExistingPhoto(p.id)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center cursor-pointer hover:bg-rose-600 transition-colors"
-                        title={t('delete')}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* New staged photos with remove button */}
-            {editNewPhotoPreviews.length > 0 && (
-              <div className="mb-2">
-                <p className="text-[11px] font-semibold text-slate-500 mb-1">{t('add_more_photos')}:</p>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {editNewPhotoPreviews.map((url, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-                      <img src={url} alt={`new-preview-${idx}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEditNewPhoto(idx)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-900/80 text-white flex items-center justify-center cursor-pointer hover:bg-rose-600 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {editExistingPhotos.length + editNewPhotos.length < 6 && (
-              <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/30 text-xs font-bold text-slate-600 hover:text-blue-600 transition-all cursor-pointer">
-                <Camera className="w-4 h-4 text-slate-400" />
-                <span>{t('take_photo_or_upload')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleEditPhotoSelect}
-                  className="hidden"
-                />
-              </label>
-            )}
-          </div>
-
-          {/* 5. Description */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              {t('finding_description')}
-            </label>
+            <label className="block text-xs font-bold mb-1">{t('finding_description')}</label>
             <textarea
-              rows={2}
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder={t('finding_description_placeholder')}
-              className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
+              rows={3}
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white"
             />
           </div>
 
-          {/* Modal Actions */}
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={() => {
-                editNewPhotoPreviews.forEach((url) => URL.revokeObjectURL(url));
-                setEditModalOpen(false);
-                setEditingFinding(null);
-              }}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+              onClick={() => setEditingFinding(null)}
+              className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              disabled={editSubmitting || !editAreaId || !editItemId}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              disabled={savingEditFinding}
+              className="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-bold cursor-pointer"
             >
-              {editSubmitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>{editNewPhotos.length > 0 ? t('uploading_photos') : t('saving')}</span>
-                </>
-              ) : (
-                <span>{t('save_changes')}</span>
-              )}
+              {savingEditFinding ? t('loading') : t('save')}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* 2K Fullscreen Lightbox Modal */}
       <Lightbox
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
         photos={lightboxPhotos}
         currentIndex={lightboxIndex}
-        onNavigate={(idx) => setLightboxIndex(idx)}
+        onNavigate={setLightboxIndex}
       />
     </div>
   );

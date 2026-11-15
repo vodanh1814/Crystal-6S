@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.12.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.13.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.13.0`
+
+### 🚀 Triển Khai Toàn Diện Kiến Trúc Mẫu A — Bento Telemetry 2.0 & Full-Screen Đa Tỷ Lệ
+- **Full-Screen Đa Tỷ Lệ & Hệ Token 3 Lớp (`index.css`, `Layout.tsx`)**: Gỡ bỏ giới hạn `max-w-7xl mx-auto` để toàn bộ ứng dụng bung full màn hình trên TV 16:9/4K, Laptop 16:10, Ultrawide 21:9 và Tablet/Mobile; hỗ trợ chuyển đổi Dark/Light tức thì với hệ biến `--app-*` và lớp `.surface-card` / `.surface-elevated` / `.font-mono-kpi`.
+- **Dashboard Bento Telemetry Chuẩn Mẫu A (`Dashboard.tsx`)**: 5 thẻ KPI Bento có `Bullet Bar`, **Hero Semi-Circular Gauge + 5S Radar Pentagon**, danh sách đếm ngược **SLA 7 Ngày**, **Ma trận Telemetry 15 Khu vực** kèm tìm kiếm nhanh & `MiniSparkline`, cùng **Biểu đồ Xu hướng 12 tuần & Kaizen**.
+- **Split-Screen Audit Inspector & CAPA Visual Kanban (`AuditDetail.tsx`, `FindingsList.tsx`, `Reports.tsx`)**: Chấm điểm chia đôi màn hình kèm bộ đếm `BOD / Customer / IE`, chụp ảnh 2K trực tiếp trên từng tiêu chí; Kanban CAPA 3 cột mặc định so sánh **`TRƯỚC (2K)` / `SAU KHẮC PHỤC`**; và **Target Simulator Studio** mô phỏng trực tiếp Heatmap Tuần/Tháng.
 
 ---
 

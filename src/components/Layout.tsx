@@ -290,7 +290,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         isLightChrome ? 'text-sky-700' : 'text-sky-400/90'
                       }`}
                     >
-                      BENTO TELEMETRY PRO
+                      BENTO TELEMETRY 2.0
                     </div>
                   </div>
                 )}
@@ -510,12 +510,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               )}
               <span
-                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[140px] sm:max-w-[240px] md:max-w-[340px] xl:max-w-none ${
+                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[160px] sm:max-w-[280px] md:max-w-[380px] xl:max-w-none ${
                   isLightChrome ? 'text-slate-900' : 'text-white'
                 }`}
               >
-                {companyName} <span className="text-slate-400 font-normal">·</span>{' '}
-                {t('factory_andon_board')}
+                CRYSTAL 5S PRO <span className="text-slate-400 font-normal">·</span>{' '}
+                {companyName}
+              </span>
+              <span
+                className={`hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${versionPillCls}`}
+              >
+                Bento Telemetry 2.0 (Glass Adaptive)
               </span>
               <span
                 className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md border text-[10px] font-mono font-bold shrink-0 ${versionPillCls}`}
@@ -763,11 +768,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </main>
         ) : (
           <main
-            className={`theme-workspace flex-1 min-h-0 overflow-y-auto pb-20 md:pb-0 ${
+            className={`theme-workspace flex-1 min-h-0 flex flex-col overflow-y-auto pb-20 md:pb-0 ${
               resolvedMode === 'dark' ? 'text-slate-100' : 'text-slate-900'
             }`}
           >
-            <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">{children}</div>
+            <div className="p-3 sm:p-4 lg:p-5 2xl:p-6 w-full min-h-full flex-1 flex flex-col">{children}</div>
           </main>
         )}
 

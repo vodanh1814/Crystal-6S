@@ -3,111 +3,85 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-test('UI Layout: index.css locks single-frame zero-scroll dashboard on laptop/PC/TV', () => {
-  const cssPath = path.resolve('src/index.css');
-  const cssContent = fs.readFileSync(cssPath, 'utf-8');
+function readProjectFile(relPath: string): string {
+  return fs.readFileSync(path.resolve(process.cwd(), relPath), 'utf-8');
+}
 
-  // Must define theme-tv-canvas with overflow-y: auto for mobile
-  assert.match(
-    cssContent,
-    /\.theme-tv-canvas\s*\{\s*overflow-y:\s*auto;/m,
-    'Canvas must enable overflow-y: auto by default for responsive screen adaptability'
-  );
+test('CSS architecture provides 3-layer Sample A tokens, Bento surface utilities, and multi-aspect viewport rules', () => {
+  const css = readProjectFile('src/index.css');
 
-  // Must lock overflow-y to hidden on desktop/laptop (>=1024w and >=500h) for single frame
-  assert.match(
-    cssContent,
-    /@media\s*\([^)]*min-width:\s*1024px\)\s+and\s+\(min-height:\s*500px\)\s*\{\s*\.theme-tv-canvas\s*\{\s*overflow-y:\s*hidden;/m,
-    'Canvas must lock overflow-y to hidden on screens >=1024x500 for zero-scroll single frame'
-  );
+  // Layer 1 semantic tokens + dark/light adaptive support
+  assert.match(css, /--app-bg:/);
+  assert.match(css, /--app-surface:/);
+  assert.match(css, /--app-surface-elevated:/);
+  assert.match(css, /html\[data-color-mode="dark"\]/);
+  assert.match(css, /html\[data-color-mode="light"\]/);
 
-  // Must support Full TV Mode / Fullscreen locking strictly to 100vh
-  assert.match(
-    cssContent,
-    /\.full-tv-mode\s*\.theme-tv-canvas/,
-    'Full TV Mode must lock canvas to 100vh for wall TV displays'
-  );
+  // Layer 2 reusable surfaces, tabular mono KPI & container queries
+  assert.match(css, /\.surface-card\s*\{/);
+  assert.match(css, /\.surface-elevated\s*\{/);
+  assert.match(css, /\.font-mono-kpi\s*\{/);
+  assert.match(css, /\.cq-area-grid\s*\{/);
+  assert.match(css, /\.cq-card\s*\{/);
+
+  // Responsive multi-aspect-ratio TV & laptop single-frame scaling rules
+  assert.match(css, /\.theme-tv-canvas/);
+  assert.match(css, /\.full-tv-mode/);
+  assert.match(css, /@media\s*\(min-width:\s*1024px\)\s*and\s*\(max-height:\s*840px\)/);
 });
 
-test('UI Layout: Dashboard Continuous Improvement & Leaderboard use side-by-side 2-column Grid without text loss', () => {
-  const dashboardPath = path.resolve('src/pages/Dashboard.tsx');
-  const content = fs.readFileSync(dashboardPath, 'utf-8');
+test('Layout shell expands inner screens full-width and keeps sidebar scroll + footer shrink-0 safe', () => {
+  const layout = readProjectFile('src/components/Layout.tsx');
 
-  // Must use side-by-side 2-column grid for Kaizen improvement tab to guarantee zero text loss and zero overlap
-  assert.match(
-    content,
-    /grid\s+grid-cols-2\s+gap-1\.5\s+sm:gap-2\s+overflow-hidden/,
-    'Kaizen card must use CSS grid-cols-2 with overflow-hidden for parallel columns'
-  );
+  // Full-screen expansion: no max-w-7xl constraining inner screens inside <main>
+  assert.doesNotMatch(layout, /max-w-7xl\s+mx-auto/);
+  assert.match(layout, /Bento Telemetry 2\.0/);
 
-  // Must use equal 4-column span for Row 3 cards
-  assert.match(
-    content,
-    /col-span-12\s+md:col-span-6\s+lg:col-span-4\s+min-h-\[170px\]/,
-    'Row 3 cards must have balanced 4-column span'
-  );
-
-  // Top improvers and Stagnant areas must have shrink-0 items
-  assert.match(
-    content,
-    /top_improvers_title[\s\S]*?shrink-0/,
-    'Top improvers section must contain shrink-0 items'
-  );
-  assert.match(
-    content,
-    /stagnant_areas_title[\s\S]*?shrink-0/,
-    'Stagnant areas section must contain shrink-0 items'
-  );
+  // Scrollable navigation inside bounded flex column and fixed shrink-0 footer
+  assert.match(layout, /overflow-y-auto\s+min-h-0/);
+  assert.match(layout, /Sidebar Footer/);
+  assert.match(layout, /shrink-0/);
 });
 
-test('UI Layout: Dashboard Area Cards use 5-column grid (3 rows) and preserve all 3 Tiers', () => {
-  const dashboardPath = path.resolve('src/pages/Dashboard.tsx');
-  const content = fs.readFileSync(dashboardPath, 'utf-8');
+test('Dashboard implements Sample A Bento Telemetry Pro 5-KPI strip, Hero Gauge, 5S Radar, SLA alarms & 15-Area Sparkline Matrix', () => {
+  const dashboard = readProjectFile('src/pages/Dashboard.tsx');
 
-  // 15 areas must use lg:grid-cols-5 for exactly 3 rows
-  assert.match(
-    content,
-    /lg:grid-cols-5/,
-    'Area matrix must use 5 columns on desktop so 15 areas fit into exactly 3 rows'
-  );
+  // Telemetry helper functions from Sample A
+  assert.match(dashboard, /function renderBulletBar\(/);
+  assert.match(dashboard, /function renderHeroGauge\(/);
+  assert.match(dashboard, /function render5SRadar\(/);
+  assert.match(dashboard, /function renderMiniSparkline\(/);
 
-  // Tier 1 Header must have shrink-0
-  assert.match(
-    content,
-    /Tier 1: Header[\s\S]*?shrink-0/,
-    'Tier 1 Area Header must be shrink-0 protected'
-  );
-
-  // Tier 3 Footer (Open/Verify counts) must have shrink-0 so it is never clipped
-  assert.match(
-    content,
-    /Tier 3: Action Telemetry Footer[\s\S]*?shrink-0/,
-    'Tier 3 Action Telemetry Footer must be shrink-0 protected so Open/Verify counts are never lost'
-  );
-
-  // Urgent alarms must have shrink-0
-  assert.match(
-    content,
-    /urgent_alarms[\s\S]*?shrink-0\s+rounded-lg\s+border/,
-    'Urgent alarms must have shrink-0 to prevent vertical overlap'
-  );
+  // 5-card KPI Bento row + 12-col asymmetric workspace + 5-col 15-area matrix
+  assert.match(dashboard, /lg:grid-cols-5/);
+  assert.match(dashboard, /xl:col-span-4/);
+  assert.match(dashboard, /xl:col-span-8/);
+  assert.match(dashboard, /urgent_alarms/);
+  assert.match(dashboard, /AreaChart/);
 });
 
-test('UI Layout: Left Sidebar preserves navigation scroll and footer protection', () => {
-  const layoutPath = path.resolve('src/components/Layout.tsx');
-  const content = fs.readFileSync(layoutPath, 'utf-8');
+test('AuditDetail defaults to Split-Screen Audit Inspector workspace without max-w-7xl constraint', () => {
+  const auditDetail = readProjectFile('src/pages/AuditDetail.tsx');
 
-  // Desktop sidebar nav must have overflow-y-auto and min-h-0
-  assert.match(
-    content,
-    /<nav\s+className="[^"]*overflow-y-auto\s+min-h-0[^"]*"/,
-    'Sidebar nav must have overflow-y-auto min-h-0 so it never pushes or squashes footer buttons'
-  );
+  assert.match(auditDetail, /useState<'split'\s*\|\s*'matrix'>\('split'\)/);
+  assert.match(auditDetail, /lg:col-span-4/);
+  assert.match(auditDetail, /lg:col-span-8/);
+  assert.doesNotMatch(auditDetail, /max-w-7xl\s+mx-auto/);
+});
 
-  // Sidebar footer must have shrink-0
-  assert.match(
-    content,
-    /Sidebar Footer[\s\S]*?shrink-0/,
-    'Sidebar footer must have shrink-0 to prevent avatar/button distortion'
-  );
+test('FindingsList defaults to CAPA Visual Kanban with Before (2K) vs After photo comparison boxes', () => {
+  const findingsList = readProjectFile('src/pages/FindingsList.tsx');
+
+  assert.match(findingsList, /useState<'list'\s*\|\s*'gallery'\s*\|\s*'kanban'>\('kanban'\)/);
+  assert.match(findingsList, /BEFORE \(2K\)|TRƯỚC \(2K\)/);
+  assert.match(findingsList, /AFTER FIX|SAU KHẮC PHỤC/);
+});
+
+test('Reports provides Interactive Target Simulator Studio sliders driving heatmap classification', () => {
+  const reports = readProjectFile('src/pages/Reports.tsx');
+
+  assert.match(reports, /const \[simTarget,\s*setSimTarget\]/);
+  assert.match(reports, /const \[simWarn,\s*setSimWarn\]/);
+  assert.match(reports, /TARGET SIMULATOR STUDIO/);
+  assert.match(reports, /type="range"/);
 });

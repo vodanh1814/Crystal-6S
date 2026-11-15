@@ -19,6 +19,28 @@
   --bento-text: #f8fafc;
   --bento-muted: #94a3b8;
   --bento-shadow: 0 14px 36px -14px rgba(2, 6, 23, 0.75);
+
+  /* Layer 1: Semantic App Design Tokens (Sample A: Bento Telemetry Pro - Glass Adaptive) */
+  --app-bg: #060a13;
+  --app-bg-accent: radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.13), transparent 42%), radial-gradient(circle at 88% 100%, rgba(16, 185, 129, 0.08), transparent 46%);
+  --app-surface: rgba(15, 23, 42, 0.78);
+  --app-surface-elevated: rgba(23, 35, 58, 0.92);
+  --app-surface-muted: rgba(30, 41, 59, 0.54);
+  --app-border: rgba(148, 163, 184, 0.17);
+  --app-border-strong: rgba(56, 189, 248, 0.40);
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-accent: #38bdf8;
+  --app-accent-soft: rgba(56, 189, 248, 0.15);
+  --app-pass: #10b981;
+  --app-pass-soft: rgba(16, 185, 129, 0.15);
+  --app-warn: #f59e0b;
+  --app-warn-soft: rgba(245, 158, 11, 0.15);
+  --app-fail: #f43f5e;
+  --app-fail-soft: rgba(244, 63, 94, 0.15);
+  --app-shadow: 0 18px 42px -18px rgba(2, 6, 23, 0.80);
+  --app-radius: 16px;
+  --app-backdrop: blur(14px) saturate(140%);
 }
 
 html[data-color-mode="dark"] {
@@ -45,6 +67,50 @@ html[data-color-mode="light"] {
   --bento-text: #0f172a;
   --bento-muted: #475569;
   --bento-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.10);
+}
+
+html[data-color-mode="dark"] {
+  --app-bg: #060a13;
+  --app-bg-accent: radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.13), transparent 42%), radial-gradient(circle at 88% 100%, rgba(16, 185, 129, 0.08), transparent 46%);
+  --app-surface: rgba(15, 23, 42, 0.78);
+  --app-surface-elevated: rgba(23, 35, 58, 0.92);
+  --app-surface-muted: rgba(30, 41, 59, 0.54);
+  --app-border: rgba(148, 163, 184, 0.17);
+  --app-border-strong: rgba(56, 189, 248, 0.40);
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-accent: #38bdf8;
+  --app-accent-soft: rgba(56, 189, 248, 0.15);
+  --app-pass: #10b981;
+  --app-pass-soft: rgba(16, 185, 129, 0.15);
+  --app-warn: #f59e0b;
+  --app-warn-soft: rgba(245, 158, 11, 0.15);
+  --app-fail: #f43f5e;
+  --app-fail-soft: rgba(244, 63, 94, 0.15);
+  --app-shadow: 0 18px 42px -18px rgba(2, 6, 23, 0.80);
+  --app-backdrop: blur(14px) saturate(140%);
+}
+
+html[data-color-mode="light"] {
+  --app-bg: #f1f5f9;
+  --app-bg-accent: radial-gradient(circle at 15% 0%, rgba(2, 132, 199, 0.08), transparent 42%), radial-gradient(circle at 90% 90%, rgba(5, 150, 105, 0.06), transparent 45%);
+  --app-surface: rgba(255, 255, 255, 0.92);
+  --app-surface-elevated: #ffffff;
+  --app-surface-muted: #f8fafc;
+  --app-border: rgba(15, 23, 42, 0.10);
+  --app-border-strong: rgba(2, 132, 199, 0.34);
+  --app-text: #0f172a;
+  --app-text-muted: #475569;
+  --app-accent: #0284c7;
+  --app-accent-soft: rgba(2, 132, 199, 0.10);
+  --app-pass: #059669;
+  --app-pass-soft: rgba(5, 150, 105, 0.11);
+  --app-warn: #d97706;
+  --app-warn-soft: rgba(217, 119, 6, 0.12);
+  --app-fail: #e11d48;
+  --app-fail-soft: rgba(225, 29, 72, 0.10);
+  --app-shadow: 0 12px 30px -12px rgba(15, 23, 42, 0.10);
+  --app-backdrop: blur(12px);
 }
 
 /* Pre-hydration initial canvas background preventing dark/light FOUC */
@@ -173,6 +239,63 @@ html[data-color-mode="light"] body {
      so elements, cards, and text co-exist cleanly with zero bleeding or overlapping.
    - On Fullscreen TV Mode (:fullscreen): Locks strictly to 100vh with zero scroll.
    ============================================================================ */
+/* Layer 2: Proposal Sample A — Reusable Bento Surfaces, Mono KPI & Adaptive Containers */
+.surface-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+  backdrop-filter: var(--app-backdrop);
+  -webkit-backdrop-filter: var(--app-backdrop);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.surface-card-interactive:hover {
+  border-color: var(--app-border-strong);
+  transform: translateY(-1px);
+}
+
+.surface-elevated {
+  background: var(--app-surface-elevated);
+  border: 1px solid var(--app-border);
+  border-radius: calc(var(--app-radius) - 2px);
+  box-shadow: var(--app-shadow);
+}
+
+.surface-muted {
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.font-mono-kpi {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1, "cv04" 1;
+  letter-spacing: -0.02em;
+}
+
+.cq-area-grid {
+  container-type: inline-size;
+  container-name: area-grid;
+}
+
+.cq-card {
+  container-type: inline-size;
+  container-name: area-card;
+}
+
+.scroll-pane {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.theme-tv-canvas,
+.theme-workspace {
+  background-color: var(--app-bg);
+  background-image: var(--app-bg-accent);
+  color: var(--app-text);
+}
+
 .theme-tv-canvas {
   overflow-y: auto;
 }
@@ -190,6 +313,23 @@ html[data-color-mode="light"] body {
   .dashboard-row-3 {
     flex: 8 8 0%;
     min-height: 0;
+  }
+}
+
+/* Compact vertical scaling for 1366x768 & 1440x900 16:10 laptops so all 15 areas & charts stay inside 100dvh */
+@media (min-width: 1024px) and (max-height: 840px) {
+  .dash-compact-shell {
+    padding: 0.5rem 0.65rem !important;
+    gap: 0.5rem !important;
+  }
+  .dash-compact-kpi {
+    padding: 0.55rem 0.7rem !important;
+  }
+  .dash-compact-panel {
+    padding: 0.65rem !important;
+  }
+  .dash-compact-area {
+    padding: 0.5rem !important;
   }
 }
 

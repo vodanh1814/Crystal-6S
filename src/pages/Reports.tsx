@@ -9,6 +9,8 @@ import {
   ClipboardPaste,
   Info,
   AlertTriangle,
+  SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import {
   downloadHistoricalTemplate,
@@ -57,6 +59,10 @@ export const Reports: React.FC = () => {
   const [monthlyData, setMonthlyData] = useState<any>(null);
   const [remediationData, setRemediationData] = useState<any>(null);
 
+  // Sample A Target Simulator Studio state
+  const [simTarget, setSimTarget] = useState<number>(95);
+  const [simWarn, setSimWarn] = useState<number>(90);
+
   // Historical Import Modal State
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [historicalInputs, setHistoricalInputs] = useState<{ [key: string]: string }>({});
@@ -79,9 +85,13 @@ export const Reports: React.FC = () => {
       if (tab === 'weekly') {
         const res = await api.get<any>(`/reports/weekly?month=${selectedMonth}`);
         setWeeklyData(res);
+        if (typeof res?.target === 'number') setSimTarget(res.target);
+        if (typeof res?.warning_target === 'number') setSimWarn(res.warning_target);
       } else if (tab === 'monthly') {
         const res = await api.get<any>(`/reports/monthly?year=${selectedYear}`);
         setMonthlyData(res);
+        if (typeof res?.target === 'number') setSimTarget(res.target);
+        if (typeof res?.warning_target === 'number') setSimWarn(res.warning_target);
       } else if (tab === 'remediation') {
         const q = remediationMonthFilter
           ? `/reports/remediation?year=${selectedYear}&month=${remediationMonthFilter}`
@@ -359,36 +369,55 @@ export const Reports: React.FC = () => {
     warningTarget: number = 90
   ) => {
     if (score === null || score === undefined) {
-      return <span className="text-slate-300">-</span>;
+      return <span className="text-[var(--app-text-muted)] opacity-45">-</span>;
     }
     const isPass = score >= target;
     const isWarning = score >= warningTarget && score < target;
-    const badgeColor = isPass
-      ? 'bg-emerald-100 text-emerald-800'
+    const cellStyle: React.CSSProperties = isPass
+      ? { backgroundColor: 'var(--app-pass-soft)', color: 'var(--app-pass)', borderColor: 'rgba(16, 185, 129, 0.25)' }
       : isWarning
-      ? 'bg-amber-100 text-amber-800'
-      : 'bg-rose-100 text-rose-800';
+      ? { backgroundColor: 'var(--app-warn-soft)', color: 'var(--app-warn)', borderColor: 'rgba(245, 158, 11, 0.25)' }
+      : { backgroundColor: 'var(--app-fail-soft)', color: 'var(--app-fail)', borderColor: 'rgba(244, 63, 94, 0.28)' };
 
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${badgeColor}`}
+        style={cellStyle}
+        className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-md border text-xs font-black font-mono-kpi min-w-[54px] transition-colors"
         title={source === 'historical' ? t('historical_score_tooltip') : t('weekly_score_tooltip')}
       >
         <span>{formatScore(score, lang)}</span>
         {source === 'historical' && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={t('historical_badge')} />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title={t('historical_badge')} />
         )}
       </span>
     );
   };
 
+  const simActiveData = tab === 'weekly' ? weeklyData : tab === 'monthly' ? monthlyData : null;
+  const baseTarget = Number(simActiveData?.target ?? 95);
+  const baseWarn = Number(simActiveData?.warning_target ?? 90);
+  const simStats = (() => {
+    const rows: any[] = simActiveData?.matrix || [];
+    let pass = 0;
+    let warn = 0;
+    let fail = 0;
+    for (const r of rows) {
+      const val = tab === 'weekly' ? r.month_avg : r.year_avg;
+      if (val === null || val === undefined) continue;
+      if (val >= simTarget) pass += 1;
+      else if (val >= simWarn) warn += 1;
+      else fail += 1;
+    }
+    return { pass, warn, fail };
+  })();
+
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-4 sm:space-y-5 pb-16 w-full flex-1 flex flex-col">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="surface-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('reports')}</h1>
-          <p className="text-sm text-slate-500 font-medium">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight">{t('reports')}</h1>
+          <p className="text-xs sm:text-sm text-[var(--app-text-muted)] font-medium">
             {tab === 'weekly'
               ? t('weekly_report')
               : tab === 'monthly'
@@ -399,11 +428,13 @@ export const Reports: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Tabs */}
-          <div className="inline-flex rounded-xl bg-slate-200/80 p-1">
+          <div className="inline-flex rounded-xl surface-muted p-1">
             <button
               onClick={() => setTab('weekly')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                tab === 'weekly' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                tab === 'weekly'
+                  ? 'bg-sky-500 text-slate-950 shadow-2xs'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
               }`}
             >
               {t('weekly_report')}
@@ -411,7 +442,9 @@ export const Reports: React.FC = () => {
             <button
               onClick={() => setTab('monthly')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                tab === 'monthly' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                tab === 'monthly'
+                  ? 'bg-sky-500 text-slate-950 shadow-2xs'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
               }`}
             >
               {t('monthly_report')}
@@ -420,8 +453,8 @@ export const Reports: React.FC = () => {
               onClick={() => setTab('remediation')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 tab === 'remediation'
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-sky-500 text-slate-950 shadow-2xs'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
               }`}
             >
               {t('remediation_report')}
@@ -434,7 +467,7 @@ export const Reports: React.FC = () => {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
+              className="surface-muted px-3 py-1.5 text-xs font-semibold font-mono-kpi focus:outline-none focus:border-[var(--app-accent)]"
             />
           ) : (
             <div className="inline-flex items-center gap-2">
@@ -447,7 +480,7 @@ export const Reports: React.FC = () => {
                     setRemediationMonthFilter(`${yr}-${remediationMonthFilter.slice(5, 7)}`);
                   }
                 }}
-                className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
+                className="surface-muted px-3 py-1.5 text-xs font-semibold font-mono-kpi focus:outline-none focus:border-[var(--app-accent)]"
               >
                 {[2024, 2025, 2026, 2027, 2028].map((y) => (
                   <option key={y} value={y}>
@@ -460,7 +493,7 @@ export const Reports: React.FC = () => {
                 <select
                   value={remediationMonthFilter}
                   onChange={(e) => setRemediationMonthFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 shadow-2xs focus:ring-2 focus:ring-blue-500"
+                  className="surface-muted px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-[var(--app-accent)]"
                 >
                   <option value="">
                     {t('all_year_option')} ({selectedYear})
@@ -481,7 +514,7 @@ export const Reports: React.FC = () => {
           {isAdmin && tab === 'monthly' && (
             <button
               onClick={openHistoricalModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
               title={t('import_excel_tooltip')}
             >
               <Upload className="w-3.5 h-3.5" />
@@ -493,7 +526,7 @@ export const Reports: React.FC = () => {
           <button
             onClick={handleExport}
             disabled={exporting || loading}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -505,66 +538,146 @@ export const Reports: React.FC = () => {
         </div>
       </div>
 
+      {/* Interactive Target Simulator Studio (Weekly / Monthly Heatmap) */}
+      {(tab === 'weekly' || tab === 'monthly') && simActiveData && (
+        <div className="surface-card p-3.5 sm:p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-[var(--app-accent-soft)] text-[var(--app-accent)] shrink-0">
+              <SlidersHorizontal className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider">
+                {lang === 'en' ? 'TARGET SIMULATOR STUDIO (WHAT-IF HEATMAP)' : 'MÔ PHỎNG NGƯỠNG MỤC TIÊU (HEATMAP SIMULATOR)'}
+              </h2>
+              <p className="text-[11px] text-[var(--app-text-muted)]">
+                {lang === 'en'
+                  ? 'Slide thresholds to simulate how areas classify under stricter or looser 5S KPIs.'
+                  : 'Kéo thanh trượt để mô phỏng ngay trạng thái Đạt / Cảnh báo / Chưa đạt trên ma trận điểm.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 flex-1 justify-end">
+            <label className="flex items-center gap-2.5 min-w-[200px]">
+              <span className="text-[11px] font-bold text-emerald-400 whitespace-nowrap font-mono-kpi">
+                Pass ≥ {simTarget.toFixed(1)}%
+              </span>
+              <input
+                type="range"
+                min={85}
+                max={99}
+                step={0.5}
+                value={simTarget}
+                onChange={(e) => {
+                  const next = parseFloat(e.target.value);
+                  setSimTarget(next);
+                  if (simWarn >= next) setSimWarn(Math.max(75, next - 0.5));
+                }}
+                className="w-28 sm:w-36 accent-emerald-500 cursor-pointer"
+              />
+            </label>
+
+            <label className="flex items-center gap-2.5 min-w-[200px]">
+              <span className="text-[11px] font-bold text-amber-400 whitespace-nowrap font-mono-kpi">
+                Warn ≥ {simWarn.toFixed(1)}%
+              </span>
+              <input
+                type="range"
+                min={75}
+                max={95}
+                step={0.5}
+                value={simWarn}
+                onChange={(e) => {
+                  const next = Math.min(simTarget - 0.5, parseFloat(e.target.value));
+                  setSimWarn(Math.max(75, next));
+                }}
+                className="w-28 sm:w-36 accent-amber-500 cursor-pointer"
+              />
+            </label>
+
+            <div className="flex items-center gap-1.5 text-[11px] font-mono-kpi font-bold">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400">{simStats.pass} Pass</span>
+              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-400">{simStats.warn} Warn</span>
+              <span className="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400">{simStats.fail} Fail</span>
+            </div>
+
+            {(simTarget !== baseTarget || simWarn !== baseWarn) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSimTarget(baseTarget);
+                  setSimWarn(baseWarn);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg surface-muted text-[11px] font-bold hover:border-[var(--app-accent)] cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset ({baseTarget}%)</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Heatmap Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+      <div className="surface-card overflow-hidden flex-1">
         {loading ? (
           <div className="py-20 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
           </div>
         ) : tab === 'weekly' && weeklyData ? (
           <div
             tabIndex={0}
             role="region"
             aria-label={t('weekly_report')}
-            className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+            className="overflow-x-auto scroll-pane focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             <table className={`w-full text-left text-sm ${stickyTableCls || 'border-collapse'}`}>
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                <tr className="border-b border-[var(--app-border)] text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">
                   <th className="py-3 px-4">{t('area_column')}</th>
                   {weeklyData.weeks.map((w: any) => (
-                    <th key={w.label} className="py-3 px-3 text-center whitespace-nowrap">
+                    <th key={w.label} className="py-3 px-3 text-center whitespace-nowrap font-mono-kpi">
                       {w.label}
                     </th>
                   ))}
-                  <th className="py-3 px-4 text-center bg-slate-100/60 font-black">{t('month_avg_column')}</th>
+                  <th className="py-3 px-4 text-center font-black">{t('month_avg_column')}</th>
                   <th className="py-3 px-4 text-center">{t('status')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--app-border)]">
                 {weeklyData.matrix.map((row: any) => (
-                  <tr key={row.area_id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
-                      {row.area_code}
-                      <span className="text-xs font-normal text-slate-400 ml-1.5 hidden sm:inline">
+                  <tr key={row.area_id} className="hover:bg-[var(--app-surface-muted)] transition-colors">
+                    <td className="py-3 px-4 font-bold whitespace-nowrap">
+                      <span className="font-mono-kpi">{row.area_code}</span>
+                      <span className="text-xs font-normal text-[var(--app-text-muted)] ml-1.5 hidden sm:inline">
                         {row.area_name}
                       </span>
                     </td>
                     {weeklyData.weeks.map((w: any) => (
                       <td key={w.label} className="py-3 px-3 text-center whitespace-nowrap">
-                        {renderCell(row.weeks[w.label]?.score, weeklyData.target, null, weeklyData.warning_target || 90)}
+                        {renderCell(row.weeks[w.label]?.score, simTarget, null, simWarn)}
                       </td>
                     ))}
-                    <td className="py-3 px-4 text-center bg-slate-50 font-black whitespace-nowrap">
-                      {renderCell(row.month_avg, weeklyData.target, null, weeklyData.warning_target || 90)}
+                    <td className="py-3 px-4 text-center font-black whitespace-nowrap">
+                      {renderCell(row.month_avg, simTarget, null, simWarn)}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
                       {row.month_avg !== null && row.month_avg !== undefined ? (
-                        row.month_avg >= weeklyData.target ? (
-                          <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
+                        row.month_avg >= simTarget ? (
+                          <span className="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/15">
                             {t('pass')}
                           </span>
-                        ) : row.month_avg >= (weeklyData.warning_target || 90) ? (
-                          <span className="text-xs font-bold text-amber-600 px-2 py-0.5 rounded bg-amber-50">
+                        ) : row.month_avg >= simWarn ? (
+                          <span className="text-xs font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/15">
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
+                          <span className="text-xs font-bold text-rose-400 px-2 py-0.5 rounded bg-rose-500/15">
                             {t('fail')}
                           </span>
                         )
                       ) : (
-                        <span className="text-xs text-slate-400">-</span>
+                        <span className="text-xs text-[var(--app-text-muted)]">-</span>
                       )}
                     </td>
                   </tr>
@@ -577,55 +690,55 @@ export const Reports: React.FC = () => {
             tabIndex={0}
             role="region"
             aria-label={t('monthly_report')}
-            className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+            className="overflow-x-auto scroll-pane focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             <table className={`w-full text-left text-sm ${stickyTableCls || 'border-collapse'}`}>
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                <tr className="border-b border-[var(--app-border)] text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">
                   <th className="py-3 px-4">{t('area_column')}</th>
                   {monthlyData.months.map((m: string) => (
-                    <th key={m} className="py-3 px-2 text-center whitespace-nowrap">
+                    <th key={m} className="py-3 px-2 text-center whitespace-nowrap font-mono-kpi">
                       {getMonthShortName(m)}
                     </th>
                   ))}
-                  <th className="py-3 px-4 text-center bg-slate-100/60 font-black">{t('year_avg_column')}</th>
+                  <th className="py-3 px-4 text-center font-black">{t('year_avg_column')}</th>
                   <th className="py-3 px-4 text-center">{t('status')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--app-border)]">
                 {monthlyData.matrix.map((row: any) => (
-                  <tr key={row.area_id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
-                      {row.area_code}
-                      <span className="text-xs font-normal text-slate-400 ml-1.5 hidden sm:inline">
+                  <tr key={row.area_id} className="hover:bg-[var(--app-surface-muted)] transition-colors">
+                    <td className="py-3 px-4 font-bold whitespace-nowrap">
+                      <span className="font-mono-kpi">{row.area_code}</span>
+                      <span className="text-xs font-normal text-[var(--app-text-muted)] ml-1.5 hidden sm:inline">
                         {row.area_name}
                       </span>
                     </td>
                     {monthlyData.months.map((m: string) => (
                       <td key={m} className="py-3 px-2 text-center whitespace-nowrap">
-                        {renderCell(row.months[m], monthlyData.target, row.sources?.[m], monthlyData.warning_target || 90)}
+                        {renderCell(row.months[m], simTarget, row.sources?.[m], simWarn)}
                       </td>
                     ))}
-                    <td className="py-3 px-4 text-center bg-slate-50 font-black whitespace-nowrap">
-                      {renderCell(row.year_avg, monthlyData.target, null, monthlyData.warning_target || 90)}
+                    <td className="py-3 px-4 text-center font-black whitespace-nowrap">
+                      {renderCell(row.year_avg, simTarget, null, simWarn)}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
                       {row.year_avg !== null && row.year_avg !== undefined ? (
-                        row.year_avg >= monthlyData.target ? (
-                          <span className="text-xs font-bold text-emerald-600 px-2 py-0.5 rounded bg-emerald-50">
+                        row.year_avg >= simTarget ? (
+                          <span className="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/15">
                             {t('pass')}
                           </span>
-                        ) : row.year_avg >= (monthlyData.warning_target || 90) ? (
-                          <span className="text-xs font-bold text-amber-600 px-2 py-0.5 rounded bg-amber-50">
+                        ) : row.year_avg >= simWarn ? (
+                          <span className="text-xs font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/15">
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className="text-xs font-bold text-rose-600 px-2 py-0.5 rounded bg-rose-50">
+                          <span className="text-xs font-bold text-rose-400 px-2 py-0.5 rounded bg-rose-500/15">
                             {t('fail')}
                           </span>
                         )
                       ) : (
-                        <span className="text-xs text-slate-400">-</span>
+                        <span className="text-xs text-[var(--app-text-muted)]">-</span>
                       )}
                     </td>
                   </tr>

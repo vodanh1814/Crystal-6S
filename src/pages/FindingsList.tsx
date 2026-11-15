@@ -32,8 +32,8 @@ export const FindingsList: React.FC = () => {
   const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // View mode: 'list' | 'gallery' | 'kanban'
-  const [viewMode, setViewMode] = useState<'list' | 'gallery' | 'kanban'>('list');
+  // View mode: 'kanban' (Sample A default) | 'list' | 'gallery'
+  const [viewMode, setViewMode] = useState<'list' | 'gallery' | 'kanban'>('kanban');
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -138,40 +138,40 @@ export const FindingsList: React.FC = () => {
           </p>
         </div>
 
-        {/* View mode toggle */}
-        <div className="inline-flex flex-wrap items-center p-1 rounded-2xl bg-slate-100 border border-slate-200 self-start sm:self-auto gap-0.5">
+        {/* View mode toggle: Kanban default first */}
+        <div className="inline-flex flex-wrap items-center p-1 rounded-2xl surface-muted self-start sm:self-auto gap-0.5">
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode('kanban')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'list'
-                ? 'bg-white text-blue-600 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              viewMode === 'kanban'
+                ? 'bg-sky-500 text-slate-950 shadow-xs'
+                : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
             }`}
           >
-            <List className="w-4 h-4" />
-            <span>{t('view_list_with_photos')}</span>
+            <Columns3 className="w-4 h-4" />
+            <span>Kanban CAPA</span>
           </button>
           <button
             onClick={() => setViewMode('gallery')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               viewMode === 'gallery'
-                ? 'bg-white text-blue-600 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-sky-500 text-slate-950 shadow-xs'
+                : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
             <span>{t('view_photo_gallery')}</span>
           </button>
           <button
-            onClick={() => setViewMode('kanban')}
+            onClick={() => setViewMode('list')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'kanban'
-                ? 'bg-white text-blue-600 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+              viewMode === 'list'
+                ? 'bg-sky-500 text-slate-950 shadow-xs'
+                : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
             }`}
           >
-            <Columns3 className="w-4 h-4" />
-            <span>Kanban</span>
+            <List className="w-4 h-4" />
+            <span>{t('view_list_with_photos')}</span>
           </button>
         </div>
       </div>
@@ -183,44 +183,44 @@ export const FindingsList: React.FC = () => {
         const closedCount = findings.filter((f) => f.status === 'closed' || f.status === 'carried').length;
         return (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+            <div className="surface-card p-3.5 sm:p-4 flex flex-col justify-between gap-1 font-mono-kpi">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--app-text-muted)]">
                 {t('findings')}
               </span>
-              <div className="text-2xl font-black font-mono tabular-nums text-slate-900">
+              <div className="text-2xl font-black font-mono-kpi">
                 {findings.length}
               </div>
             </div>
-            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+            <div className="surface-card p-3.5 sm:p-4 flex flex-col justify-between gap-1 font-mono-kpi">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-500">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400">
                   {t('status_open')}
                 </span>
-                <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
               </div>
-              <div className="text-2xl font-black font-mono tabular-nums text-rose-600">
+              <div className="text-2xl font-black font-mono-kpi text-rose-400">
                 {openCount}
               </div>
             </div>
-            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+            <div className="surface-card p-3.5 sm:p-4 flex flex-col justify-between gap-1 font-mono-kpi">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-500">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">
                   {t('status_fixed')}
                 </span>
-                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <div className="text-2xl font-black font-mono tabular-nums text-amber-600">
+              <div className="text-2xl font-black font-mono-kpi text-amber-400">
                 {fixedCount}
               </div>
             </div>
-            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+            <div className="surface-card p-3.5 sm:p-4 flex flex-col justify-between gap-1 font-mono-kpi">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">
                   {t('status_closed')}
                 </span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <div className="text-2xl font-black font-mono tabular-nums text-emerald-600">
+              <div className="text-2xl font-black font-mono-kpi text-emerald-400">
                 {closedCount}
               </div>
             </div>
@@ -229,13 +229,13 @@ export const FindingsList: React.FC = () => {
       })()}
 
       {/* Top Area Quick Pills Bar */}
-      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+      <div className="surface-card p-3 sm:p-4 space-y-2">
+        <div className="flex items-center justify-between text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">
           <span>{t('quick_area_pills')}</span>
           {areaFilter && (
             <button
               onClick={() => updateFilter('area_id', '')}
-              className="text-blue-600 hover:underline normal-case font-semibold"
+              className="text-[var(--app-accent)] hover:underline normal-case font-semibold cursor-pointer"
             >
               {t('all_areas')}
             </button>
@@ -247,8 +247,8 @@ export const FindingsList: React.FC = () => {
             onClick={() => updateFilter('area_id', '')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
               !areaFilter
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-sky-500 text-slate-950 shadow-sm'
+                : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
             }`}
           >
             {t('all')}
@@ -260,10 +260,10 @@ export const FindingsList: React.FC = () => {
               <button
                 key={a.id}
                 onClick={() => updateFilter('area_id', isSelected ? '' : String(a.id))}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono-kpi transition-all cursor-pointer ${mobilePillCls} ${
                   isSelected
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-sky-500 text-slate-950 shadow-sm'
+                    : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
                 }`}
                 title={a.name}
               >
@@ -275,8 +275,8 @@ export const FindingsList: React.FC = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+      <div className="surface-card p-3.5 sm:p-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-[var(--app-text-muted)] text-xs font-bold uppercase tracking-wider">
           <Filter className="w-4 h-4" />
           <span>{t('filter')}:</span>
         </div>
@@ -284,7 +284,7 @@ export const FindingsList: React.FC = () => {
         <select
           value={statusFilter}
           onChange={(e) => updateFilter('status', e.target.value)}
-          className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500"
+          className="surface-muted px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-[var(--app-accent)]"
         >
           <option value="">{t('all')} {t('status')}</option>
           <option value="open">{t('status_open')}</option>
@@ -296,15 +296,15 @@ export const FindingsList: React.FC = () => {
           type="month"
           value={monthFilter}
           onChange={(e) => updateFilter('month', e.target.value)}
-          className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500"
+          className="surface-muted px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-[var(--app-accent)]"
         />
 
         <button
           onClick={() => updateFilter('overdue', overdueFilter ? '' : '1')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
             overdueFilter
-              ? 'bg-rose-600 text-white shadow-2xs'
-              : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+              ? 'bg-rose-500 text-white shadow-2xs'
+              : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
           }`}
         >
           {t('count_overdue_findings')}
@@ -314,8 +314,8 @@ export const FindingsList: React.FC = () => {
           onClick={() => updateFilter('repeat', repeatFilter ? '' : '1')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
             repeatFilter
-              ? 'bg-purple-600 text-white shadow-2xs'
-              : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+              ? 'bg-purple-500 text-white shadow-2xs'
+              : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
           }`}
         >
           {t('count_not_improved')}
@@ -324,7 +324,7 @@ export const FindingsList: React.FC = () => {
         {(areaFilter || statusFilter || monthFilter || repeatFilter || overdueFilter) && (
           <button
             onClick={() => setSearchParams(new URLSearchParams())}
-            className="text-xs font-semibold text-rose-600 hover:underline ml-auto cursor-pointer"
+            className="text-xs font-semibold text-rose-400 hover:underline ml-auto cursor-pointer"
           >
             {t('all')}
           </button>
@@ -334,10 +334,10 @@ export const FindingsList: React.FC = () => {
       {/* Main Content Area */}
       {loading ? (
         <div className="py-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
         </div>
       ) : findings.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+        <div className="surface-card p-12 text-center text-[var(--app-text-muted)]">
           {t('noData')}
         </div>
       ) : viewMode === 'list' ? (
@@ -351,7 +351,7 @@ export const FindingsList: React.FC = () => {
             return (
               <div
                 key={finding.id}
-                className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 hover:border-blue-400 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="surface-card surface-card-interactive p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 {/* Left: Info details */}
                 <div className="space-y-2 min-w-0 flex-1">
@@ -483,7 +483,7 @@ export const FindingsList: React.FC = () => {
             return (
               <div
                 key={finding.id}
-                className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col justify-between hover:border-blue-400 hover:shadow-md transition-all group"
+                className="surface-card surface-card-interactive rounded-3xl overflow-hidden flex flex-col justify-between group"
               >
                 {/* Header of card */}
                 <div className="p-4 border-b border-slate-100 space-y-2">
@@ -599,14 +599,14 @@ export const FindingsList: React.FC = () => {
           })}
         </div>
       ) : (
-        /* VIEW 3: 3-COLUMN KANBAN BOARD */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        /* VIEW 3: 3-COLUMN CAPA VISUAL KANBAN BOARD (BEFORE 2K vs AFTER COMPARISON) */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start flex-1 min-h-0">
           {[
             {
               key: 'open',
               title: t('status_open'),
               dotCls: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]',
-              badgeCls: 'bg-rose-500/15 text-rose-500 border-rose-500/30',
+              badgeCls: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
               borderAccent: 'border-t-2 border-t-rose-500',
               items: findings.filter((f) => f.status === 'open'),
             },
@@ -614,7 +614,7 @@ export const FindingsList: React.FC = () => {
               key: 'fixed',
               title: t('status_fixed'),
               dotCls: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
-              badgeCls: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
+              badgeCls: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
               borderAccent: 'border-t-2 border-t-amber-500',
               items: findings.filter((f) => f.status === 'fixed'),
             },
@@ -622,56 +622,64 @@ export const FindingsList: React.FC = () => {
               key: 'closed',
               title: t('status_closed'),
               dotCls: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]',
-              badgeCls: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+              badgeCls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
               borderAccent: 'border-t-2 border-t-emerald-500',
               items: findings.filter((f) => f.status === 'closed' || f.status === 'carried'),
             },
           ].map((col) => (
             <div
               key={col.key}
-              className={`bento-card bg-white rounded-2xl border border-slate-200 overflow-hidden ${col.borderAccent}`}
+              className={`surface-card overflow-hidden flex flex-col ${col.borderAccent}`}
             >
               {/* Column Header */}
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
+              <div className="px-4 py-3 border-b border-[var(--app-border)] flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.dotCls}`} />
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 truncate">
+                  <h3 className="text-xs font-black uppercase tracking-wider truncate">
                     {col.title}
                   </h3>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[11px] font-black font-mono tabular-nums border shrink-0 ${col.badgeCls}`}
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-black font-mono-kpi border shrink-0 ${col.badgeCls}`}
                 >
                   {col.items.length}
                 </span>
               </div>
 
               {/* Column Cards */}
-              <div className="p-3 space-y-2.5 max-h-[70vh] overflow-y-auto">
+              <div className="p-3 space-y-3 max-h-[74vh] overflow-y-auto scroll-pane">
                 {col.items.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <div className="py-10 text-center text-xs text-[var(--app-text-muted)] font-medium">
                     {t('noData')}
                   </div>
                 ) : (
                   col.items.map((finding) => {
                     const allPhotos = finding.photos || [];
-                    const previewPhoto = allPhotos.find((p) => p.kind === 'before') || allPhotos[0];
+                    const beforePhotos = allPhotos.filter((p) => p.kind === 'before');
+                    const afterPhotos = allPhotos.filter((p) => p.kind === 'after');
+                    const isOverdue = Boolean(finding.is_overdue);
+
                     return (
                       <div
                         key={finding.id}
-                        className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-blue-400 transition-all space-y-2"
+                        className="surface-elevated surface-card-interactive p-3 space-y-2.5"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800 shrink-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className="text-[11px] font-black font-mono-kpi px-2 py-0.5 rounded bg-[var(--app-accent-soft)] text-[var(--app-accent)] shrink-0">
                               {finding.area_code}
                             </span>
-                            <span className="text-[11px] font-mono font-bold text-slate-500 truncate">
+                            <span className="text-[11px] font-mono-kpi font-bold text-[var(--app-text-muted)] truncate">
                               {finding.item_code}
                             </span>
+                            {finding.repeat_level > 1 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                                x{finding.repeat_level}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[11px] font-black font-mono tabular-nums text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+                            <span className="text-[11px] font-black font-mono-kpi text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded">
                               -{finding.applied_penalty}{t('pts_unit')}
                             </span>
                             <StatusBadge status={finding.status} type="finding" />
@@ -680,47 +688,87 @@ export const FindingsList: React.FC = () => {
 
                         <Link
                           to={`/findings/${finding.id}`}
-                          className="block text-xs font-bold text-slate-900 hover:text-blue-600 line-clamp-2 transition-colors"
+                          className="block text-xs font-bold hover:text-[var(--app-accent)] line-clamp-2 transition-colors leading-snug"
                         >
                           {lang === 'en' ? finding.content_en || finding.content_vi : finding.content_vi}
                         </Link>
 
                         {finding.description && (
-                          <p className="text-[11px] text-slate-500 line-clamp-2 italic">
+                          <p className="text-[11px] text-[var(--app-text-muted)] line-clamp-2 italic">
                             {finding.description}
                           </p>
                         )}
 
-                        {previewPhoto && (
-                          <button
-                            type="button"
-                            onClick={() => openLightboxForFinding(finding, previewPhoto.id, allPhotos)}
-                            className="relative w-full h-28 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 group/thumb cursor-pointer block"
-                            title={t('click_to_zoom')}
-                          >
-                            <img
-                              src={`/api/photos/${previewPhoto.id}`}
-                              alt={finding.item_code || 'Finding'}
-                              className="w-full h-full object-cover group-hover/thumb:scale-105 transition"
-                              loading="lazy"
-                            />
-                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-slate-900/75 text-white text-[9px] font-bold uppercase tracking-wider">
-                              {allPhotos.length}
-                            </span>
-                            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
-                              <ZoomIn className="w-4 h-4" />
-                            </div>
-                          </button>
-                        )}
+                        {/* 2-Column Visual Comparison: BEFORE (2K) vs AFTER REMEDIATION */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="relative h-24 rounded-lg overflow-hidden border border-[var(--app-border)] surface-muted">
+                            {beforePhotos.length > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => openLightboxForFinding(finding, beforePhotos[0].id, allPhotos)}
+                                className="w-full h-full relative group/thumb cursor-pointer block"
+                                title={t('click_to_zoom')}
+                              >
+                                <img
+                                  src={`/api/photos/${beforePhotos[0].id}`}
+                                  alt="Before 2K"
+                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition"
+                                  loading="lazy"
+                                />
+                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-rose-600/90 text-white text-[9px] font-black uppercase tracking-wider">
+                                  {lang === 'en' ? 'BEFORE (2K)' : 'TRƯỚC (2K)'}
+                                </span>
+                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                                  <ZoomIn className="w-4 h-4" />
+                                </div>
+                              </button>
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-[10px] text-[var(--app-text-muted)]">
+                                <ImageIcon className="w-4 h-4 opacity-50 mb-0.5" />
+                                <span>{lang === 'en' ? 'No Before' : 'Chưa có ảnh'}</span>
+                              </div>
+                            )}
+                          </div>
 
-                        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/70 text-[10px] text-slate-400">
-                          <span className="font-mono tabular-nums truncate">
-                            {t('week')} {finding.iso_week}
-                            {finding.due_date ? ` · ${t('due_date')}: ${finding.due_date}` : ''}
+                          <div className="relative h-24 rounded-lg overflow-hidden border border-[var(--app-border)] surface-muted">
+                            {afterPhotos.length > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => openLightboxForFinding(finding, afterPhotos[0].id, allPhotos)}
+                                className="w-full h-full relative group/thumb cursor-pointer block"
+                                title={t('click_to_zoom')}
+                              >
+                                <img
+                                  src={`/api/photos/${afterPhotos[0].id}`}
+                                  alt="After Remediation"
+                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition"
+                                  loading="lazy"
+                                />
+                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-emerald-600/90 text-white text-[9px] font-black uppercase tracking-wider">
+                                  {lang === 'en' ? 'AFTER FIX' : 'SAU KHẮC PHỤC'}
+                                </span>
+                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                                  <ZoomIn className="w-4 h-4" />
+                                </div>
+                              </button>
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-center px-1 text-[10px] text-[var(--app-text-muted)]">
+                                <Clock className="w-4 h-4 text-amber-400 mb-0.5" />
+                                <span className="font-semibold">{lang === 'en' ? 'AFTER FIX' : 'SAU KHẮC PHỤC'}</span>
+                                <span className="text-[9px] opacity-75">{t('pending_after')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-[var(--app-border)] text-[10px] text-[var(--app-text-muted)]">
+                          <span className={`font-mono-kpi truncate ${isOverdue && finding.status === 'open' ? 'text-rose-400 font-bold' : ''}`}>
+                            W{finding.iso_week}
+                            {finding.due_date ? ` · Due ${finding.due_date}` : ''}
                           </span>
                           <Link
                             to={`/findings/${finding.id}`}
-                            className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700 shrink-0"
+                            className="inline-flex items-center gap-1 font-bold text-[var(--app-accent)] hover:underline shrink-0"
                           >
                             <span>{t('edit')}</span>
                             <ExternalLink className="w-3 h-3" />

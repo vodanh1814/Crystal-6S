@@ -7,6 +7,24 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.13.0] - 2026-11-15
+
+### Added & Changed (Triển Khai Toàn Diện Kiến Trúc Mẫu A — Bento Telemetry 2.0 & Full-Screen Đa Tỷ Lệ)
+- **Hệ Thống Token 3 Lớp & Giao Diện Full-Screen Đa Tỷ Lệ (`src/index.css`, `src/components/Layout.tsx`)**:
+  - Bổ sung bộ biến ngữ nghĩa `--app-bg`, `--app-bg-accent`, `--app-surface`, `--app-surface-elevated`, `--app-surface-muted`, `--app-border`, `--app-border-strong`, `--app-text`, `--app-text-muted`, `--app-accent`, `--app-pass/warn/fail` cho cả `dark` và `light`.
+  - Bổ sung các lớp bề mặt `.surface-card`, `.surface-card-interactive`, `.surface-elevated`, `.surface-muted`, `.font-mono-kpi`, `.cq-area-grid`, `.cq-card`, `.scroll-pane` cùng media query `.dash-compact-*` (`@media (min-width: 1024px) and (max-height: 840px)`) cho tỷ lệ 16:10, 16:9, 21:9 và 4K TV.
+  - Gỡ bỏ giới hạn `max-w-7xl mx-auto` ở `<main>` trong `Layout.tsx` giúp tất cả màn hình nghiệp vụ bung 100% chiều rộng/chiều cao; cập nhật nhận diện `CRYSTAL 5S PRO · {companyName}` / `Bento Telemetry 2.0 (Glass Adaptive)`.
+- **TV Andon Dashboard Mẫu A Hoàn Chỉnh (`src/pages/Dashboard.tsx`)**:
+  - Tái cấu trúc hoàn chỉnh theo Mẫu A với dải **5 thẻ KPI Bento (`lg:grid-cols-5`)** tích hợp `renderBulletBar`, khối trái `xl:col-span-4` (**Hero Semi-Circular Gauge** `renderHeroGauge`, **Ngũ giác Radar 5S** `render5SRadar`, và **Cảnh báo SLA 7 Ngày** `urgent_alarms`), cùng khối phải `xl:col-span-8` (**Ma trận Telemetry 15 Khu vực** có tìm kiếm nhanh/lọc ngưỡng, `renderMiniSparkline`, Bullet Bar, và **Xu hướng 12 Tuần `AreaChart` & Top Kaizen**).
+- **Split-Screen Audit Inspector (`src/pages/AuditDetail.tsx`)**:
+  - Chuyển sang mô hình làm việc **chia đôi màn hình (`workspaceMode = 'split'`)** mặc định (kèm nút chuyển qua `matrix`): cột trái `lg:col-span-4` chọn nhanh 15 khu vực, cột phải `lg:col-span-8` gồm bộ đếm trực tiếp ngoại quan (`BOD`, `Customer`, `IE Audit`), bộ lọc `S1–S5`, thẻ tiêu chí với cụm nút **`ĐẠT` / `LỖI (-xđ)` / `N/A`** (`min-h-[40px]`), lưu mô tả inline và chụp/tải ảnh 2K trực tiếp.
+- **CAPA Visual Kanban Mặc Định (`src/pages/FindingsList.tsx`)**:
+  - Đặt mặc định chế độ `kanban` 3 cột và nâng cấp thẻ lỗi với **khung so sánh 2 cột `TRƯỚC (2K)` / `SAU KHẮC PHỤC`** kèm lightbox xem ảnh 2K.
+- **Target Simulator Studio & Heatmap (`src/pages/Reports.tsx`)**:
+  - Bổ sung thanh trượt mô phỏng ngưỡng mục tiêu (`simTarget`, `simWarn`) cập nhật tức thời màu ô Heatmap và thống kê Pass/Warn/Fail cho cả tab Tuần & Tháng.
+
+---
+
 ## [2.12.0] - 2026-11-15
 
 ### Added & Redesigned (Thiết Kế Lại Toàn Bộ Giao Diện Mẫu A — Bento Telemetry Pro Adaptive Glass & Dark/Light)
