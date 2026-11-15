@@ -50,9 +50,10 @@ Tất cả các Agent khi hoạt động trong dự án này BẮT BUỘC phải
 
 ### Bước 6: Agent push lên Git (Execute — Model: Hydrogen 4)
 Khi người dùng đã ra lệnh duyệt push lên Git, **Model Hydrogen 4** thực hiện:
-1. **Nâng phiên bản (`version`)** trong `package.json` theo chuẩn Semantic Versioning (Patch, Minor hoặc Major).
+1. **Nâng phiên bản (`version`)** đồng bộ trong cả `package.json` và `src/version.ts` (`APP_VERSION`, `APP_RELEASE_DATE`) theo chuẩn Semantic Versioning (Patch, Minor hoặc Major).
 2. **Cập nhật `CHANGELOG.md`**: Ghi rõ số phiên bản mới, ngày phát hành và chi tiết các mục Fixed / Added / Changed.
 3. **Cập nhật `README.md`**: Cập nhật huy hiệu phiên bản hiện tại và tóm tắt các điểm nổi bật của phiên bản mới.
 4. **Tái đóng gói file EXE**: Chạy `npm run build:exe` để nhúng mã nguồn mới vào `Crystal_5S_Setup.exe`.
 5. **Git Commit & Tag**: Tạo git commit với commit message chuẩn mực, tạo git annotated tag (`git tag -a vX.Y.Z -m "..."`).
 6. **Git Push**: Đẩy mã nguồn và tag lên remote repository (`git push origin main --tags`).
+7. **Cloudflare Deploy**: Chạy `npm run deploy` để đồng bộ phiên bản mới lên Cloudflare Workers Production.

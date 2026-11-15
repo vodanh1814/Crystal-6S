@@ -100,6 +100,7 @@ export async function getAppSettings(
 
 // GET /api/settings - Public read for branding & app version across UI & TV screens
 settingsRouter.get('/', async (c) => {
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate');
   const settings = await getAppSettings(c.env.DB);
   const ghToken = await resolveGithubToken(c.env);
   const activeRepo = await resolveGithubRepo(c.env.DB);
@@ -245,6 +246,7 @@ settingsRouter.put('/', authMiddleware, async (c) => {
 
 // GET /api/settings/update-check - Check GitHub repository for newer version (Admin only!)
 settingsRouter.get('/update-check', authMiddleware, async (c) => {
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate');
   const user = c.get('user');
   const isEn = c.req.header('accept-language')?.toLowerCase().includes('en');
   if (!isAdmin(user)) {
@@ -254,10 +256,12 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
   const ghToken = await resolveGithubToken(c.env);
   const activeRepo = await resolveGithubRepo(c.env.DB);
   const activeRepoUrl = `https://github.com/${activeRepo}`;
+  const cacheBust = Date.now();
 
   const headers: Record<string, string> = {
     'User-Agent': 'Crystal-5S-Audit-Updater',
     Accept: 'application/vnd.github.v3+json',
+    'Cache-Control': 'no-cache',
   };
   if (ghToken) {
     headers['Authorization'] = `Bearer ${ghToken}`;
@@ -271,7 +275,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
     // 1. Try GitHub API
     try {
       const pkgRes = await fetch(
-        `https://api.github.com/repos/${activeRepo}/contents/package.json?ref=main`,
+        `https://api.github.com/repos/${activeRepo}/contents/package.json?ref=main&t=${cacheBust}`,
         { headers }
       );
       if (pkgRes.ok) {
@@ -287,12 +291,13 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
       try {
         const rawHeaders: Record<string, string> = {
           'User-Agent': 'Crystal-5S-Audit-Updater',
+          'Cache-Control': 'no-cache',
         };
         if (ghToken) {
           rawHeaders['Authorization'] = `token ${ghToken}`;
         }
         const rawRes = await fetch(
-          `https://raw.githubusercontent.com/${activeRepo}/main/package.json`,
+          `https://raw.githubusercontent.com/${activeRepo}/main/package.json?t=${cacheBust}`,
           { headers: rawHeaders }
         );
         if (rawRes.ok) {
@@ -326,11 +331,12 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
     }
 
     const hasUpdate = compareSemver(latestVersion, APP_VERSION) > 0;
+    const normalizedLatest = hasUpdate ? latestVersion : APP_VERSION;
 
     // Fetch CHANGELOG.md (GitHub API first, then raw fallback)
     try {
       const chgRes = await fetch(
-        `https://api.github.com/repos/${activeRepo}/contents/CHANGELOG.md?ref=main`,
+        `https://api.github.com/repos/${activeRepo}/contents/CHANGELOG.md?ref=main&t=${cacheBust}`,
         { headers }
       );
       if (chgRes.ok) {
@@ -340,11 +346,18 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
         changelog = new TextDecoder('utf-8').decode(bytes);
       } else {
         const rawChg = await fetch(
-          `https://raw.githubusercontent.com/${activeRepo}/main/CHANGELOG.md`,
+          `https://raw.githubusercontent.com/${activeRepo}/main/CHANGELOG.md?t=${cacheBust}`,
           {
             headers: ghToken
-              ? { Authorization: `token ${ghToken}`, 'User-Agent': 'Crystal-5S-Audit-Updater' }
-              : { 'User-Agent': 'Crystal-5S-Audit-Updater' },
+              ? {
+                  Authorization: `token ${ghToken}`,
+                  'User-Agent': 'Crystal-5S-Audit-Updater',
+                  'Cache-Control': 'no-cache',
+                }
+              : {
+                  'User-Agent': 'Crystal-5S-Audit-Updater',
+                  'Cache-Control': 'no-cache',
+                },
           }
         );
         if (rawChg.ok) {
@@ -355,7 +368,7 @@ settingsRouter.get('/update-check', authMiddleware, async (c) => {
 
     return c.json({
       current_version: APP_VERSION,
-      latest_version: latestVersion,
+      latest_version: normalizedLatest,
       has_update: hasUpdate,
       has_github_token: Boolean(ghToken),
       changelog: changelog.slice(0, 3000),

@@ -27,7 +27,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { api } from '../api/client';
-import { APP_VERSION, APP_COPYRIGHT } from '../version';
+import { APP_VERSION, APP_COPYRIGHT, compareSemver } from '../version';
 import { resolveAppColorMode } from '../lib/theme';
 import { AboutModal } from './AboutModal';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -81,6 +81,28 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     setLogoBroken(false);
   }, [companyLogo]);
 
+  // Auto-detect deployed Worker updates across all clients (TV / tablets / browsers)
+  useEffect(() => {
+    let cancelled = false;
+    const checkLiveWorkerVersion = async () => {
+      try {
+        const res = await api.get<any>(`/settings?t=${Date.now()}`);
+        if (!cancelled && res?.version && compareSemver(res.version, APP_VERSION) > 0) {
+          window.location.reload();
+        }
+      } catch {}
+    };
+
+    checkLiveWorkerVersion();
+    const timer = setInterval(checkLiveWorkerVersion, 2 * 60 * 1000);
+    window.addEventListener('focus', checkLiveWorkerVersion);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener('focus', checkLiveWorkerVersion);
+    };
+  }, []);
+
   // Admin-only background check for new version on Git
   useEffect(() => {
     if (!isAdmin) {
@@ -91,8 +113,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const checkGitUpdate = async () => {
       try {
         const res = await api
-          .get<any>('/settings/local-update-check')
-          .catch(() => api.get<any>('/settings/update-check'));
+          .get<any>(`/settings/local-update-check?t=${Date.now()}`)
+          .catch(() => api.get<any>(`/settings/update-check?t=${Date.now()}`));
         if (!cancelled && res && res.has_update && res.latest_version) {
           setAvailableUpdateVer(res.latest_version);
         } else if (!cancelled) {

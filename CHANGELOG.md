@@ -7,6 +7,23 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.13.1] - 2026-11-15
+
+### Fixed & Improved (Đồng Bộ Phiên Bản & Tự Động Cập Nhật Cloudflare Workers)
+- **Đồng Bộ Tuyệt Đối `APP_VERSION` & `package.json` (`src/version.ts`, `worker/lib/ui_layout_integrity.test.ts`, `GEMINI.md`)**:
+  - Khắc phục lỗi lệch hằng số `APP_VERSION` khiến Cloudflare Worker báo sai phiên bản đang chạy và lặp vô hạn thông báo cập nhật.
+  - Bổ sung unit test tự động khóa cứng `APP_VERSION === pkg.version` trong `ui_layout_integrity.test.ts`.
+- **Chống Cache (Cache-Busting) Cho API Kiểm Tra Phiên Bản (`worker/routes/settings.ts`)**:
+  - Bổ sung header `Cache-Control: no-store, no-cache, must-revalidate` cho `GET /api/settings` và `GET /api/settings/update-check`.
+  - Thêm tham số chống cache `?t=${Date.now()}` và header `'Cache-Control': 'no-cache'` khi truy vấn GitHub API / `raw.githubusercontent.com` để lấy `package.json` và `CHANGELOG.md`.
+- **Tự Động Làm Mới Giao Diện (Hot-Reload) Khi Worker Nâng Cấp (`src/components/Layout.tsx`)**:
+  - Bổ sung cơ chế kiểm tra ngầm `/api/settings?t=...` khi mở ứng dụng, định kỳ mỗi 2 phút và khi focus lại cửa sổ trình duyệt; tự động `window.location.reload()` ngay khi phát hiện Cloudflare Worker vừa được nâng cấp lên phiên bản mới hơn.
+- **Polling Tiến Trình CI/CD & Tự Động Reload Trên Quản Trị Cloud (`src/pages/AdminTargets.tsx`, `.github/workflows/deploy.yml`)**:
+  - Sau khi kích hoạt `POST /api/settings/cloud-update-apply` trên Cloudflare, giao diện Quản trị tự động poll `/api/settings?t=...` mỗi 5 giây (tối đa 36 lần) và tự động tải lại trang ngay khi Worker mới hoàn tất triển khai.
+  - Bổ sung trigger `push: branches: [main]` kèm kiểm tra an toàn thông tin xác thực Cloudflare trong `.github/workflows/deploy.yml`.
+
+---
+
 ## [2.13.0] - 2026-11-15
 
 ### Added & Changed (Triển Khai Toàn Diện Kiến Trúc Mẫu A — Bento Telemetry 2.0 & Full-Screen Đa Tỷ Lệ)

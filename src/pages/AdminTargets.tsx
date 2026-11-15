@@ -50,6 +50,7 @@ import {
   APP_COPYRIGHT,
   GITHUB_REPO,
   GITHUB_REPO_URL,
+  compareSemver,
 } from '../version';
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -182,9 +183,10 @@ export const AdminTargets: React.FC = () => {
     setCheckingUpdate(true);
     setUpdateError(null);
     try {
+      const ts = Date.now();
       const res = await api
-        .get<any>('/settings/local-update-check')
-        .catch(() => api.get<any>('/settings/update-check'));
+        .get<any>(`/settings/local-update-check?t=${ts}`)
+        .catch(() => api.get<any>(`/settings/update-check?t=${ts}`));
       setUpdateInfo(res);
     } catch (err: any) {
       setUpdateError(err.message || 'Failed to check for updates');
@@ -231,12 +233,21 @@ export const AdminTargets: React.FC = () => {
     }
   }, [updateInfo?.repo]);
 
+  const isMountedRef = React.useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const handleApplyAutoUpdate = async () => {
     if (!isAdmin) return;
     setApplyingUpdate(true);
     setUpdateError(null);
     setUpdateSuccess(null);
     const isCloud = updateInfo?.mode === 'cloud_worker';
+    const targetVer = updateInfo?.latest_version || APP_VERSION;
     setUpdateLog(
       isCloud
         ? (lang === 'en'
@@ -268,12 +279,69 @@ export const AdminTargets: React.FC = () => {
           throw primaryErr;
         });
 
-      setUpdateLog(res.log || (lang === 'en' ? '✔ Successfully updated!' : '✔ Đã cập nhật thành công!'));
-      setUpdateSuccess(t('update_success_msg', { v: res.new_version || APP_VERSION }));
+      const baseLog = res.log || (lang === 'en' ? '✔ Successfully updated!' : '✔ Đã cập nhật thành công!');
+      setUpdateLog(baseLog);
+      setUpdateSuccess(t('update_success_msg', { v: res.new_version || targetVer }));
+
       if (!isCloud) {
         setTimeout(() => {
           window.location.reload();
         }, 2500);
+        return;
+      }
+
+      // Poll live Cloudflare Worker /api/settings every 5s (up to 36 tries = 3 minutes)
+      let deployed = false;
+      for (let attempt = 1; attempt <= 36; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        if (!isMountedRef.current) return;
+
+        let polledVer = APP_VERSION;
+        try {
+          const settingsRes = await api.get<any>(`/settings?t=${Date.now()}`);
+          polledVer = String(settingsRes?.version || APP_VERSION).trim();
+          const isNewer =
+            compareSemver(polledVer, APP_VERSION) > 0 ||
+            (compareSemver(targetVer, APP_VERSION) > 0 && compareSemver(polledVer, targetVer) >= 0);
+
+          if (isNewer) {
+            deployed = true;
+            setUpdateLog(
+              `${baseLog}\n✔ ${
+                lang === 'en'
+                  ? `Cloudflare Edge updated to v${polledVer}! Reloading application...`
+                  : `Cloudflare Edge đã nâng cấp lên v${polledVer}! Đang tự động tải lại ứng dụng...`
+              }`
+            );
+            setUpdateSuccess(t('update_success_msg', { v: polledVer }));
+            setTimeout(() => {
+              window.location.reload();
+            }, 1800);
+            break;
+          }
+        } catch {
+          // Ignore transient errors while Worker restarts
+        }
+
+        if (isMountedRef.current) {
+          setUpdateLog(
+            `${baseLog}\n⏳ ${
+              lang === 'en'
+                ? `[Check ${attempt}/36] Waiting for GitHub Actions & Cloudflare Edge to reach v${targetVer} (live: v${polledVer})...`
+                : `[Lần ${attempt}/36] Đang chờ GitHub Actions & Cloudflare Edge cập nhật lên v${targetVer} (hiện tại: v${polledVer})...`
+            }`
+          );
+        }
+      }
+
+      if (!deployed && isMountedRef.current) {
+        setUpdateLog(
+          `${baseLog}\nℹ ${
+            lang === 'en'
+              ? 'CI/CD deployment is still in progress on GitHub Actions. Please wait a moment and reload the page.'
+              : 'Tiến trình deploy trên GitHub Actions vẫn đang chạy thêm vài chục giây. Bạn vui lòng bấm tải lại trang sau ít phút.'
+          }`
+        );
       }
     } catch (err: any) {
       const errMsg = err.message || 'Auto-update failed';
@@ -283,7 +351,9 @@ export const AdminTargets: React.FC = () => {
         setUpdateError(errMsg);
       }
     } finally {
-      setApplyingUpdate(false);
+      if (isMountedRef.current) {
+        setApplyingUpdate(false);
+      }
     }
   };
 

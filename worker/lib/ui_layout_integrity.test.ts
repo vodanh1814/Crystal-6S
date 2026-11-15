@@ -85,3 +85,12 @@ test('Reports provides Interactive Target Simulator Studio sliders driving heatm
   assert.match(reports, /TARGET SIMULATOR STUDIO/);
   assert.match(reports, /type="range"/);
 });
+
+test('APP_VERSION in src/version.ts strictly matches version in package.json', () => {
+  const pkg = JSON.parse(readProjectFile('package.json'));
+  const versionTs = readProjectFile('src/version.ts');
+  const match = versionTs.match(/export const APP_VERSION = ['"]([^'"]+)['"]/);
+
+  assert.ok(match, 'APP_VERSION constant not found in src/version.ts');
+  assert.equal(match?.[1], pkg.version);
+});

@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.13.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.13.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.13.1`
+
+### 🔄 Đồng Bộ Phiên Bản & Tự Động Cập Nhật Trực Tuyến Trên Cloudflare Workers
+- **Khóa Đồng Bộ `APP_VERSION` & Chống Cache API (`src/version.ts`, `worker/routes/settings.ts`, `ui_layout_integrity.test.ts`)**: Đồng bộ tuyệt đối phiên bản giữa `package.json` và `src/version.ts` (có unit test kiểm soát tự động), kết hợp header `Cache-Control: no-store` và cache-busting `?t=...` khi kiểm tra bản mới từ GitHub.
+- **Hot-Reload Tự Động Trên Trình Duyệt / Smart TV (`src/components/Layout.tsx`)**: Tự động kiểm tra phiên bản thực tế của Cloudflare Worker qua `/api/settings?t=...` và tự động làm mới trang (`window.location.reload()`) ngay khi phát hiện bản triển khai mới.
+- **Polling Tiến Trình Cloud CI/CD Tự Động (`src/pages/AdminTargets.tsx`, `.github/workflows/deploy.yml`)**: Theo dõi thời gian thực quá trình build & deploy trên GitHub Actions sau khi bấm Cập nhật Tự động trên Cloud và tự động tải lại giao diện ngay khi hoàn tất.
 
 ---
 
