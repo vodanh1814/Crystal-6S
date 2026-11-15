@@ -1,11 +1,19 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.13.1`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.13.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.13.2`
+
+### 🖥️ Tối Ưu Full TV Mode Zero-Gap, Mở Rộng Week Trend & Top Improvement, Chuẩn Hóa Label Khu Vực
+- **Bố Cục Full TV Mode Không Khoảng Trống (`src/pages/Dashboard.tsx`)**: Cân đối tỷ lệ Flexbox `xl:flex-[60]` / `xl:flex-[40]`, lưới 15 khu vực `lg:grid-rows-3 h-full` tự giãn kín 100% khung, mở rộng chiều cao biểu đồ **12-Week Factory Trend** và bảng **Top Improvement**, đồng thời tích hợp thanh phân bổ điểm trừ `S1–S5` tại khung SLA 7 ngày.
+- **Chuẩn Hóa Thuật Ngữ `Top Improvement` & Tên Label Khu Vực (`area_name`)**: Thay thế hoàn toàn nhãn `Kaizen` bằng `Improvement` (`TOP IMPROVEMENT`) và hiển thị trực tiếp **Tên Label Khu vực (`area_name`)** thay vì mã viết tắt (`area_code`) trên toàn bộ thẻ khu vực, bảng cải tiến, cảnh báo SLA và danh sách lỗi.
 
 ---
 

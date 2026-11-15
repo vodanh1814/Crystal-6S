@@ -99,14 +99,16 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
         <div className={`px-4 py-3 sm:px-6 sm:py-4 border-b flex items-center justify-between gap-3 shrink-0 ${modalHeaderCls}`}>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold border ${
-                isLight ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
-              }`}>
-                {area.area_code}
-              </span>
               <h2 className={`text-base sm:text-lg font-black truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {area.area_name || area.area_code}
               </h2>
+              {area.area_code && area.area_code !== area.area_name && (
+                <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold border ${
+                  isLight ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                }`}>
+                  {area.area_code}
+                </span>
+              )}
               {isSubmitted ? (
                 <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                   isPass

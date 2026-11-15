@@ -629,7 +629,7 @@ export const en: typeof vi = {
   dashboard_layout_zone_name: 'Sample 2: Production & Support',
   dashboard_layout_zone_desc: 'Executive Hero Gauge command column combined with 2 core factory divisions: Production and Support.',
   dashboard_layout_bento_name: 'Sample 3: Bento Telemetry 2.0',
-  dashboard_layout_bento_desc: 'Circular 5S health telemetry with radar pentagon, 16-area Bento grid with micro sparklines, and Kaizen improvement spotlight.',
+  dashboard_layout_bento_desc: 'Circular 5S health telemetry with radar pentagon, 15-area Bento grid with micro sparklines, and Top Improvement spotlight.',
   dashboard_layout_hud_name: 'Sample 4: Industrial Cyberpunk HUD',
   dashboard_layout_hud_desc: 'High-contrast tactical SCADA HUD (Siemens/Tesla style): left flank 10 production workshops, right flank 6 utilities, center real-time alarm tower.',
   dashboard_layout_saved_success: 'Default dashboard presentation layout saved successfully!',

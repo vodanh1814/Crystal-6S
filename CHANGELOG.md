@@ -7,6 +7,20 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.13.2] - 2026-11-15
+
+### Changed & Improved (Tối Ưu Full TV Mode Zero-Gap, Mở Rộng Week Trend & Top Improvement, Hiển Thị Tên Label Khu Vực)
+- **Xóa Khoảng Trống Full TV Mode & Mở Rộng Container `12-Week Factory Trend` / `Top Improvement` (`src/pages/Dashboard.tsx`)**:
+  - Phân bổ chiều cao linh hoạt cột phải giữa **Ma trận 15 khu vực (`xl:flex-[60]`)** với lưới `lg:grid-cols-5 lg:grid-rows-3 flex-1 h-full auto-rows-fr` và **Container `12-Week Trend` + `Top Improvement` (`xl:flex-[40] min-h-[205px] xl:min-h-[225px]`)**.
+  - Đồ thị `12-WEEK FACTORY TREND` tự động bung toàn bộ chiều cao (`flex-1 min-h-[145px] xl:min-h-[165px] h-full`), và danh sách `TOP IMPROVEMENT` giãn đều 5 mục (`3 Top Improvers` + `2 Stagnant Watchlist`) kèm điểm hiện tại và biên độ MoM.
+  - Bổ sung thanh **Phân bổ điểm trừ theo trụ cột 5S (`S1–S5`)** ở chân khung `7-Day SLA Countdown Alarms` và nâng kích thước SVG của Hero Gauge (`max-w-[205px]`) & 5S Radar (`max-w-[215px]`).
+- **Đổi Hoàn Toàn `Kaizen` Thành `Improvement` (`src/pages/Dashboard.tsx`, `src/i18n/en.ts`, `src/i18n/vi.ts`)**:
+  - Đổi tiêu đề và mô tả sang `TOP IMPROVEMENT` / `TOP CẢI TIẾN (IMPROVEMENT)`, loại bỏ từ `Kaizen`.
+- **Hiển Thị Tên Label Khu Vực (`area_name`) Thay Vì Code Khu Vực (`area_code`) (`Dashboard.tsx`, `AreaTrendModal.tsx`, `AuditDetail.tsx`, `FindingsList.tsx`)**:
+  - Ưu tiên hiển thị tên Label khu vực (`Knitting`, `Greige QC`, `Warehouse`, `Batching`, `Dyeing`, `Lab Dip`, `Setting`, `Final QC`, `Lab Test`, `Utility`...) làm nhãn chính trên 15 thẻ khu vực, bảng Top Improvement, cảnh báo SLA 7 ngày, bộ lọc và thẻ lỗi CAPA.
+
+---
+
 ## [2.13.1] - 2026-11-15
 
 ### Fixed & Improved (Đồng Bộ Phiên Bản & Tự Động Cập Nhật Cloudflare Workers)

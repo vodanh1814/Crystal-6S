@@ -167,7 +167,7 @@ function renderHeroGauge(
 
   return (
     <div className="flex flex-col items-center justify-center relative select-none">
-      <svg viewBox="0 0 180 102" className="w-full max-w-[178px] overflow-visible">
+      <svg viewBox="0 0 180 102" className="w-full max-w-[205px] overflow-visible">
         <defs>
           <linearGradient id="heroGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={strokeColor} stopOpacity="0.72" />
@@ -296,7 +296,7 @@ function render5SRadar(
   const accent = isLight ? '#0284c7' : '#38bdf8';
 
   return (
-    <svg viewBox="0 0 220 186" className="w-full max-w-[195px] mx-auto select-none">
+    <svg viewBox="0 0 220 186" className="w-full max-w-[215px] mx-auto select-none">
       {rings.map((r, idx) => {
         const pts = labels
           .map((_, i) => {
@@ -730,7 +730,7 @@ export const Dashboard: React.FC = () => {
         {/* LEFT RAIL (4 Cols): Hero Plant Gauge + 5S Radar + 7-Day SLA Countdown Alarms */}
         <div className="xl:col-span-4 flex flex-col gap-2.5 lg:gap-3 min-h-0">
           {/* Panel A: Hero Semi-Circular Gauge + 5S Pillar Radar */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col gap-2 shrink-0">
+          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col justify-between gap-2 xl:flex-[44] min-h-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--app-border)] pb-1.5">
               <div className="flex items-center gap-1.5 min-w-0">
                 <ShieldAlert className="w-4 h-4 text-[var(--app-accent)] shrink-0" />
@@ -750,7 +750,7 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2 flex-1 min-h-0">
               <div className="flex flex-col items-center justify-center">
                 {renderHeroGauge(plantWeekScore, target, warningTarget, isLight, lang)}
                 <div className="flex items-center gap-1.5 text-[10px] font-mono-kpi mt-0.5">
@@ -772,7 +772,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Panel B: 7-Day SLA Countdown Alarms */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col flex-1 min-h-0">
+          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[56] flex-1 min-h-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--app-border)] pb-1.5 shrink-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Flame className="w-4 h-4 text-rose-400 shrink-0" />
@@ -818,8 +818,8 @@ export const Dashboard: React.FC = () => {
                     >
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono-kpi font-black bg-sky-500/15 text-sky-400">
-                            {alarm.area_code}
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/15 text-sky-400">
+                            {alarm.area_name || alarm.area_code}
                           </span>
                           <span className="text-[10px] font-mono-kpi font-bold text-[var(--app-text-muted)]">
                             {alarm.item_code}
@@ -837,7 +837,7 @@ export const Dashboard: React.FC = () => {
                           {lang === 'en' ? alarm.content_en || alarm.content_vi : alarm.content_vi}
                         </p>
                         <div className="text-[10px] text-[var(--app-text-muted)] truncate">
-                          {alarm.manager_name || alarm.auditor_name || alarm.area_name} · Due {alarm.due_date}
+                          {alarm.manager_name || alarm.auditor_name || (lang === 'en' ? '5S Area' : 'Khu vực 5S')} · Due {alarm.due_date}
                         </div>
                       </div>
                       <span
@@ -854,13 +854,38 @@ export const Dashboard: React.FC = () => {
                 })
               )}
             </div>
+
+            <div className="mt-2 pt-2 border-t border-[var(--app-border)] shrink-0 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)]">
+                <span>{lang === 'en' ? '5S PILLAR DEDUCTION BREAKDOWN' : 'PHÂN BỔ ĐIỂM TRỪ THEO TRỤ CỘT 5S'}</span>
+                <span className="font-mono-kpi text-[var(--app-accent)]">S1–S5</span>
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[1, 2, 3, 4, 5].map((g) => {
+                  const item = (s_group_breakdown || []).find((s: any) => Number(s.s_group) === g);
+                  const pen = Number(item?.penalty || 0);
+                  const cnt = Number(item?.count || 0);
+                  return (
+                    <div key={g} className="surface-muted px-1.5 py-1 text-center flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-black font-mono-kpi">S{g}</span>
+                      <span className={`text-[10px] font-mono-kpi font-bold ${pen > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {pen > 0 ? `-${pen}${lang === 'en' ? 'pt' : 'đ'}` : '0'}
+                      </span>
+                      <span className="text-[9px] text-[var(--app-text-muted)] font-mono-kpi">
+                        {cnt} {lang === 'en' ? 'err' : 'lỗi'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT WORKSPACE (8 Cols): 15-Area Bento Telemetry Matrix + 12-Week Trend & Kaizen */}
+        {/* RIGHT WORKSPACE (8 Cols): 15-Area Bento Telemetry Matrix + 12-Week Trend & Improvement */}
         <div className="xl:col-span-8 flex flex-col gap-2.5 lg:gap-3 min-h-0">
           {/* Panel C: 15-Area Bento Telemetry Matrix */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col flex-1 min-h-0 cq-area-grid">
+          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[60] flex-1 min-h-0 cq-area-grid">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] pb-2 mb-2 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-xs font-black uppercase tracking-wider truncate">
@@ -912,13 +937,13 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="scroll-pane flex-1 min-h-0 overflow-y-auto xl:overflow-y-auto pr-0.5">
+            <div className="scroll-pane flex-1 min-h-0 overflow-y-auto pr-0.5 flex flex-col">
               {filteredAreas.length === 0 ? (
                 <div className="h-full min-h-[140px] flex items-center justify-center text-xs text-[var(--app-text-muted)]">
                   {lang === 'en' ? 'No areas match current filter.' : 'Không có khu vực nào phù hợp bộ lọc.'}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-2.5 auto-rows-fr">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:grid-rows-3 gap-2 lg:gap-2.5 flex-1 h-full auto-rows-fr">
                   {filteredAreas.map((area: any) => {
                     const displayScore =
                       area.score !== null && area.score !== undefined
@@ -938,25 +963,30 @@ export const Dashboard: React.FC = () => {
                         onClick={() => setSelectedTrendArea(area)}
                         className="surface-elevated surface-card-interactive dash-compact-area cq-card p-2.5 flex flex-col justify-between gap-1.5 text-left cursor-pointer group"
                       >
-                        {/* Tier 1: Area Code + Name + MoM Delta */}
+                        {/* Tier 1: Area Label Name + MoM Delta */}
                         <div className="flex items-start justify-between gap-1.5 w-full">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <span
                                 className="w-2 h-2 rounded-full shrink-0"
                                 style={{ backgroundColor: colorVar }}
                               />
-                              <span className="text-xs font-black font-mono-kpi tracking-tight truncate">
-                                {area.area_code}
+                              <span
+                                className="text-xs sm:text-[13px] font-extrabold tracking-tight truncate"
+                                title={area.area_name || area.area_code}
+                              >
+                                {area.area_name || area.area_code}
                               </span>
                             </div>
-                            <div className="text-[10px] text-[var(--app-text-muted)] truncate mt-0.5">
-                              {area.area_name}
-                            </div>
+                            {area.manager_name && (
+                              <div className="text-[10px] text-[var(--app-text-muted)] truncate mt-0.5 pl-3.5">
+                                {area.manager_name}
+                              </div>
+                            )}
                           </div>
                           {momDelta !== null && momDelta !== undefined && (
                             <span
-                              className={`shrink-0 px-1 py-0.5 rounded text-[9px] font-mono-kpi font-bold ${
+                              className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono-kpi font-bold ${
                                 momDelta > 0
                                   ? 'bg-emerald-500/15 text-emerald-400'
                                   : momDelta < 0
@@ -1013,9 +1043,9 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Panel D: 12-Week Plant Trend AreaChart + Kaizen Leaderboard */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 shrink-0 grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
-            <div className="lg:col-span-8 flex flex-col min-w-0">
+          {/* Panel D: 12-Week Plant Trend AreaChart + Top Improvement Leaderboard */}
+          <div className="surface-card dash-compact-panel p-3 lg:p-4 xl:flex-[40] min-h-[205px] xl:min-h-[225px] grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 items-stretch">
+            <div className="lg:col-span-7 xl:col-span-8 flex flex-col min-w-0 h-full">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5 text-[var(--app-accent)]" />
@@ -1027,7 +1057,7 @@ export const Dashboard: React.FC = () => {
                   Target {target}% · Warn {warningTarget}%
                 </span>
               </div>
-              <div className="h-[104px] xl:h-[112px] w-full min-w-0">
+              <div className="flex-1 min-h-[145px] xl:min-h-[165px] h-full w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendChartData} margin={{ top: 6, right: 8, left: -24, bottom: 0 }}>
                     <defs>
@@ -1089,39 +1119,59 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: Compact Kaizen Improvers & Stagnant Watchlist */}
-            <div className="lg:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-[var(--app-border)] pt-2 lg:pt-0 lg:pl-3 gap-1.5">
+            {/* Right: Top Improvement Leaderboard & Stagnant Watchlist */}
+            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-[var(--app-border)] pt-2 lg:pt-0 lg:pl-4 gap-2 h-full min-h-0">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
-                  {lang === 'en' ? 'TOP KAIZEN IMPROVERS' : 'CẢI TIẾN NỔI BẬT (KAIZEN)'}
+                <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">
+                  {lang === 'en' ? 'TOP IMPROVEMENT' : 'TOP CẢI TIẾN (IMPROVEMENT)'}
                 </span>
-                <span className="text-[9px] font-mono-kpi text-[var(--app-text-muted)]">MoM</span>
+                <span className="text-[10px] font-mono-kpi text-[var(--app-text-muted)]">MoM</span>
               </div>
-              <div className="space-y-1">
-                {(improvement_analysis.top_improvers || []).slice(0, 2).map((imp: any) => (
+              <div className="flex-1 flex flex-col justify-between gap-1.5 min-h-0">
+                {(improvement_analysis.top_improvers || []).slice(0, 3).map((imp: any) => (
                   <div
-                    key={imp.area_id}
-                    className="flex items-center justify-between text-[11px] surface-muted px-2 py-1"
+                    key={`imp-${imp.area_id}`}
+                    className="flex items-center justify-between gap-2 text-xs surface-muted px-2.5 py-1.5 flex-1"
                   >
-                    <span className="font-bold truncate">
-                      {imp.area_code} · <span className="font-normal text-[var(--app-text-muted)]">{imp.area_name}</span>
-                    </span>
-                    <span className="font-mono-kpi font-black text-emerald-400 shrink-0 ml-1">
-                      +{imp.delta}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <span className="font-bold truncate" title={imp.area_name || imp.area_code}>
+                        {imp.area_name || imp.area_code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 font-mono-kpi">
+                      {imp.current_score !== null && imp.current_score !== undefined && (
+                        <span className="text-[10px] text-[var(--app-text-muted)]">
+                          {formatScore(imp.current_score, lang)}
+                        </span>
+                      )}
+                      <span className="font-black text-emerald-400">
+                        +{imp.delta}
+                      </span>
+                    </div>
                   </div>
                 ))}
                 {(improvement_analysis.stagnant_areas || []).slice(0, 2).map((st: any) => (
                   <div
-                    key={st.area_id}
-                    className="flex items-center justify-between text-[11px] surface-muted px-2 py-1"
+                    key={`st-${st.area_id}`}
+                    className="flex items-center justify-between gap-2 text-xs surface-muted px-2.5 py-1.5 flex-1"
                   >
-                    <span className="font-bold truncate text-amber-300">
-                      {st.area_code} · <span className="font-normal text-[var(--app-text-muted)]">{st.area_name}</span>
-                    </span>
-                    <span className="font-mono-kpi font-black text-rose-400 shrink-0 ml-1">
-                      {formatScore(st.current_score, lang)}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                      <span className="font-bold truncate text-amber-300" title={st.area_name || st.area_code}>
+                        {st.area_name || st.area_code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 font-mono-kpi">
+                      {st.delta !== null && st.delta !== undefined && Number(st.delta) !== 0 && (
+                        <span className="text-[10px] text-rose-400">
+                          {Number(st.delta) > 0 ? `+${st.delta}` : st.delta}
+                        </span>
+                      )}
+                      <span className="font-black text-rose-400">
+                        {formatScore(st.current_score, lang)}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

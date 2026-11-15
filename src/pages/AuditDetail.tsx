@@ -610,7 +610,7 @@ export const AuditDetail: React.FC = () => {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-black font-mono-kpi">{a.area_code}</span>
+                          <span className="text-xs font-black tracking-tight truncate">{a.area_name || a.area_code}</span>
                           {areaFindingCount > 0 && (
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-mono-kpi font-bold bg-rose-500/20 text-rose-300">
                               {areaFindingCount} {lang === 'en' ? 'err' : 'lỗi'}
@@ -622,9 +622,11 @@ export const AuditDetail: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-[var(--app-text-muted)] truncate mt-0.5">
-                          {a.area_name}
-                        </div>
+                        {a.area_code && a.area_code !== a.area_name && (
+                          <div className="text-[11px] font-mono-kpi text-[var(--app-text-muted)] truncate mt-0.5">
+                            {a.area_code}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className={`text-sm font-black font-mono-kpi ${tierColor}`}>

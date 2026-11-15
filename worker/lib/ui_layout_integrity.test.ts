@@ -54,10 +54,16 @@ test('Dashboard implements Sample A Bento Telemetry Pro 5-KPI strip, Hero Gauge,
 
   // 5-card KPI Bento row + 12-col asymmetric workspace + 5-col 15-area matrix
   assert.match(dashboard, /lg:grid-cols-5/);
+  assert.match(dashboard, /lg:grid-rows-3/);
   assert.match(dashboard, /xl:col-span-4/);
   assert.match(dashboard, /xl:col-span-8/);
+  assert.match(dashboard, /xl:flex-\[60\]/);
+  assert.match(dashboard, /xl:flex-\[40\]/);
   assert.match(dashboard, /urgent_alarms/);
   assert.match(dashboard, /AreaChart/);
+  assert.match(dashboard, /TOP IMPROVEMENT/);
+  assert.doesNotMatch(dashboard, /KAIZEN/i);
+  assert.match(dashboard, /area\.area_name \|\| area\.area_code/);
 });
 
 test('AuditDetail defaults to Split-Screen Audit Inspector workspace without max-w-7xl constraint', () => {

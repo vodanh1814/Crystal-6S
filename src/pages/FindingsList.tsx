@@ -265,9 +265,9 @@ export const FindingsList: React.FC = () => {
                     ? 'bg-sky-500 text-slate-950 shadow-sm'
                     : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
                 }`}
-                title={a.name}
+                title={a.code}
               >
-                {a.code}
+                {a.name || a.code}
               </button>
             );
           })}
@@ -357,7 +357,7 @@ export const FindingsList: React.FC = () => {
                 <div className="space-y-2 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-black px-2.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
-                      {finding.area_code}
+                      {finding.area_name || finding.area_code}
                     </span>
                     <span className="text-xs font-bold text-slate-600">{finding.item_code}</span>
                     <StatusBadge status={finding.status} type="finding" />
@@ -490,7 +490,7 @@ export const FindingsList: React.FC = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                        {finding.area_code}
+                        {finding.area_name || finding.area_code}
                       </span>
                       <span className="text-xs font-bold text-slate-600">{finding.item_code}</span>
                       <span className="text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
@@ -666,8 +666,8 @@ export const FindingsList: React.FC = () => {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                            <span className="text-[11px] font-black font-mono-kpi px-2 py-0.5 rounded bg-[var(--app-accent-soft)] text-[var(--app-accent)] shrink-0">
-                              {finding.area_code}
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-[var(--app-accent-soft)] text-[var(--app-accent)] shrink-0">
+                              {finding.area_name || finding.area_code}
                             </span>
                             <span className="text-[11px] font-mono-kpi font-bold text-[var(--app-text-muted)] truncate">
                               {finding.item_code}
