@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -23,7 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { getMonthShortName, formatMonthYear } from '../lib/date';
 import { formatScore, formatDelta } from '../lib/format';
-import { resolveColorMode } from '../lib/theme';
+import { resolveAppColorMode } from '../lib/theme';
 import { AreaTrendModal } from '../components/dashboard/AreaTrendModal';
 
 const SHORT_CRITERIA_LABELS: Record<string, { vi: string; en: string }> = {
@@ -62,9 +62,27 @@ function getShortCriterionText(itemCode: string, fullText: string, lang: 'vi' | 
   return withoutParens.length > 55 ? withoutParens.slice(0, 52) + '...' : withoutParens;
 }
 
+/**
+ * Maps a 5S score (focused window 60–100%) to a 0–100% track width so variations near
+ * the 90% warning / 95% target thresholds are clearly legible on Bullet Target Bars.
+ */
+function scoreToBulletPct(score: number | null | undefined): number {
+  if (score === null || score === undefined || isNaN(Number(score))) return 0;
+  const normalized = ((Number(score) - 60) / 40) * 100;
+  return Math.max(4, Math.min(100, Math.round(normalized * 10) / 10));
+}
+
+const RADAR_AXES = [
+  { label: 'S1', angle: -90 },
+  { label: 'S2', angle: -18 },
+  { label: 'S3', angle: 54 },
+  { label: 'S4', angle: 126 },
+  { label: 'S5', angle: 198 },
+];
+
 export const Dashboard: React.FC = () => {
   const { lang, t } = useI18n();
-  const { activeTheme, colorModeOverride } = useAuth();
+  const { colorModeOverride } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedMonth = searchParams.get('month') || '';
 
@@ -74,11 +92,8 @@ export const Dashboard: React.FC = () => {
   const [expandedAlarmId, setExpandedAlarmId] = useState<number | null>(null);
   const [selectedTrendArea, setSelectedTrendArea] = useState<any | null>(null);
 
-  const isClassic = true;
-  const isGlass = false;
-  const isHybrid = false;
-  const resolvedMode = 'dark';
-  const isLightTv = false;
+  const resolvedMode = resolveAppColorMode(colorModeOverride, true);
+  const isLightTv = resolvedMode === 'light';
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -113,11 +128,7 @@ export const Dashboard: React.FC = () => {
   if (loading || !data) {
     return (
       <div className="h-full w-full flex items-center justify-center p-12">
-        <Loader2
-          className={`w-8 h-8 animate-spin ${
-            isClassic ? 'text-emerald-500' : isGlass ? 'text-blue-500' : 'text-sky-500'
-          }`}
-        />
+        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
       </div>
     );
   }
@@ -129,7 +140,6 @@ export const Dashboard: React.FC = () => {
     month_info,
     kpi,
     remediation,
-    is_authenticated,
     current_week_status,
     top_areas,
     bottom_areas,
@@ -142,8 +152,13 @@ export const Dashboard: React.FC = () => {
   } = data;
 
   const isCurrentWeekAudited = kpi?.weekly_avg !== null && kpi?.weekly_avg !== undefined;
-  const isFallbackWeek = !isCurrentWeekAudited && kpi?.latest_completed_avg !== null && kpi?.latest_completed_avg !== undefined;
-  const effectiveWeeklyScore = isCurrentWeekAudited ? kpi.weekly_avg : isFallbackWeek ? kpi.latest_completed_avg : null;
+  const isFallbackWeek =
+    !isCurrentWeekAudited && kpi?.latest_completed_avg !== null && kpi?.latest_completed_avg !== undefined;
+  const effectiveWeeklyScore = isCurrentWeekAudited
+    ? kpi.weekly_avg
+    : isFallbackWeek
+    ? kpi.latest_completed_avg
+    : null;
   const effectiveWeeklyWeekName = isCurrentWeekAudited
     ? `W${current_week.iso_week}`
     : isFallbackWeek && kpi.latest_completed_week
@@ -163,7 +178,7 @@ export const Dashboard: React.FC = () => {
     .slice(0, 3)
     .join(' · ');
 
-  // Total findings and max penalty for 5S horizontal bars
+  // Total findings and max count for 5S breakdown + radar pentagon
   const totalFindingsInMonth = (s_group_breakdown || []).reduce(
     (sum: number, g: any) => sum + (g.count || 0),
     0
@@ -176,6 +191,10 @@ export const Dashboard: React.FC = () => {
     1,
     ...(s_group_breakdown || []).map((g: any) => g.count || 0)
   );
+  const maxGroupPenalty = Math.max(
+    5,
+    ...(s_group_breakdown || []).map((g: any) => Number(g.penalty) || 0)
+  );
   const topViolationGroup = [...(s_group_breakdown || [])].sort(
     (a: any, b: any) => (b.count || 0) - (a.count || 0)
   )[0];
@@ -184,114 +203,100 @@ export const Dashboard: React.FC = () => {
       ? `S${topViolationGroup.s_group} (${topViolationGroup.count} ${t('findings_unit')})`
       : '—';
 
-  // ── Theme-specific TV Board Tokens (Classic 100% unchanged) ──
-  const panelCls = isClassic
-    ? 'rounded-lg bg-slate-900 border border-slate-800'
-    : isGlass
-    ? isLightTv
-      ? 'rounded-2xl bg-white/82 backdrop-blur-md border border-slate-200/80 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.08)]'
-      : 'rounded-2xl bg-[#0c172e]/76 backdrop-blur-md border border-sky-300/15 shadow-[0_12px_36px_-10px_rgba(2,6,23,0.7)]'
-    : isLightTv
-    ? 'rounded-2xl bg-white border border-slate-200/90 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.07)]'
-    : 'rounded-2xl bg-[#0f1624] border border-white/[0.08] shadow-[0_12px_32px_-12px_rgba(0,0,0,0.6)]';
+  const targetMarkerLeftPct = scoreToBulletPct(target);
 
-  const toolbarPillCls = isClassic
-    ? 'bg-slate-900 border-slate-800 text-slate-300'
-    : isGlass
-    ? isLightTv
-      ? 'bg-white/85 backdrop-blur-md border-slate-200/80 text-slate-700 shadow-xs'
-      : 'bg-[#0c172e]/80 backdrop-blur-md border-sky-300/20 text-slate-200'
-    : isLightTv
-    ? 'bg-white border-slate-200 text-slate-700 shadow-xs'
-    : 'bg-[#0f1624] border-white/10 text-slate-200';
+  // 5S Radar Pentagon polygon vertices (center: 55, 55; outer radius: 36)
+  const buildPentagonPoints = (radiusScale: number) =>
+    RADAR_AXES.map((axis) => {
+      const rad = (axis.angle * Math.PI) / 180;
+      const r = 36 * radiusScale;
+      return `${(55 + r * Math.cos(rad)).toFixed(1)},${(55 + r * Math.sin(rad)).toFixed(1)}`;
+    }).join(' ');
 
-  const optionBgCls = isLightTv ? 'bg-white text-slate-900' : 'bg-slate-900 text-slate-200';
-  const accentTextCls = isClassic
-    ? 'text-emerald-400'
-    : isGlass
-    ? isLightTv
-      ? 'text-blue-600'
-      : 'text-sky-400'
-    : isLightTv
-    ? 'text-sky-600'
-    : 'text-sky-400';
+  const radarDataPoints = RADAR_AXES.map((axis, idx) => {
+    const groupItem = (s_group_breakdown || []).find((g: any) => g.s_group === idx + 1) || {
+      penalty: 0,
+    };
+    const penaltyRatio = Math.min(1, (Number(groupItem.penalty) || 0) / maxGroupPenalty);
+    const healthRatio = Math.max(0.32, 1 - penaltyRatio * 0.68);
+    const rad = (axis.angle * Math.PI) / 180;
+    const r = 36 * healthRatio;
+    return {
+      x: 55 + r * Math.cos(rad),
+      y: 55 + r * Math.sin(rad),
+      label: axis.label,
+    };
+  });
+  const radarPolygonStr = radarDataPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+  // Segmented Area status counts for KPI 3 bar
+  const totalAreasDenominator = Math.max(1, kpi?.audited_areas_count || current_week_status?.length || 15);
+  const passRatioPct = Math.round(((kpi?.passed_areas_count || 0) / totalAreasDenominator) * 100);
+  const warnRatioPct = Math.round(((kpi?.warning_areas_count || 0) / totalAreasDenominator) * 100);
+  const failRatioPct = Math.max(0, 100 - passRatioPct - warnRatioPct);
+
+  // Open vs Waiting Verify bar ratio for KPI 4
+  const openTotalPair = Math.max(1, (counts.open || 0) + (counts.waiting_verify || 0));
+  const openOnlyPct = Math.round(((counts.open || 0) / openTotalPair) * 100);
+
+  // ── Sample A: Bento Telemetry Pro Adaptive Surface Tokens ──
+  const panelCls = isLightTv
+    ? 'rounded-2xl bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-[0_10px_28px_-12px_rgba(15,23,42,0.09)]'
+    : 'rounded-2xl bg-[#0c1527]/88 backdrop-blur-md border border-slate-800/90 shadow-[0_14px_34px_-12px_rgba(2,6,23,0.75)]';
+
+  const toolbarPillCls = isLightTv
+    ? 'bg-white/90 backdrop-blur-md border-slate-200/90 text-slate-700 shadow-2xs'
+    : 'bg-[#0c1527]/90 backdrop-blur-md border-slate-800 text-slate-200';
+
+  const optionBgCls = isLightTv ? 'bg-white text-slate-900' : 'bg-[#0c1527] text-slate-200';
+  const accentTextCls = isLightTv ? 'text-sky-600' : 'text-sky-400';
 
   const headingTextCls = isLightTv ? 'text-slate-900' : 'text-white';
   const subTextCls = isLightTv ? 'text-slate-700' : 'text-slate-200';
   const mutedTextCls = isLightTv ? 'text-slate-500' : 'text-slate-400';
-  const subtleDividerCls = isClassic
-    ? 'border-slate-800'
-    : isLightTv
-    ? 'border-slate-200/80'
-    : 'border-white/10';
+  const subtleDividerCls = isLightTv ? 'border-slate-200/80' : 'border-white/10';
   const innerRowDividerCls = isLightTv ? 'border-slate-200/70' : 'border-white/5';
 
-  // Status semantic colors adapted safely for Light TV vs Dark TV
+  // Status semantic colors adapted safely for Light vs Dark Bento
   const passTextCls = isLightTv ? 'text-emerald-700' : 'text-emerald-400';
   const passBadgeCls = isLightTv
     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-    : 'bg-emerald-500/20 text-emerald-400';
+    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
   const warnTextCls = isLightTv ? 'text-amber-700' : 'text-amber-300';
   const warnBadgeCls = isLightTv
     ? 'bg-amber-100 text-amber-800 border border-amber-200'
-    : 'bg-amber-500/20 text-amber-300';
+    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
   const failTextCls = isLightTv ? 'text-rose-700' : 'text-rose-400';
   const failBadgeCls = isLightTv
     ? 'bg-rose-100 text-rose-800 border border-rose-200'
-    : 'bg-rose-500/20 text-rose-400';
-  const blueStatTextCls = isLightTv ? 'text-blue-700' : 'text-blue-400';
+    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30';
+  const blueStatTextCls = isLightTv ? 'text-sky-700' : 'text-sky-400';
   const purpleTextCls = isLightTv ? 'text-purple-700' : 'text-purple-300';
   const purpleValTextCls = isLightTv ? 'text-purple-700' : 'text-purple-400';
 
-  const kpiOverdueCardCls = isClassic
-    ? `rounded-lg bg-rose-950/30 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
+  const kpiOverdueCardCls = isLightTv
+    ? `rounded-2xl bg-rose-50/95 backdrop-blur-md p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] transition-all ${
+        totalOverdue > 0 ? 'border-2 border-rose-500 alarm-pulse' : 'border border-rose-200'
+      }`
+    : `rounded-2xl bg-rose-950/35 backdrop-blur-md p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] transition-all ${
         totalOverdue > 0 ? 'border-2 border-rose-500/90 alarm-pulse' : 'border border-slate-800'
-      }`
-    : isLightTv
-    ? `rounded-2xl bg-rose-50/90 p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
-        isHybrid ? 'border-l-4 border-l-rose-500 ' : ''
-      }${totalOverdue > 0 ? 'border-2 border-rose-500 alarm-pulse' : 'border border-rose-200'}`
-    : `${isGlass ? 'rounded-2xl bg-rose-950/35 backdrop-blur-md' : 'rounded-2xl bg-rose-950/30'} p-2.5 sm:px-3 sm:py-2 flex flex-col justify-between min-h-[64px] transition-all ${
-        isHybrid ? 'border-l-4 border-l-rose-500 ' : ''
-      }${totalOverdue > 0 ? 'border-2 border-rose-500/90 alarm-pulse' : 'border border-white/10'}`;
-
-  const kpiRepeatCardCls = isClassic
-    ? 'rounded-lg bg-slate-900 border border-purple-500/40'
-    : isLightTv
-    ? `rounded-2xl bg-white border border-purple-200 shadow-xs ${
-        isHybrid ? 'border-l-4 border-l-purple-500' : ''
-      }`
-    : `${isGlass ? 'rounded-2xl bg-[#0c172e]/76 backdrop-blur-md' : 'rounded-2xl bg-[#0f1624]'} border border-purple-500/35 ${
-        isHybrid ? 'border-l-4 border-l-purple-500' : ''
       }`;
 
-  const remedMiniCardCls = isClassic
-    ? 'rounded bg-slate-950/90 border border-slate-800'
-    : isLightTv
-    ? 'rounded-lg bg-slate-100/80 border border-slate-200/80'
-    : isGlass
-    ? 'rounded-lg bg-[#081022]/75 border border-sky-300/15'
-    : 'rounded-lg bg-[#090e18] border border-white/[0.08]';
+  const kpiRepeatCardCls = isLightTv
+    ? 'rounded-2xl bg-white/95 backdrop-blur-md border border-purple-200 shadow-xs'
+    : 'rounded-2xl bg-[#0c1527]/90 backdrop-blur-md border border-purple-500/35';
 
-  const remedBtnCls = isClassic
-    ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300'
-    : isLightTv
-    ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
-    : isGlass
-    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-sky-300 border border-sky-400/25'
+  const remedMiniCardCls = isLightTv
+    ? 'rounded-xl bg-slate-100/85 border border-slate-200/80'
+    : 'rounded-xl bg-[#070d1b]/90 border border-white/[0.08]';
+
+  const remedBtnCls = isLightTv
+    ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200'
     : 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/25';
 
-  const barTrackCls = isLightTv ? 'bg-slate-200' : 'bg-slate-800';
-  const chartLineStroke = isClassic
-    ? '#10b981'
-    : isGlass
-    ? isLightTv
-      ? '#2563eb'
-      : '#38bdf8'
-    : isLightTv
-    ? '#0284c7'
-    : '#0ea5e9';
-  const chartGridStroke = isLightTv ? '#cbd5e1' : isClassic ? '#334155' : 'rgba(148, 163, 184, 0.16)';
+  const barTrackCls = isLightTv ? 'bg-slate-200/90' : 'bg-slate-800/90';
+  const chartLineStroke = isLightTv ? '#0284c7' : '#38bdf8';
+  const chartGridStroke = isLightTv ? '#cbd5e1' : 'rgba(148, 163, 184, 0.16)';
   const chartTickColor = isLightTv ? '#475569' : '#94a3b8';
   const chartTooltipStyle = isLightTv
     ? {
@@ -303,22 +308,19 @@ export const Dashboard: React.FC = () => {
         boxShadow: '0 8px 24px rgba(15,23,42,0.12)',
       }
     : {
-        backgroundColor: isClassic ? '#0f172a' : '#0b111e',
-        border: isClassic ? '1px solid #334155' : '1px solid rgba(56, 189, 248, 0.25)',
-        color: '#fff',
+        backgroundColor: '#0b111e',
+        border: '1px solid rgba(56, 189, 248, 0.30)',
+        color: '#f8fafc',
         borderRadius: '10px',
         fontSize: '11px',
       };
-
-  const hybridKpiAccent = (tierColor: string) =>
-    isHybrid ? `border-l-4 ${tierColor}` : '';
 
   return (
     <div className="dashboard-container flex-1 w-full min-h-0 p-1.5 sm:p-2.5 2xl:p-3 flex flex-col gap-1.5 2xl:gap-2.5 select-none fit:h-full fit:overflow-hidden fit:p-1.5 fit:2xl:p-2.5">
       {/* TOOLBAR: Month Selector & Status */}
       <div className="shrink-0 flex items-center justify-between gap-1.5 px-0.5 text-xs">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-          <div className={`flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border ${toolbarPillCls}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-xl border ${toolbarPillCls}`}>
             <Calendar className={`w-3.5 h-3.5 shrink-0 ${accentTextCls}`} />
             <span className={`text-[11px] font-bold uppercase tracking-wider hidden sm:inline ${mutedTextCls}`}>
               {t('dashboard_month_filter')}:
@@ -344,11 +346,9 @@ export const Dashboard: React.FC = () => {
           {selectedMonth && (
             <button
               onClick={() => handleMonthChange('')}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
-                isClassic
-                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
-                  : isLightTv
-                  ? 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700'
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
+                isLightTv
+                  ? 'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-700'
                   : 'bg-sky-500/15 hover:bg-sky-500/25 border-sky-400/30 text-sky-300'
               }`}
               title={t('back_to_current_month')}
@@ -376,31 +376,25 @@ export const Dashboard: React.FC = () => {
           <span>{t('target')}:</span>
           <span className={`font-bold font-mono ${passTextCls}`}>≥{target}%</span>
           <span className={isLightTv ? 'text-slate-300' : 'text-slate-600'}>|</span>
-          <span className={`font-mono ${warnTextCls}`}>{warningTarget}-{target}%</span>
+          <span className={`font-mono ${warnTextCls}`}>
+            {warningTarget}-{target}%
+          </span>
         </div>
       </div>
 
-      {/* ROW 1: 6 COMPACT KPI STRIP CARDS */}
+      {/* ROW 1: 6 BENTO KPI TELEMETRY CARDS WITH BULLET TARGET BARS */}
       <div className="shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
-        {/* KPI 1: Weekly Average Score */}
+        {/* KPI 1: Weekly Average Score + Bullet Target Bar */}
         <div
-          className={`${panelCls} ${hybridKpiAccent(
-            effectiveWeeklyScore === null
-              ? 'border-l-amber-400'
-              : effectiveWeeklyScore >= target
-              ? 'border-l-emerald-500'
-              : effectiveWeeklyScore >= warningTarget
-              ? 'border-l-amber-400'
-              : 'border-l-rose-500'
-          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
+          className={`${panelCls} p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] fit:min-h-[52px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
-            <span className="font-semibold truncate text-[11px] sm:text-xs">
+            <span className="font-semibold truncate text-[10px] sm:text-[11px]">
               {t('weekly_avg_kpi', { week: effectiveWeeklyWeekName })}
             </span>
             {isCurrentWeekAudited ? (
               <span
-                className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${
+                className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${
                   effectiveWeeklyScore >= target
                     ? passBadgeCls
                     : effectiveWeeklyScore >= warningTarget
@@ -416,18 +410,18 @@ export const Dashboard: React.FC = () => {
               </span>
             ) : isFallbackWeek ? (
               <span
-                className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}
+                className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${warnBadgeCls}`}
                 title={t('pending_audit_week', { week: current_week.iso_week })}
               >
                 {t('latest_week_badge')}
               </span>
             ) : (
-              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${warnBadgeCls}`}>
                 {t('tag_pending')}
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
             <span
               className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${
                 effectiveWeeklyScore === null
@@ -439,12 +433,14 @@ export const Dashboard: React.FC = () => {
                   : failTextCls
               }`}
             >
-              {effectiveWeeklyScore !== null ? formatScore(effectiveWeeklyScore, lang) : t('waiting_audit_badge')}
+              {effectiveWeeklyScore !== null
+                ? formatScore(effectiveWeeklyScore, lang)
+                : t('waiting_audit_badge')}
             </span>
-            <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
+            <div className="flex items-center gap-1 shrink-0 flex-nowrap">
               {kpi?.weekly_delta !== null && kpi?.weekly_delta !== undefined ? (
                 <span
-                  className={`text-xs font-semibold shrink-0 whitespace-nowrap ${
+                  className={`text-[11px] font-mono font-bold shrink-0 whitespace-nowrap ${
                     kpi.weekly_delta >= 0 ? passTextCls : failTextCls
                   }`}
                 >
@@ -452,57 +448,85 @@ export const Dashboard: React.FC = () => {
                 </span>
               ) : null}
               {isFallbackWeek && (
-                <span className={`text-[10px] font-mono truncate shrink-0 ${mutedTextCls}`}>
-                  ({t('pending_audit_week', { week: current_week.iso_week })})
+                <span className={`text-[9px] font-mono truncate shrink-0 ${mutedTextCls}`}>
+                  (W{current_week.iso_week})
                 </span>
               )}
             </div>
           </div>
+          {/* Bullet Target Progress Bar */}
+          <div className={`bullet-track w-full h-1.5 mt-1 ${barTrackCls}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                effectiveWeeklyScore === null
+                  ? 'bg-slate-500/40'
+                  : effectiveWeeklyScore >= target
+                  ? 'bg-emerald-500'
+                  : effectiveWeeklyScore >= warningTarget
+                  ? 'bg-amber-500'
+                  : 'bg-rose-500'
+              }`}
+              style={{ width: `${scoreToBulletPct(effectiveWeeklyScore)}%` }}
+            />
+            <span
+              className={`bullet-target-marker ${isLightTv ? 'bg-slate-900' : 'bg-white'}`}
+              style={{ left: `${targetMarkerLeftPct}%` }}
+              title={`${t('target')}: ${target}%`}
+            />
+          </div>
         </div>
 
-        {/* KPI 2: Monthly Average Score */}
+        {/* KPI 2: Monthly Average Score + Bullet Target Bar */}
         <div
-          className={`${panelCls} ${hybridKpiAccent(
-            isHybrid ? 'border-l-sky-500' : ''
-          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
+          className={`${panelCls} p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] fit:min-h-[52px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
-            <span className="font-semibold truncate text-[11px] sm:text-xs">
+            <span className="font-semibold truncate text-[10px] sm:text-[11px]">
               {t('monthly_avg_kpi', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
             {month_info?.is_fallback ? (
-              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0 ${warnBadgeCls}`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold shrink-0 ${warnBadgeCls}`}>
                 {t('latest_month_badge')}
               </span>
             ) : (
-              <span className={`font-mono text-[10px] shrink-0 ${mutedTextCls}`}>
+              <span className={`font-mono text-[9px] shrink-0 ${mutedTextCls}`}>
                 {t('target_standard', { target })}
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
             <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${headingTextCls}`}>
               {formatScore(kpi?.monthly_avg_overall, lang)}
             </span>
-            <span className={`text-xs font-mono truncate shrink-0 ${mutedTextCls}`}>
+            <span className={`text-[10px] font-mono truncate shrink-0 ${mutedTextCls}`}>
               {month_info?.is_fallback
                 ? t('historical_data_badge')
                 : `W${current_week.iso_week} (${current_week.iso_year})`}
             </span>
           </div>
+          {/* Bullet Target Progress Bar */}
+          <div className={`bullet-track w-full h-1.5 mt-1 ${barTrackCls}`}>
+            <div
+              className="h-full rounded-full bg-sky-500 transition-all duration-500"
+              style={{ width: `${scoreToBulletPct(kpi?.monthly_avg_overall)}%` }}
+            />
+            <span
+              className={`bullet-target-marker ${isLightTv ? 'bg-slate-900' : 'bg-white'}`}
+              style={{ left: `${targetMarkerLeftPct}%` }}
+              title={`${t('target')}: ${target}%`}
+            />
+          </div>
         </div>
 
-        {/* KPI 3: Areas Meeting Target */}
+        {/* KPI 3: Areas Meeting Target + Segmented 3-Tier Bar */}
         <div
-          className={`${panelCls} ${hybridKpiAccent(
-            isHybrid ? 'border-l-blue-500' : ''
-          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
+          className={`${panelCls} p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] fit:min-h-[52px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
-            <span className="font-semibold truncate text-[11px] sm:text-xs">{t('areas_meeting_target')}</span>
-            <span className={`text-[10px] font-bold shrink-0 ${blueStatTextCls}`}>
+            <span className="font-semibold truncate text-[10px] sm:text-[11px]">{t('areas_meeting_target')}</span>
+            <span className={`text-[9px] font-bold shrink-0 ${blueStatTextCls}`}>
               {month_info?.is_fallback
                 ? t('display_month_short', { month: getMonthShortName(month_info.display_month) })
                 : t('audited_areas_status', {
@@ -511,14 +535,14 @@ export const Dashboard: React.FC = () => {
                   })}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
             <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap shrink-0 ${blueStatTextCls}`}>
               {kpi?.passed_areas_count || 0}{' '}
-              <span className={`text-xs font-normal ${mutedTextCls}`}>
+              <span className={`text-[11px] font-normal ${mutedTextCls}`}>
                 {t('area_count_slash', { n: kpi?.audited_areas_count || 0 })}
               </span>
             </span>
-            <div className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0">
+            <div className="flex items-center gap-1 text-[10px] font-semibold whitespace-nowrap shrink-0">
               {(kpi?.warning_areas_count || 0) > 0 && (
                 <span className={warnTextCls}>
                   {kpi?.warning_areas_count} {t('tag_warning')}
@@ -529,79 +553,115 @@ export const Dashboard: React.FC = () => {
               </span>
             </div>
           </div>
+          {/* Segmented Pass / Warning / Fail Progress Bar */}
+          <div className={`w-full h-1.5 rounded-full overflow-hidden flex mt-1 ${barTrackCls}`}>
+            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${passRatioPct}%` }} />
+            <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: `${warnRatioPct}%` }} />
+            <div className="h-full bg-rose-500 transition-all duration-500" style={{ width: `${failRatioPct}%` }} />
+          </div>
         </div>
 
         {/* KPI 4: Open Findings */}
         <div
-          className={`${panelCls} ${hybridKpiAccent(
-            isHybrid ? 'border-l-amber-400' : ''
-          )} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}
+          className={`${panelCls} p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] fit:min-h-[52px]`}
         >
           <div className={`flex items-center justify-between gap-1 text-xs min-w-0 ${mutedTextCls}`}>
-            <span className="font-semibold truncate text-[11px] sm:text-xs">{t('open_findings_kpi')}</span>
-            <span className={`text-[10px] font-bold shrink-0 ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
+            <span className="font-semibold truncate text-[10px] sm:text-[11px]">{t('open_findings_kpi')}</span>
+            <span className={`text-[9px] font-bold shrink-0 ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
               {t('waiting_mng')}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
             <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${isLightTv ? 'text-amber-700' : 'text-amber-400'}`}>
               {counts.open}
             </span>
-            <span className={`text-xs truncate shrink-0 ${mutedTextCls}`}>
+            <span className={`text-[10px] truncate shrink-0 ${mutedTextCls}`}>
               {t('waiting_verify_count', { n: counts.waiting_verify })}
             </span>
+          </div>
+          <div className={`w-full h-1.5 rounded-full overflow-hidden flex mt-1 ${barTrackCls}`}>
+            <div
+              className="h-full bg-amber-500 transition-all duration-500"
+              style={{ width: `${counts.open > 0 ? Math.max(12, openOnlyPct) : 0}%` }}
+            />
+            <div
+              className="h-full bg-sky-500 transition-all duration-500"
+              style={{ width: `${counts.waiting_verify > 0 ? Math.max(12, 100 - openOnlyPct) : 0}%` }}
+            />
           </div>
         </div>
 
         {/* KPI 5: 7-Day Overdue Alarm */}
-        <div className={`${kpiOverdueCardCls} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}>
+        <div className={`${kpiOverdueCardCls} min-h-[54px] fit:min-h-[52px]`}>
           <div className={`flex items-center justify-between gap-1 text-xs font-bold min-w-0 ${failTextCls}`}>
-            <span className="truncate text-[11px] sm:text-xs">{t('alarm_7_days')}</span>
+            <span className="truncate text-[10px] sm:text-[11px]">{t('alarm_7_days')}</span>
             {totalOverdue > 0 && (
-              <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-black shrink-0">
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9px] font-black shrink-0">
                 {t('alarm_badge')}
               </span>
             )}
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
-            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${failTextCls}`}>{totalOverdue}</span>
-            <span className={`text-[11px] font-semibold truncate shrink-0 max-w-[140px] ${isLightTv ? 'text-rose-700' : 'text-rose-300'}`}>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
+            <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${failTextCls}`}>
+              {totalOverdue}
+            </span>
+            <span className={`text-[10px] font-semibold truncate shrink-0 max-w-[130px] ${isLightTv ? 'text-rose-700' : 'text-rose-300'}`}>
               {overdueAreasList || t('no_findings_clean')}
             </span>
+          </div>
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mt-1 ${barTrackCls}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                totalOverdue > 0 ? 'bg-rose-500' : 'bg-emerald-500/70'
+              }`}
+              style={{ width: totalOverdue > 0 ? `${Math.min(100, Math.max(20, totalOverdue * 15))}%` : '100%' }}
+            />
           </div>
         </div>
 
         {/* KPI 6: Repeat Findings Escalation */}
-        <div className={`${kpiRepeatCardCls} p-1 sm:px-2 sm:py-1 fit:p-1 fit:2xl:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[52px] fit:min-h-[46px]`}>
+        <div
+          className={`${kpiRepeatCardCls} p-1.5 sm:px-2.5 sm:py-1.5 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between min-h-[54px] fit:min-h-[52px]`}
+        >
           <div className={`flex items-center justify-between gap-1 text-xs font-semibold min-w-0 ${purpleTextCls}`}>
-            <span className="truncate text-[11px] sm:text-xs">{t('repeat_findings_kpi')}</span>
+            <span className="truncate text-[10px] sm:text-[11px]">{t('repeat_findings_kpi')}</span>
             <span
-              className={`px-1.5 rounded text-[10px] font-bold shrink-0 ${
+              className={`px-1.5 rounded-full text-[9px] font-bold shrink-0 ${
                 isLightTv ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/20 text-purple-300'
               }`}
             >
               {t('repeat_step_badge')}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-1 mt-0.5 sm:mt-1 flex-nowrap">
+          <div className="flex items-baseline justify-between gap-1 mt-0.5 flex-nowrap">
             <span className={`text-lg sm:text-xl font-black font-mono leading-none whitespace-nowrap ${purpleValTextCls}`}>
               {counts.not_improved}
             </span>
-            <span className={`text-[11px] font-semibold truncate shrink-0 max-w-[140px] ${purpleTextCls}`}>
+            <span className={`text-[10px] font-semibold truncate shrink-0 max-w-[130px] ${purpleTextCls}`}>
               {repeatAreasList || t('no_findings_clean')}
             </span>
+          </div>
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mt-1 ${barTrackCls}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                counts.not_improved > 0 ? 'bg-purple-500' : 'bg-emerald-500/70'
+              }`}
+              style={{
+                width: counts.not_improved > 0 ? `${Math.min(100, Math.max(20, counts.not_improved * 18))}%` : '100%',
+              }}
+            />
           </div>
         </div>
       </div>
 
-      {/* ROW 2: MIDDLE MAIN WORKSPACE */}
+      {/* ROW 2: MIDDLE MAIN TELEMETRY WORKSPACE */}
       <div className="dashboard-row-2 grid grid-cols-12 gap-2 2xl:gap-3 fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
-        {/* 16 AREAS STATUS MATRIX WALL */}
-        <div className={`col-span-12 lg:col-span-8 ${panelCls} p-2.5 sm:p-3 fit:p-1.5 fit:2xl:p-3 flex flex-col justify-between fit:min-h-0 fit:overflow-hidden`}>
+        {/* LEFT 8 COLS: 15 AREAS BENTO MATRIX WALL */}
+        <div className={`col-span-12 lg:col-span-8 ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between fit:min-h-0 fit:overflow-hidden`}>
           <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-1 2xl:pb-2 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs tracking-wide uppercase truncate ${headingTextCls}`}>
               {t('production_areas_wall', {
-                total: current_week_status?.length || 16,
+                total: current_week_status?.length || 15,
                 week: `W${current_week.iso_week}`,
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
@@ -630,42 +690,47 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Grid of area cards: 2 cols mobile, 3 cols tablet, 4 cols md, 5 cols desktop (15 areas = EXACTLY 3 rows!) */}
+          {/* Grid of area cards: 5 cols desktop (15 areas = EXACTLY 3 rows!) */}
           <div className="mt-1 fit:mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 sm:gap-2 fit:gap-1.5 fit:2xl:gap-2 fit:flex-1 fit:min-h-0 fit:grid-rows-3 fit:grid-cols-5">
             {current_week_status.map((area: any) => {
               const isCurrentWeekAudited = area.status === 'submitted' && area.score !== null;
 
-              // Week score & label: if current week audited, use it. Otherwise fallback to latest completed week!
               const latestCompleted = area.latest_completed_week;
-              const weekScore = isCurrentWeekAudited
-                ? area.score
-                : (latestCompleted?.score ?? null);
+              const weekScore = isCurrentWeekAudited ? area.score : latestCompleted?.score ?? null;
               const weekLabel = isCurrentWeekAudited
                 ? `W${current_week.iso_week}`
-                : (latestCompleted?.week ?? `W${current_week.iso_week}`);
-              const isWeekFallback = !isCurrentWeekAudited && latestCompleted?.score !== null && latestCompleted?.score !== undefined;
+                : latestCompleted?.week ?? `W${current_week.iso_week}`;
+              const isWeekFallback =
+                !isCurrentWeekAudited && latestCompleted?.score !== null && latestCompleted?.score !== undefined;
 
-              // Month score & label: if area.month_avg !== null, use it. Otherwise fallback to prev_month_avg!
               const hasCurrentMonthAvg = area.month_avg !== null && area.month_avg !== undefined;
-              const monthScore = hasCurrentMonthAvg
-                ? area.month_avg
-                : (area.prev_month_avg ?? null);
+              const monthScore = hasCurrentMonthAvg ? area.month_avg : area.prev_month_avg ?? null;
               const targetMonthStr = hasCurrentMonthAvg
-                ? (month_info?.display_month || current_week.month)
-                : (area.prev_month_str || current_week.month);
+                ? month_info?.display_month || current_week.month
+                : area.prev_month_str || current_week.month;
               const monthParts = String(targetMonthStr).split('-');
               const monthNum = parseInt(monthParts[monthParts.length - 1], 10);
               const monthDisplayLabel = lang === 'vi' ? String(monthNum) : getMonthShortName(targetMonthStr);
-              const isMonthFallback = !hasCurrentMonthAvg && area.prev_month_avg !== null && area.prev_month_avg !== undefined;
+              const isMonthFallback =
+                !hasCurrentMonthAvg && area.prev_month_avg !== null && area.prev_month_avg !== undefined;
 
-              // Primary score determines overall card state
-              const primaryScore = isCurrentWeekAudited ? area.score : (weekScore ?? monthScore);
+              const primaryScore = isCurrentWeekAudited ? area.score : weekScore ?? monthScore;
               const isPass = primaryScore !== null && primaryScore >= target;
               const isWarning = primaryScore !== null && primaryScore >= warningTarget && primaryScore < target;
               const isFail = primaryScore !== null && primaryScore < warningTarget;
               const isOverdue = area.overdue_count > 0;
 
-              const boxCls = isOverdue
+              const boxCls = isLightTv
+                ? isOverdue
+                  ? 'rounded-xl border border-rose-400 bg-rose-50/75 ring-1 ring-rose-300/60'
+                  : isPass
+                  ? 'rounded-xl border border-emerald-300/90 bg-emerald-50/45'
+                  : isWarning
+                  ? 'rounded-xl border border-amber-300/90 bg-amber-50/55 ring-1 ring-amber-200/60'
+                  : isFail
+                  ? 'rounded-xl border border-rose-300 bg-rose-50/65'
+                  : 'rounded-xl border border-slate-200 bg-slate-50/80 opacity-85'
+                : isOverdue
                 ? 'rounded-xl border border-rose-500/80 bg-rose-950/30 ring-1 ring-rose-500/40'
                 : isPass
                 ? 'rounded-xl border border-emerald-500/35 bg-emerald-950/20'
@@ -673,96 +738,133 @@ export const Dashboard: React.FC = () => {
                 ? 'rounded-xl border border-amber-500/40 bg-amber-950/25 ring-1 ring-amber-500/20'
                 : isFail
                 ? 'rounded-xl border border-rose-500/70 bg-rose-950/30'
-                : 'rounded-xl border border-slate-700 bg-slate-800/40 opacity-75';
+                : 'rounded-xl border border-slate-700/80 bg-slate-800/40 opacity-80';
+
+              const miniTileCls = isLightTv
+                ? 'bg-white/90 border border-slate-200/80'
+                : 'bg-[#070d1b]/75 border border-slate-800/80';
+
+              const bulletFillCls =
+                primaryScore === null
+                  ? 'bg-slate-500/40'
+                  : isPass
+                  ? 'bg-emerald-500'
+                  : isWarning
+                  ? 'bg-amber-400'
+                  : 'bg-rose-500';
 
               return (
                 <div
                   key={area.area_id}
                   onClick={() => setSelectedTrendArea(area)}
-                  className={`${boxCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between h-auto min-h-[96px] sm:min-h-[104px] fit:min-h-0 fit:h-full fit:overflow-hidden transition-all duration-150 cursor-pointer group hover:border-slate-400`}
+                  className={`${boxCls} p-1.5 sm:p-2 fit:p-1.5 fit:2xl:p-2 flex flex-col justify-between h-auto min-h-[100px] sm:min-h-[108px] fit:min-h-0 fit:h-full fit:overflow-hidden transition-all duration-150 cursor-pointer group ${
+                    isLightTv ? 'hover:border-sky-400 hover:shadow-md' : 'hover:border-sky-400/70'
+                  }`}
                   title={t('click_to_inspect_area')}
                 >
                   {/* Tier 1: Header (Area Name on Left, Status Badge on Right) */}
-                  <div className="flex items-center justify-between gap-1 min-w-0 pb-0.5 fit:pb-0.5 2xl:pb-1 border-b border-slate-800/60 shrink-0">
+                  <div className={`flex items-center justify-between gap-1 min-w-0 pb-0.5 fit:pb-0.5 2xl:pb-1 border-b ${innerRowDividerCls} shrink-0`}>
                     <span
-                      className={`font-black text-xs sm:text-sm fit:text-[11px] 2xl:fit:text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-emerald-400`}
+                      className={`font-black text-xs sm:text-[13px] fit:text-[11px] 2xl:fit:text-sm tracking-wide transition-colors truncate max-w-[65%] ${headingTextCls} group-hover:text-sky-400`}
                       title={`${area.area_name || area.area_code} (${area.area_code})`}
                     >
                       {area.area_name || area.area_code}
                     </span>
                     <div className="shrink-0">
                       {isOverdue ? (
-                        <span className="px-1.5 py-0.2 fit:py-0 rounded-full bg-rose-600 text-white text-[9px] 2xl:text-[10px] font-black uppercase tracking-wider shadow-xs shadow-rose-950">
+                        <span className="px-1.5 py-0.2 fit:py-0 rounded-full bg-rose-600 text-white text-[9px] 2xl:text-[10px] font-black uppercase tracking-wider shadow-xs">
                           🚨 {area.overdue_count}
                         </span>
                       ) : isCurrentWeekAudited ? (
                         isPass ? (
-                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/35">
+                          <span className={`px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider ${passBadgeCls}`}>
                             {t('tag_pass')}
                           </span>
                         ) : isWarning ? (
-                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                          <span className={`px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider ${warnBadgeCls}`}>
                             {t('tag_warning')}
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/35">
+                          <span className={`px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-black tracking-wider ${failBadgeCls}`}>
                             {t('tag_fail')}
                           </span>
                         )
                       ) : (
-                        <span className="px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-bold tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        <span className={`px-1.5 py-0.2 fit:py-0 rounded-full text-[9px] 2xl:text-[10px] font-bold tracking-wider ${warnBadgeCls}`}>
                           {t('badge_pending_week', { week: current_week.iso_week })}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Tier 2: Telemetry Body (2 Clean Symmetrical Tiles: Week Score & Month Score) */}
-                  <div className="grid grid-cols-2 gap-1 2xl:gap-1.5 py-0.5 fit:py-0.5 2xl:py-1 min-w-0 flex-1 items-center">
-                    {/* Left Tile: Week Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-md 2xl:rounded-lg py-0.5 fit:py-0.5 2xl:py-1 px-1 border border-slate-800/80 min-w-0">
-                      <div className="flex items-center gap-0.5 2xl:gap-1 text-[8.5px] 2xl:text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
-                        <span>{t('week')}</span>
-                        <span className={isWeekFallback ? 'text-amber-400/90 font-mono' : 'font-mono'}>
-                          {weekLabel}
+                  {/* Tier 2: Telemetry Body (Symmetrical Week/Month Tiles + Horizontal Bullet Target Bar) */}
+                  <div className="flex-1 flex flex-col justify-center gap-1 py-0.5 fit:py-0.5 min-w-0">
+                    <div className="grid grid-cols-2 gap-1 2xl:gap-1.5 min-w-0 items-center">
+                      {/* Left Tile: Week Score */}
+                      <div className={`flex flex-col items-center justify-center rounded-md 2xl:rounded-lg py-0.5 px-1 min-w-0 ${miniTileCls}`}>
+                        <div className={`flex items-center gap-0.5 2xl:gap-1 text-[8px] 2xl:text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
+                          <span>{t('week')}</span>
+                          <span className={isWeekFallback ? 'text-amber-500 font-mono' : 'font-mono'}>
+                            {weekLabel}
+                          </span>
+                        </div>
+                        <span
+                          className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
+                            weekScore !== null
+                              ? weekScore >= target
+                                ? passTextCls
+                                : weekScore >= warningTarget
+                                ? warnTextCls
+                                : failTextCls
+                              : mutedTextCls
+                          }`}
+                        >
+                          {weekScore !== null ? formatScore(weekScore, lang) : '-'}
                         </span>
                       </div>
-                      <span
-                        className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
-                          weekScore !== null
-                            ? (weekScore >= target ? passTextCls : weekScore >= warningTarget ? warnTextCls : failTextCls)
-                            : mutedTextCls
-                        }`}
-                      >
-                        {weekScore !== null ? formatScore(weekScore, lang) : '-'}
-                      </span>
+
+                      {/* Right Tile: Month Score */}
+                      <div className={`flex flex-col items-center justify-center rounded-md 2xl:rounded-lg py-0.5 px-1 min-w-0 ${miniTileCls}`}>
+                        <div className={`flex items-center gap-0.5 2xl:gap-1 text-[8px] 2xl:text-[9px] uppercase font-bold tracking-wider truncate ${mutedTextCls}`}>
+                          <span>{t('month')}</span>
+                          <span className={isMonthFallback ? accentTextCls : 'font-mono'}>
+                            {monthDisplayLabel}
+                          </span>
+                        </div>
+                        <span
+                          className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
+                            monthScore !== null
+                              ? monthScore >= target
+                                ? passTextCls
+                                : monthScore >= warningTarget
+                                ? warnTextCls
+                                : failTextCls
+                              : mutedTextCls
+                          }`}
+                        >
+                          {monthScore !== null ? formatScore(monthScore, lang) : '-'}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Right Tile: Month Score */}
-                    <div className="flex flex-col items-center justify-center bg-slate-900/70 rounded-md 2xl:rounded-lg py-0.5 fit:py-0.5 2xl:py-1 px-1 border border-slate-800/80 min-w-0">
-                      <div className="flex items-center gap-0.5 2xl:gap-1 text-[8.5px] 2xl:text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
-                        <span>{t('month')}</span>
-                        <span className={isMonthFallback ? 'text-sky-400/90 font-mono' : 'font-mono'}>
-                          {monthDisplayLabel}
-                        </span>
-                      </div>
+                    {/* Horizontal Bullet Target Bar vs Target% */}
+                    <div className={`bullet-track w-full h-1 ${barTrackCls}`}>
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${bulletFillCls}`}
+                        style={{ width: `${scoreToBulletPct(primaryScore)}%` }}
+                      />
                       <span
-                        className={`font-black text-xs sm:text-sm fit:text-xs 2xl:fit:text-base font-mono tracking-tight leading-none mt-0.5 ${
-                          monthScore !== null
-                            ? (monthScore >= target ? passTextCls : monthScore >= warningTarget ? warnTextCls : failTextCls)
-                            : mutedTextCls
-                        }`}
-                      >
-                        {monthScore !== null ? formatScore(monthScore, lang) : '-'}
-                      </span>
+                        className={`bullet-target-marker ${isLightTv ? 'bg-slate-900' : 'bg-white/90'}`}
+                        style={{ left: `${targetMarkerLeftPct}%` }}
+                      />
                     </div>
                   </div>
 
                   {/* Tier 3: Action Telemetry Footer */}
-                  <div className={`flex items-center justify-between text-[9px] 2xl:text-[10px] pt-0.5 fit:pt-0.5 2xl:pt-1 border-t border-slate-800/80 text-slate-400 font-mono shrink-0`}>
+                  <div className={`flex items-center justify-between text-[9px] 2xl:text-[10px] pt-0.5 fit:pt-0.5 2xl:pt-1 border-t ${innerRowDividerCls} ${mutedTextCls} font-mono shrink-0`}>
                     <div className="flex items-center gap-1">
                       <span>{t('open_short')}:</span>
-                      <strong className={area.open_count > 0 ? 'text-amber-400 font-bold' : subTextCls}>
+                      <strong className={area.open_count > 0 ? 'text-amber-500 font-bold' : subTextCls}>
                         {area.open_count}
                       </strong>
                     </div>
@@ -782,23 +884,23 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT 4 COLS: 7-DAY ALARM & REMEDIATION EFFECTIVENESS BOARD */}
-        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-2.5 sm:p-3 fit:p-2 fit:2xl:p-3 flex flex-col min-w-0 justify-start gap-1.5 fit:gap-1.5 2xl:fit:gap-2 fit:min-h-0 fit:overflow-hidden`}>
+        {/* RIGHT 4 COLS: 7-DAY SLA COUNTDOWN & REMEDIATION EFFECTIVENESS BOARD */}
+        <div className={`col-span-12 lg:col-span-4 ${panelCls} p-2 sm:p-2.5 fit:p-2 fit:2xl:p-3 flex flex-col min-w-0 justify-start gap-1.5 fit:gap-1.5 2xl:fit:gap-2 fit:min-h-0 fit:overflow-hidden`}>
           <div className={`shrink-0 flex items-center justify-between gap-2 pb-1 border-b min-w-0 ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${failTextCls}`}>
               {t('alarm_board_title')}
             </span>
             <Link
               to="/reports"
-              className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition ${remedBtnCls}`}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 transition ${remedBtnCls}`}
             >
               {t('remediation_report')} →
             </Link>
           </div>
 
-          {/* Single-line Compact Remediation Effectiveness Strip */}
+          {/* 3-Tile Remediation Effectiveness Strip */}
           <div className="shrink-0 mt-0.5 grid grid-cols-3 gap-1 min-w-0">
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('on_time')}
               </span>
@@ -806,7 +908,7 @@ export const Dashboard: React.FC = () => {
                 {formatScore(remediation?.on_time_rate_pct, lang)}
               </span>
             </div>
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('avg_remediation_time')}
               </span>
@@ -817,7 +919,7 @@ export const Dashboard: React.FC = () => {
                   : '-'}
               </span>
             </div>
-            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-0.5 sm:py-1 flex items-center justify-between gap-1 min-w-0`}>
+            <div className={`${remedMiniCardCls} px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 min-w-0`}>
               <span className={`text-[10px] font-semibold truncate ${mutedTextCls}`}>
                 {t('repeat_findings_label')}
               </span>
@@ -827,7 +929,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-1 flex-1 flex flex-col justify-start gap-1.5 2xl:gap-2 min-w-0 fit:min-h-0 overflow-y-auto pr-0.5">
+          {/* Expandable Urgent Alarms Countdown List */}
+          <div className="mt-0.5 flex-1 flex flex-col justify-start gap-1.5 2xl:gap-2 min-w-0 fit:min-h-0 overflow-y-auto pr-0.5">
             {urgent_alarms && urgent_alarms.length > 0 ? (
               urgent_alarms.slice(0, 6).map((f: any) => {
                 const isOverdue = f.is_overdue;
@@ -840,14 +943,14 @@ export const Dashboard: React.FC = () => {
                     : isRepeat
                     ? 'border-purple-300 bg-purple-50/80'
                     : isFixed
-                    ? 'border-blue-300 bg-blue-50/80'
+                    ? 'border-sky-300 bg-sky-50/80'
                     : 'border-amber-300 bg-amber-50/80'
                   : isOverdue
                   ? 'border-rose-500/60 bg-rose-950/25'
                   : isRepeat
                   ? 'border-purple-500/40 bg-purple-950/20'
                   : isFixed
-                  ? 'border-blue-500/40 bg-blue-950/20'
+                  ? 'border-sky-500/40 bg-sky-950/20'
                   : 'border-amber-500/40 bg-amber-950/20';
 
                 const fullCriterion = lang === 'en' ? f.content_en || f.content_vi : f.content_vi;
@@ -860,7 +963,7 @@ export const Dashboard: React.FC = () => {
                     key={f.id}
                     onClick={() => setExpandedAlarmId(isExpanded ? null : f.id)}
                     className={`w-full min-w-0 shrink-0 rounded-lg border ${cardBorder} px-2.5 py-1.5 sm:py-2 flex flex-col justify-between ${
-                      isLightTv ? 'hover:border-blue-400' : 'hover:border-slate-400'
+                      isLightTv ? 'hover:border-sky-500' : 'hover:border-sky-400/70'
                     } transition-all cursor-pointer group`}
                   >
                     <div className="flex items-center justify-between gap-1.5 text-xs min-w-0">
@@ -884,7 +987,8 @@ export const Dashboard: React.FC = () => {
                           </span>
                         ) : (
                           <span className={`font-mono text-[9px] sm:text-[10px] shrink-0 ${warnTextCls}`}>
-                            -{f.applied_penalty}{t('pts_unit')}
+                            -{f.applied_penalty}
+                            {t('pts_unit')}
                           </span>
                         )}
                       </div>
@@ -910,7 +1014,7 @@ export const Dashboard: React.FC = () => {
                               })}
                         </span>
                         <span
-                          className="p-0.5 rounded text-slate-400 group-hover:text-white transition"
+                          className="p-0.5 rounded text-slate-400 group-hover:text-sky-400 transition"
                           title={isExpanded ? t('alarm_details_collapse') : t('alarm_details_expand')}
                         >
                           {isExpanded ? (
@@ -922,30 +1026,39 @@ export const Dashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className={`text-[10px] sm:text-[11px] font-medium leading-tight my-0.5 min-w-0 ${
-                      isExpanded ? 'whitespace-normal' : 'truncate'
-                    } ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}>
+                    <div
+                      className={`text-[10px] sm:text-[11px] font-medium leading-tight my-0.5 min-w-0 ${
+                        isExpanded ? 'whitespace-normal' : 'truncate'
+                      } ${isLightTv ? 'text-slate-800' : 'text-slate-100'}`}
+                    >
                       {isExpanded ? fullCriterion : shortCriterion}
                     </div>
 
-                    {/* Expandable Accordion Drawer ("dạng xổ xuống để đọc notify") */}
                     {isExpanded && (
-                      <div className="pt-1.5 pb-1 mt-1 border-t border-white/10 flex flex-col gap-1 text-[11px] animate-in fade-in duration-150">
+                      <div className={`pt-1.5 pb-1 mt-1 border-t ${innerRowDividerCls} flex flex-col gap-1 text-[11px] animate-in fade-in duration-150`}>
                         {f.description && (
-                          <div className={`text-[11px] italic p-1.5 rounded ${
-                            isLightTv ? 'bg-slate-100 text-slate-700' : 'bg-black/30 text-slate-200'
-                          }`}>
+                          <div
+                            className={`text-[11px] italic p-1.5 rounded ${
+                              isLightTv ? 'bg-slate-100 text-slate-700' : 'bg-black/30 text-slate-200'
+                            }`}
+                          >
                             "{f.description}"
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-slate-400">
-                          <span>{t('areas')}: <strong className={subTextCls}>{f.area_name || f.area_code}</strong></span>
-                          <span>{t('due_date')}: <strong className={subTextCls}>{f.due_date}</strong></span>
+                          <span>
+                            {t('areas')}: <strong className={subTextCls}>{f.area_name || f.area_code}</strong>
+                          </span>
+                          <span>
+                            {t('due_date')}: <strong className={subTextCls}>{f.due_date}</strong>
+                          </span>
                         </div>
                       </div>
                     )}
 
-                    <div className={`flex items-center justify-between gap-2 text-[9px] sm:text-[10px] border-t pt-0.5 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}>
+                    <div
+                      className={`flex items-center justify-between gap-2 text-[9px] sm:text-[10px] border-t pt-0.5 min-w-0 ${mutedTextCls} ${innerRowDividerCls}`}
+                    >
                       <span className="truncate min-w-0">
                         {isFixed ? 'Auditor:' : 'MNG:'}{' '}
                         <strong className={subTextCls}>
@@ -977,10 +1090,12 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ROW 3: BOTTOM ANALYTICS STRIP */}
+      {/* ROW 3: BOTTOM ANALYTICS STRIP (3 Equal 4-Column Bento Cards) */}
       <div className="dashboard-row-3 grid grid-cols-12 gap-1.5 2xl:gap-2.5 fit:min-h-0 fit:grid-rows-[minmax(0,1fr)]">
-        {/* 12-WEEK TREND LINE */}
-        <div className={`col-span-12 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between`}>
+        {/* CARD 1: 12-WEEK PLANT TREND AREA CHART */}
+        <div
+          className={`col-span-12 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between`}
+        >
           <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('trend_title')}
@@ -997,10 +1112,16 @@ export const Dashboard: React.FC = () => {
 
           <div className="flex-1 min-h-[100px] fit:min-h-0 pt-0.5">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
+              <AreaChart
                 data={trend_12_weeks}
                 margin={{ top: 6, right: 6, left: -25, bottom: 0 }}
               >
+                <defs>
+                  <linearGradient id="bentoTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={chartLineStroke} stopOpacity={0.38} />
+                    <stop offset="95%" stopColor={chartLineStroke} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} />
                 <XAxis dataKey="week" tick={{ fontSize: 9, fill: chartTickColor }} />
                 <YAxis domain={[85, 100]} tick={{ fontSize: 9, fill: chartTickColor }} />
@@ -1017,84 +1138,159 @@ export const Dashboard: React.FC = () => {
                 />
                 <ReferenceLine y={target} stroke="#10b981" strokeDasharray="5 4" strokeWidth={1.5} />
                 <ReferenceLine y={warningTarget} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1.2} />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="avg_score"
                   connectNulls
                   stroke={chartLineStroke}
                   strokeWidth={2.5}
+                  fill="url(#bentoTrendGradient)"
                   dot={{ r: 2, fill: chartLineStroke }}
                   activeDot={{ r: 4 }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* 5S GROUP BREAKDOWN */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}>
+        {/* CARD 2: 5S RADAR PENTAGON SVG + S1-S5 PILLAR PARETO BREAKDOWN */}
+        <div
+          className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}
+        >
           <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {t('breakdown_title', {
                 month: formatMonthYear(month_info?.display_month || current_week.month),
               })}
             </span>
-            <span className={`text-[10px] shrink-0 ${mutedTextCls}`}>
+            <span className={`text-[10px] shrink-0 font-mono ${mutedTextCls}`}>
               {t('total_findings_count', { n: totalFindingsInMonth })}
             </span>
           </div>
 
-          <div className="flex-1 flex flex-col justify-around py-0.5 fit:py-0 text-xs gap-0.5">
-            {(s_group_breakdown || []).map((group: any) => {
-              const widthPct = Math.round(((group.count || 0) / maxGroupFindings) * 100);
-              const barColor =
-                group.s_group === 2
-                  ? 'bg-rose-500'
-                  : group.s_group === 3
-                  ? 'bg-amber-500'
-                  : group.s_group === 1
-                  ? 'bg-blue-500'
-                  : group.s_group === 4
-                  ? 'bg-indigo-500'
-                  : 'bg-emerald-500';
+          <div className="flex-1 min-h-0 grid grid-cols-12 gap-1.5 items-center py-0.5 fit:py-0">
+            {/* Left 4 Cols: 5S Radar Pentagon SVG */}
+            <div className="col-span-4 h-full flex items-center justify-center min-h-[92px] fit:min-h-0">
+              <svg viewBox="0 0 110 110" className="w-full h-full max-w-[106px] max-h-[106px]">
+                {/* Reference pentagon rings */}
+                <polygon
+                  points={buildPentagonPoints(1.0)}
+                  fill="none"
+                  stroke={isLightTv ? 'rgba(15, 23, 42, 0.14)' : 'rgba(148, 163, 184, 0.22)'}
+                  strokeWidth="1"
+                />
+                <polygon
+                  points={buildPentagonPoints(0.68)}
+                  fill="none"
+                  stroke={isLightTv ? 'rgba(15, 23, 42, 0.10)' : 'rgba(148, 163, 184, 0.14)'}
+                  strokeWidth="0.8"
+                  strokeDasharray="2 2"
+                />
+                {/* Radial axis spokes */}
+                {RADAR_AXES.map((axis) => {
+                  const rad = (axis.angle * Math.PI) / 180;
+                  const x2 = 55 + 36 * Math.cos(rad);
+                  const y2 = 55 + 36 * Math.sin(rad);
+                  const lx = 55 + 46 * Math.cos(rad);
+                  const ly = 55 + 46 * Math.sin(rad);
+                  return (
+                    <g key={axis.label}>
+                      <line
+                        x1="55"
+                        y1="55"
+                        x2={x2}
+                        y2={y2}
+                        stroke={isLightTv ? 'rgba(15, 23, 42, 0.12)' : 'rgba(148, 163, 184, 0.18)'}
+                        strokeWidth="0.8"
+                      />
+                      <text
+                        x={lx}
+                        y={ly + 3}
+                        textAnchor="middle"
+                        fontSize="8.5"
+                        fontWeight="800"
+                        fill={isLightTv ? '#334155' : '#94a3b8'}
+                      >
+                        {axis.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Actual 5S health polygon */}
+                <polygon
+                  points={radarPolygonStr}
+                  fill={isLightTv ? 'rgba(14, 165, 233, 0.22)' : 'rgba(56, 189, 248, 0.24)'}
+                  stroke={isLightTv ? '#0284c7' : '#38bdf8'}
+                  strokeWidth="1.8"
+                />
+                {radarDataPoints.map((pt) => (
+                  <circle
+                    key={pt.label}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="2.2"
+                    fill={isLightTv ? '#0284c7' : '#38bdf8'}
+                  />
+                ))}
+              </svg>
+            </div>
 
-              const sNames: Record<number, string> = {
-                1: `S1 · ${t('s1_name')}`,
-                2: `S2 · ${t('s2_name')}`,
-                3: `S3 · ${t('s3_name')}`,
-                4: `S4 · ${t('s4_name')}`,
-                5: `S5 · ${t('s5_name')}`,
-              };
+            {/* Right 8 Cols: S1-S5 Pillar Bars */}
+            <div className="col-span-8 flex flex-col justify-around h-full text-xs gap-0.5 min-w-0">
+              {(s_group_breakdown || []).map((group: any) => {
+                const widthPct = Math.round(((group.count || 0) / maxGroupFindings) * 100);
+                const barColor =
+                  group.s_group === 2
+                    ? 'bg-rose-500'
+                    : group.s_group === 3
+                    ? 'bg-amber-500'
+                    : group.s_group === 1
+                    ? 'bg-sky-500'
+                    : group.s_group === 4
+                    ? 'bg-indigo-500'
+                    : 'bg-emerald-500';
 
-              return (
-                <div key={group.s_group} className="flex flex-col gap-0.5 py-0.2">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className={`w-2 h-2 rounded-full ${barColor} shrink-0`}></span>
-                      <span className={`font-semibold truncate text-[10px] sm:text-[11px] ${subTextCls}`}>
-                        {sNames[group.s_group] || `S${group.s_group}`}
+                const sNames: Record<number, string> = {
+                  1: `S1 · ${t('s1_name')}`,
+                  2: `S2 · ${t('s2_name')}`,
+                  3: `S3 · ${t('s3_name')}`,
+                  4: `S4 · ${t('s4_name')}`,
+                  5: `S5 · ${t('s5_name')}`,
+                };
+
+                return (
+                  <div key={group.s_group} className="flex flex-col gap-0.5 py-0.2 min-w-0">
+                    <div className="flex items-center justify-between text-xs min-w-0">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className={`w-1.5 h-1.5 rounded-full ${barColor} shrink-0`}></span>
+                        <span className={`font-semibold truncate text-[10px] ${subTextCls}`}>
+                          {sNames[group.s_group] || `S${group.s_group}`}
+                        </span>
+                      </div>
+                      <span
+                        className={`font-mono font-bold text-[9px] sm:text-[10px] whitespace-nowrap shrink-0 ml-1 ${
+                          group.count > 0 ? failTextCls : mutedTextCls
+                        }`}
+                      >
+                        {group.count} (-{group.penalty}
+                        {t('pts_unit')})
                       </span>
                     </div>
-                    <span className={`font-mono font-bold text-[9px] sm:text-[10px] whitespace-nowrap shrink-0 ml-1.5 ${
-                      group.count > 0 ? failTextCls : mutedTextCls
-                    }`}>
-                      {group.count} {t('findings_unit')} (-{group.penalty}{t('pts_unit')})
-                    </span>
+                    <div className={`h-1.5 rounded-full overflow-hidden ${barTrackCls}`}>
+                      <div
+                        className={`h-full ${barColor} rounded-full transition-all duration-500`}
+                        style={{ width: `${Math.max(group.count > 0 ? 5 : 0, widthPct)}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className={`h-1.5 sm:h-2 2xl:h-2.5 rounded-full overflow-hidden ${barTrackCls}`}>
-                    <div
-                      className={`h-full ${barColor} rounded-full transition-all duration-500`}
-                      style={{ width: `${Math.max(group.count > 0 ? 5 : 0, widthPct)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
           {/* Telemetry Summary Footer Strip */}
           <div className={`shrink-0 pt-0.5 fit:pt-0.5 2xl:pt-1 border-t ${subtleDividerCls} flex items-center justify-between text-[9px] sm:text-[10px] font-mono ${mutedTextCls}`}>
-            <span className="font-semibold text-rose-400">
+            <span className={`font-semibold ${failTextCls}`}>
               {t('total_penalty_month', { n: totalPenaltiesInMonth })}
             </span>
             <span className="truncate ml-2">
@@ -1103,8 +1299,10 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* TOP & BOTTOM MONTHLY LEADERBOARD & CONTINUOUS IMPROVEMENT TRACKER */}
-        <div className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}>
+        {/* CARD 3: CONTINUOUS IMPROVEMENT KAIZEN TRACKER & LEADERBOARD */}
+        <div
+          className={`col-span-12 md:col-span-6 lg:col-span-4 min-h-[170px] fit:min-h-0 fit:overflow-hidden ${panelCls} p-2 sm:p-2.5 fit:p-1.5 fit:2xl:p-2.5 flex flex-col justify-between gap-1 fit:gap-0.5`}
+        >
           <div className={`shrink-0 flex items-center justify-between pb-1 fit:pb-0.5 2xl:pb-1.5 border-b ${subtleDividerCls}`}>
             <span className={`font-bold text-xs uppercase truncate ${headingTextCls}`}>
               {row3Tab === 'improvement'
@@ -1113,14 +1311,18 @@ export const Dashboard: React.FC = () => {
                     month: formatMonthYear(month_info?.display_month || current_week.month),
                   })}
             </span>
-            <div className="flex items-center gap-1 rounded bg-slate-800/80 p-0.5 text-[9px] font-bold shrink-0">
+            <div
+              className={`flex items-center gap-0.5 rounded-lg p-0.5 text-[9px] font-bold shrink-0 ${
+                isLightTv ? 'bg-slate-100 border border-slate-200' : 'bg-[#070d1b] border border-white/10'
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => setRow3Tab('improvement')}
-                className={`px-1.5 py-0.2 rounded transition cursor-pointer ${
+                className={`px-1.5 py-0.5 rounded-md transition cursor-pointer ${
                   row3Tab === 'improvement'
                     ? 'bg-sky-500 text-slate-950 font-black'
-                    : `${mutedTextCls} hover:text-white`
+                    : `${mutedTextCls} hover:text-sky-400`
                 }`}
                 title={t('switch_to_improvement_view')}
               >
@@ -1129,10 +1331,10 @@ export const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setRow3Tab('leaderboard')}
-                className={`px-1.5 py-0.2 rounded transition cursor-pointer ${
+                className={`px-1.5 py-0.5 rounded-md transition cursor-pointer ${
                   row3Tab === 'leaderboard'
                     ? 'bg-sky-500 text-slate-950 font-black'
-                    : `${mutedTextCls} hover:text-white`
+                    : `${mutedTextCls} hover:text-sky-400`
                 }`}
                 title={t('switch_to_leaderboard_view')}
               >
@@ -1143,26 +1345,32 @@ export const Dashboard: React.FC = () => {
 
           {row3Tab === 'improvement' ? (
             <div className="flex-1 flex flex-col justify-between text-xs py-0.5 fit:py-0 gap-1 fit:gap-0.5 min-h-0 overflow-hidden">
-              {/* Kaizen Status Micro-Strip: 1 clean horizontal row */}
-              <div className={`shrink-0 grid grid-cols-3 gap-1 p-0.5 rounded-lg border ${
-                isLightTv ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-white/5'
-              } text-[9px] sm:text-[10px] font-mono text-center whitespace-nowrap`}>
+              {/* Kaizen Status Micro-Strip */}
+              <div
+                className={`shrink-0 grid grid-cols-3 gap-1 p-0.5 rounded-lg border ${
+                  isLightTv ? 'bg-slate-100 border-slate-200' : 'bg-[#070d1b]/70 border-white/5'
+                } text-[9px] sm:text-[10px] font-mono text-center whitespace-nowrap`}
+              >
                 <div className="flex items-center justify-center gap-1">
-                  <span className="text-emerald-400 font-bold">▲</span>
+                  <span className="text-emerald-500 font-bold">▲</span>
                   <span className={`font-semibold ${passTextCls}`}>
-                    {t('kaizen_stat_improved', { n: improvement_analysis?.improved_count ?? (improvement_analysis?.top_improvers?.length || 0) })}
+                    {t('kaizen_stat_improved', {
+                      n: improvement_analysis?.improved_count ?? (improvement_analysis?.top_improvers?.length || 0),
+                    })}
                   </span>
                 </div>
-                <div className="flex items-center justify-center gap-1 border-x border-white/10">
+                <div className={`flex items-center justify-center gap-1 border-x ${subtleDividerCls}`}>
                   <span className="text-slate-400 font-bold">▬</span>
                   <span className={`font-semibold ${mutedTextCls}`}>
                     {t('kaizen_stat_stable', { n: improvement_analysis?.stagnant_count ?? 0 })}
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-1">
-                  <span className="text-rose-400 font-bold">▼</span>
+                  <span className="text-rose-500 font-bold">▼</span>
                   <span className={`font-semibold ${failTextCls}`}>
-                    {t('kaizen_stat_declined', { n: improvement_analysis?.declined_count ?? (improvement_analysis?.stagnant_areas?.length || 0) })}
+                    {t('kaizen_stat_declined', {
+                      n: improvement_analysis?.declined_count ?? (improvement_analysis?.stagnant_areas?.length || 0),
+                    })}
                   </span>
                 </div>
               </div>
@@ -1171,7 +1379,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-hidden items-stretch">
                 {/* Col 1: Top Improvers */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 mb-0.5 px-0.5 truncate ${passTextCls}`}>
                     {t('top_improvers_title')}
                   </span>
                   <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
@@ -1197,8 +1405,13 @@ export const Dashboard: React.FC = () => {
                             <span className={`font-mono font-bold text-[10px] sm:text-[11px] ${passTextCls}`}>
                               {formatScore(a.current_score, lang)}
                             </span>
-                            <span className="px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[9px] sm:text-[10px]">
-                              ▲+{a.delta}{t('pts_unit')}
+                            <span
+                              className={`px-1 py-0.2 rounded font-mono font-bold text-[9px] sm:text-[10px] ${
+                                isLightTv ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/20 text-emerald-300'
+                              }`}
+                            >
+                              ▲+{a.delta}
+                              {t('pts_unit')}
                             </span>
                           </div>
                         </div>
@@ -1211,7 +1424,7 @@ export const Dashboard: React.FC = () => {
 
                 {/* Col 2: Stagnant / Needs Improvement */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 mb-0.5 px-0.5 truncate ${failTextCls}`}>
                     {t('stagnant_areas_title')}
                   </span>
                   <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
@@ -1237,11 +1450,17 @@ export const Dashboard: React.FC = () => {
                             <span className={`font-mono font-bold text-[10px] sm:text-[11px] ${failTextCls}`}>
                               {formatScore(a.current_score, lang)}
                             </span>
-                            <span className={`px-1 py-0.2 rounded font-mono font-bold text-[9px] sm:text-[10px] ${
-                              a.delta !== null && a.delta < 0
-                                ? 'bg-rose-500/25 text-rose-300'
-                                : 'bg-amber-500/20 text-amber-300'
-                            }`}>
+                            <span
+                              className={`px-1 py-0.2 rounded font-mono font-bold text-[9px] sm:text-[10px] ${
+                                a.delta !== null && a.delta < 0
+                                  ? isLightTv
+                                    ? 'bg-rose-100 text-rose-800'
+                                    : 'bg-rose-500/25 text-rose-300'
+                                  : isLightTv
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-amber-500/20 text-amber-300'
+                              }`}
+                            >
                               {a.delta !== null && a.delta < 0
                                 ? `▼${a.delta}${t('pts_unit')}`
                                 : a.delta !== null && a.delta > 0
@@ -1264,7 +1483,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex-1 min-h-0 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-hidden items-stretch">
                 {/* Col 1: Top 3 Leaders */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 shrink-0 mb-0.5 px-0.5 truncate">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 mb-0.5 px-0.5 truncate ${passTextCls}`}>
                     {t('top_leaders_title')}
                   </span>
                   <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">
@@ -1299,7 +1518,7 @@ export const Dashboard: React.FC = () => {
 
                 {/* Col 2: Bottom 3 Needs Improvement */}
                 <div className="flex flex-col min-h-0 overflow-hidden justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 shrink-0 mb-0.5 px-0.5 truncate">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 mb-0.5 px-0.5 truncate ${failTextCls}`}>
                     {t('bottom_lagging_title')}
                   </span>
                   <div className="flex-1 min-h-0 flex flex-col justify-around gap-0.5 fit:gap-0.5 overflow-hidden">

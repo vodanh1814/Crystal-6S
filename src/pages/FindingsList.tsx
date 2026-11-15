@@ -10,6 +10,7 @@ import {
   ArrowRight,
   List,
   LayoutGrid,
+  Columns3,
   ZoomIn,
   Image as ImageIcon,
   ExternalLink,
@@ -22,18 +23,17 @@ import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import type { Finding, Area, Photo } from '../api/types';
 
 export const FindingsList: React.FC = () => {
-  const { activeTheme, user } = useAuth();
+  const { user } = useAuth();
   const { lang, t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isHybrid = false;
-  const mobilePillCls = isHybrid ? 'min-h-[40px] sm:min-h-0' : '';
+  const mobilePillCls = 'min-h-[40px] sm:min-h-0';
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // View mode: 'list' | 'gallery'
-  const [viewMode, setViewMode] = useState<'list' | 'gallery'>('list');
+  // View mode: 'list' | 'gallery' | 'kanban'
+  const [viewMode, setViewMode] = useState<'list' | 'gallery' | 'kanban'>('list');
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -104,7 +104,7 @@ export const FindingsList: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-20">
       {/* Top Bar: Back to Dashboard & Guest Notice */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Link
@@ -139,7 +139,7 @@ export const FindingsList: React.FC = () => {
         </div>
 
         {/* View mode toggle */}
-        <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200 self-start sm:self-auto">
+        <div className="inline-flex flex-wrap items-center p-1 rounded-2xl bg-slate-100 border border-slate-200 self-start sm:self-auto gap-0.5">
           <button
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -162,8 +162,71 @@ export const FindingsList: React.FC = () => {
             <LayoutGrid className="w-4 h-4" />
             <span>{t('view_photo_gallery')}</span>
           </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'kanban'
+                ? 'bg-white text-blue-600 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Columns3 className="w-4 h-4" />
+            <span>Kanban</span>
+          </button>
         </div>
       </div>
+
+      {/* Bento KPI Summary Strip */}
+      {(() => {
+        const openCount = findings.filter((f) => f.status === 'open').length;
+        const fixedCount = findings.filter((f) => f.status === 'fixed').length;
+        const closedCount = findings.filter((f) => f.status === 'closed' || f.status === 'carried').length;
+        return (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                {t('findings')}
+              </span>
+              <div className="text-2xl font-black font-mono tabular-nums text-slate-900">
+                {findings.length}
+              </div>
+            </div>
+            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-500">
+                  {t('status_open')}
+                </span>
+                <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+              </div>
+              <div className="text-2xl font-black font-mono tabular-nums text-rose-600">
+                {openCount}
+              </div>
+            </div>
+            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-500">
+                  {t('status_fixed')}
+                </span>
+                <Clock className="w-3.5 h-3.5 text-amber-500" />
+              </div>
+              <div className="text-2xl font-black font-mono tabular-nums text-amber-600">
+                {fixedCount}
+              </div>
+            </div>
+            <div className="bento-card p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 flex flex-col justify-between gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">
+                  {t('status_closed')}
+                </span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              </div>
+              <div className="text-2xl font-black font-mono tabular-nums text-emerald-600">
+                {closedCount}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Top Area Quick Pills Bar */}
       <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
@@ -409,7 +472,7 @@ export const FindingsList: React.FC = () => {
             );
           })}
         </div>
-      ) : (
+      ) : viewMode === 'gallery' ? (
         /* VIEW 2: PHOTO GALLERY VIEW (BEFORE & AFTER SIDE-BY-SIDE CARDS) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {findings.map((finding) => {
@@ -534,6 +597,142 @@ export const FindingsList: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      ) : (
+        /* VIEW 3: 3-COLUMN KANBAN BOARD */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          {[
+            {
+              key: 'open',
+              title: t('status_open'),
+              dotCls: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]',
+              badgeCls: 'bg-rose-500/15 text-rose-500 border-rose-500/30',
+              borderAccent: 'border-t-2 border-t-rose-500',
+              items: findings.filter((f) => f.status === 'open'),
+            },
+            {
+              key: 'fixed',
+              title: t('status_fixed'),
+              dotCls: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
+              badgeCls: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
+              borderAccent: 'border-t-2 border-t-amber-500',
+              items: findings.filter((f) => f.status === 'fixed'),
+            },
+            {
+              key: 'closed',
+              title: t('status_closed'),
+              dotCls: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]',
+              badgeCls: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+              borderAccent: 'border-t-2 border-t-emerald-500',
+              items: findings.filter((f) => f.status === 'closed' || f.status === 'carried'),
+            },
+          ].map((col) => (
+            <div
+              key={col.key}
+              className={`bento-card bg-white rounded-2xl border border-slate-200 overflow-hidden ${col.borderAccent}`}
+            >
+              {/* Column Header */}
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.dotCls}`} />
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 truncate">
+                    {col.title}
+                  </h3>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-black font-mono tabular-nums border shrink-0 ${col.badgeCls}`}
+                >
+                  {col.items.length}
+                </span>
+              </div>
+
+              {/* Column Cards */}
+              <div className="p-3 space-y-2.5 max-h-[70vh] overflow-y-auto">
+                {col.items.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                    {t('noData')}
+                  </div>
+                ) : (
+                  col.items.map((finding) => {
+                    const allPhotos = finding.photos || [];
+                    const previewPhoto = allPhotos.find((p) => p.kind === 'before') || allPhotos[0];
+                    return (
+                      <div
+                        key={finding.id}
+                        className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-blue-400 transition-all space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[11px] font-black px-2 py-0.5 rounded bg-blue-100 text-blue-800 shrink-0">
+                              {finding.area_code}
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-slate-500 truncate">
+                              {finding.item_code}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[11px] font-black font-mono tabular-nums text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+                              -{finding.applied_penalty}{t('pts_unit')}
+                            </span>
+                            <StatusBadge status={finding.status} type="finding" />
+                          </div>
+                        </div>
+
+                        <Link
+                          to={`/findings/${finding.id}`}
+                          className="block text-xs font-bold text-slate-900 hover:text-blue-600 line-clamp-2 transition-colors"
+                        >
+                          {lang === 'en' ? finding.content_en || finding.content_vi : finding.content_vi}
+                        </Link>
+
+                        {finding.description && (
+                          <p className="text-[11px] text-slate-500 line-clamp-2 italic">
+                            {finding.description}
+                          </p>
+                        )}
+
+                        {previewPhoto && (
+                          <button
+                            type="button"
+                            onClick={() => openLightboxForFinding(finding, previewPhoto.id, allPhotos)}
+                            className="relative w-full h-28 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 group/thumb cursor-pointer block"
+                            title={t('click_to_zoom')}
+                          >
+                            <img
+                              src={`/api/photos/${previewPhoto.id}`}
+                              alt={finding.item_code || 'Finding'}
+                              className="w-full h-full object-cover group-hover/thumb:scale-105 transition"
+                              loading="lazy"
+                            />
+                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-slate-900/75 text-white text-[9px] font-bold uppercase tracking-wider">
+                              {allPhotos.length}
+                            </span>
+                            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/thumb:opacity-100 transition flex items-center justify-center text-white">
+                              <ZoomIn className="w-4 h-4" />
+                            </div>
+                          </button>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/70 text-[10px] text-slate-400">
+                          <span className="font-mono tabular-nums truncate">
+                            {t('week')} {finding.iso_week}
+                            {finding.due_date ? ` · ${t('due_date')}: ${finding.due_date}` : ''}
+                          </span>
+                          <Link
+                            to={`/findings/${finding.id}`}
+                            className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700 shrink-0"
+                          >
+                            <span>{t('edit')}</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

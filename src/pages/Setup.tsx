@@ -19,18 +19,15 @@ import { fileToLogoDataUrl } from '../lib/imageCompression';
 import { APP_VERSION } from '../version';
 
 export const Setup: React.FC = () => {
-  const { login, updateBranding, activeTheme, colorModeOverride, setColorModeOverride } = useAuth();
+  const { login, updateBranding, colorModeOverride, setColorModeOverride } = useAuth();
   const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
-
-  const isClassic = true;
-  const isGlass = false;
 
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dark, setDark] = useState<boolean>(() => {
-    if (!isClassic && colorModeOverride) {
+    if (colorModeOverride) {
       return colorModeOverride === 'dark';
     }
     return true;
@@ -41,17 +38,12 @@ export const Setup: React.FC = () => {
     document.documentElement.dataset.colorMode = mode;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
     if (meta) meta.content = mode;
-    return () => {
-      if (meta && isClassic) meta.content = 'light dark';
-    };
-  }, [dark, isClassic]);
+  }, [dark]);
 
   const handleToggleDark = () => {
     const next = !dark;
     setDark(next);
-    if (!isClassic) {
-      setColorModeOverride(next ? 'dark' : 'light');
-    }
+    setColorModeOverride(next ? 'dark' : 'light');
   };
 
   // 1. Branding
@@ -131,101 +123,54 @@ export const Setup: React.FC = () => {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${
-          dark ? (isClassic ? 'bg-slate-950' : 'bg-[#070b14]') : 'bg-slate-100'
+          dark ? 'bg-[#060c1a]' : 'bg-[#eef4fb]'
         }`}
       >
-        <Loader2
-          className={`w-8 h-8 animate-spin ${
-            isClassic ? 'text-emerald-500' : isGlass ? 'text-blue-500' : 'text-sky-500'
-          }`}
-        />
+        <Loader2 className={`w-8 h-8 animate-spin ${dark ? 'text-cyan-400' : 'text-blue-600'}`} />
       </div>
     );
   }
 
-  const outerBg = isClassic
-    ? dark
-      ? 'bg-slate-950'
-      : 'bg-slate-100'
-    : isGlass
-    ? dark
-      ? 'bg-[#060c1a]'
-      : 'bg-[#eef4fb]'
-    : dark
-    ? 'bg-[#070b14]'
-    : 'bg-[#f4f7fb]';
+  const outerBg = dark ? 'bg-[#060c1a]' : 'bg-[#eef4fb]';
 
-  const cardBg = isClassic
-    ? dark
-      ? 'bg-slate-900 border-slate-800 text-slate-100'
-      : 'bg-white border-slate-200 text-slate-900'
-    : isGlass
-    ? dark
-      ? 'bg-[#091226]/85 backdrop-blur-xl border-white/15 text-slate-100'
-      : 'bg-white/85 backdrop-blur-xl border-blue-200/70 text-slate-900'
-    : dark
-    ? 'bg-[#0f1624] border-white/10 text-slate-100'
-    : 'bg-white border-slate-200/90 text-slate-900';
+  const outerStyle = {
+    backgroundImage: dark
+      ? 'radial-gradient(circle at 18% 12%, rgba(6, 182, 212, 0.18), transparent 46%), radial-gradient(circle at 82% 85%, rgba(37, 99, 235, 0.16), transparent 50%)'
+      : 'radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.16), transparent 45%), radial-gradient(circle at 85% 90%, rgba(37, 99, 235, 0.10), transparent 45%)',
+  };
 
-  const sectionBg = isClassic
-    ? dark
-      ? 'bg-slate-950/60 border-slate-800'
-      : 'bg-slate-50 border-slate-200/80'
-    : dark
+  const cardBg = dark
+    ? 'bg-[#0b1326]/85 backdrop-blur-xl border-white/15 text-slate-100'
+    : 'bg-white/85 backdrop-blur-xl border-blue-200/70 text-slate-900';
+
+  const sectionBg = dark
     ? 'bg-[#080d18]/80 border-white/10'
     : 'bg-slate-50/80 border-slate-200/80';
 
-  const inputBg = isClassic
-    ? dark
-      ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:ring-emerald-500'
-      : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-emerald-500'
-    : dark
-    ? 'bg-[#0f1624] border-white/15 text-white placeholder-slate-500 focus:ring-sky-500'
+  const inputBg = dark
+    ? 'bg-[#0f1624] border-white/15 text-white placeholder-slate-500 focus:ring-cyan-500'
     : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-blue-500';
 
   const subText = dark ? 'text-slate-400' : 'text-slate-500';
   const labelText = dark ? 'text-slate-300' : 'text-slate-700';
 
-  const accentHeadingCls = isClassic
-    ? 'text-emerald-500'
-    : isGlass
-    ? dark
-      ? 'text-sky-400'
-      : 'text-blue-600'
-    : dark
-    ? 'text-sky-400'
-    : 'text-sky-600';
+  const accentHeadingCls = dark ? 'text-cyan-400' : 'text-blue-600';
 
-  const heroBadgeCls = isClassic
-    ? 'bg-emerald-600 shadow-emerald-500/30'
-    : isGlass
-    ? 'bg-linear-to-br from-blue-600 to-sky-500 shadow-blue-600/30'
-    : 'bg-linear-to-br from-sky-500 to-blue-600 shadow-sky-500/30';
+  const heroBadgeCls = 'bg-linear-to-br from-cyan-500 via-blue-600 to-emerald-500 shadow-cyan-500/30';
 
-  const versionPillCls = isClassic
-    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-    : isGlass
-    ? dark
-      ? 'bg-blue-500/20 border-blue-400/40 text-sky-300'
-      : 'bg-blue-50 border-blue-200 text-blue-700'
-    : dark
-    ? 'bg-sky-500/20 border-sky-400/40 text-sky-300'
-    : 'bg-sky-50 border-sky-200 text-sky-700';
+  const versionPillCls = dark
+    ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300'
+    : 'bg-blue-50 border-blue-200 text-blue-700';
 
-  const sampleToggleActiveCls = isClassic
-    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-500'
-    : isGlass
-    ? 'border-blue-500/50 bg-blue-500/15 text-blue-500'
-    : 'border-sky-500/50 bg-sky-500/15 text-sky-500';
+  const sampleToggleActiveCls = dark
+    ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
+    : 'border-blue-500/50 bg-blue-500/10 text-blue-700';
 
-  const submitBtnCls = isClassic
-    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
-    : isGlass
-    ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30'
-    : 'bg-sky-600 hover:bg-sky-500 shadow-sky-600/30';
+  const submitBtnCls = 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-600/30';
 
   return (
     <div
+      style={outerStyle}
       className={`min-h-screen w-full overflow-y-auto flex items-center justify-center p-4 transition-colors ${outerBg}`}
     >
       <div
@@ -331,11 +276,7 @@ export const Setup: React.FC = () => {
                 </label>
                 <div className="flex items-center gap-3">
                   {companyLogo ? (
-                    <div
-                      className={`logo-well relative w-14 h-14 rounded-xl border bg-white p-1.5 flex items-center justify-center shrink-0 shadow-sm ${
-                        isClassic ? 'border-emerald-500/40' : 'border-blue-500/40'
-                      }`}
-                    >
+                    <div className="logo-well relative w-14 h-14 rounded-xl border border-cyan-500/40 bg-white p-1.5 flex items-center justify-center shrink-0 shadow-sm">
                       <img
                         src={companyLogo}
                         alt="Logo Preview"

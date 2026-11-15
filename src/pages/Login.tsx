@@ -12,15 +12,11 @@ export const Login: React.FC = () => {
     user,
     companyName,
     companyLogo,
-    activeTheme,
     colorModeOverride,
     setColorModeOverride,
   } = useAuth();
   const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
-
-  const isClassic = true;
-  const isGlass = false;
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +24,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [logoBroken, setLogoBroken] = useState(false);
   const [dark, setDark] = useState(() => {
-    if (!isClassic && colorModeOverride) {
+    if (colorModeOverride) {
       return colorModeOverride === 'dark';
     }
     return true;
@@ -39,10 +35,7 @@ export const Login: React.FC = () => {
     document.documentElement.dataset.colorMode = mode;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
     if (meta) meta.content = mode;
-    return () => {
-      if (meta && isClassic) meta.content = 'light dark';
-    };
-  }, [dark, isClassic]);
+  }, [dark]);
 
   useEffect(() => {
     if (user) {
@@ -62,9 +55,7 @@ export const Login: React.FC = () => {
   const handleToggleDark = () => {
     const next = !dark;
     setDark(next);
-    if (!isClassic) {
-      setColorModeOverride(next ? 'dark' : 'light');
-    }
+    setColorModeOverride(next ? 'dark' : 'light');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,85 +77,31 @@ export const Login: React.FC = () => {
     }
   };
 
-  const outerBgCls = isClassic
-    ? dark
-      ? 'bg-slate-950'
-      : 'bg-slate-100'
-    : isGlass
-    ? dark
-      ? 'bg-[#060c1a]'
-      : 'bg-[#eef4fb]'
-    : dark
-    ? 'bg-[#070b14]'
-    : 'bg-[#f4f7fb]';
+  const outerBgCls = dark ? 'bg-[#060c1a]' : 'bg-[#eef4fb]';
 
-  const outerStyle = isClassic
-    ? undefined
-    : isGlass
-    ? {
-        backgroundImage: dark
-          ? 'radial-gradient(circle at 18% 12%, rgba(37, 99, 235, 0.22), transparent 46%), radial-gradient(circle at 82% 85%, rgba(6, 182, 212, 0.14), transparent 50%)'
-          : 'radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.18), transparent 45%), radial-gradient(circle at 85% 90%, rgba(37, 99, 235, 0.12), transparent 45%)',
-      }
-    : {
-        backgroundImage: dark
-          ? 'radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.12), transparent 48%), radial-gradient(circle at 85% 95%, rgba(37, 99, 235, 0.10), transparent 48%)'
-          : 'radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.10), transparent 45%)',
-      };
+  const outerStyle = {
+    backgroundImage: dark
+      ? 'radial-gradient(circle at 18% 12%, rgba(6, 182, 212, 0.20), transparent 46%), radial-gradient(circle at 82% 85%, rgba(37, 99, 235, 0.16), transparent 50%)'
+      : 'radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.18), transparent 45%), radial-gradient(circle at 85% 90%, rgba(37, 99, 235, 0.12), transparent 45%)',
+  };
 
-  const topBtnCls = isClassic
-    ? dark
-      ? 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-200'
-      : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-800 shadow-xs'
-    : isGlass
-    ? dark
-      ? 'bg-[#0b152a]/80 backdrop-blur-md border-white/10 hover:bg-[#11203d] text-slate-200'
-      : 'bg-white/85 backdrop-blur-md border-slate-200/80 hover:bg-white text-slate-800 shadow-xs'
-    : dark
-    ? 'bg-[#0f1624] border-white/10 hover:bg-white/10 text-slate-200'
-    : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-800 shadow-xs';
+  const topBtnCls = dark
+    ? 'bg-[#0b152a]/80 backdrop-blur-md border-white/15 hover:bg-[#11203d] text-slate-200'
+    : 'bg-white/85 backdrop-blur-md border-blue-200/80 hover:bg-white text-slate-800 shadow-xs';
 
-  const cardCls = isClassic
-    ? dark
-      ? 'bg-slate-900 border-slate-800 text-slate-100'
-      : 'bg-white border-slate-200 text-slate-900'
-    : isGlass
-    ? dark
-      ? 'bg-[#091226]/85 backdrop-blur-xl border-white/15 text-slate-100'
-      : 'bg-white/85 backdrop-blur-xl border-blue-200/70 text-slate-900'
-    : dark
-    ? 'bg-[#0f1624] border-white/10 text-slate-100'
-    : 'bg-white border-slate-200/90 text-slate-900';
+  const cardCls = dark
+    ? 'bg-[#0b1326]/85 backdrop-blur-xl border-white/15 text-slate-100'
+    : 'bg-white/85 backdrop-blur-xl border-blue-200/70 text-slate-900';
 
-  const inputSurfaceCls = isClassic
-    ? dark
-      ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:ring-emerald-500'
-      : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-emerald-500'
-    : dark
-    ? 'bg-[#080d18] border-white/15 text-white placeholder-slate-500 focus:ring-sky-500'
+  const inputSurfaceCls = dark
+    ? 'bg-[#080d18] border-white/15 text-white placeholder-slate-500 focus:ring-cyan-500'
     : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:ring-blue-500';
 
-  const brandBadgeCls = isClassic
-    ? 'bg-linear-to-br from-emerald-500 to-sky-600 shadow-emerald-500/30'
-    : isGlass
-    ? 'bg-linear-to-br from-blue-600 to-sky-500 shadow-blue-600/30'
-    : 'bg-linear-to-br from-sky-500 to-blue-600 shadow-sky-500/30';
+  const brandBadgeCls = 'bg-linear-to-br from-cyan-500 via-blue-600 to-emerald-500 shadow-cyan-500/30';
 
-  const submitBtnCls = isClassic
-    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
-    : isGlass
-    ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30'
-    : 'bg-sky-600 hover:bg-sky-500 shadow-sky-600/30';
+  const submitBtnCls = 'bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-600/30';
 
-  const accentTextCls = isClassic
-    ? 'text-emerald-500'
-    : isGlass
-    ? dark
-      ? 'text-sky-400'
-      : 'text-blue-600'
-    : dark
-    ? 'text-sky-400'
-    : 'text-sky-600';
+  const accentTextCls = dark ? 'text-cyan-400' : 'text-blue-600';
 
   return (
     <div

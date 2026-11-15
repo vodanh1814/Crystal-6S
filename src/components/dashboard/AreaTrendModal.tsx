@@ -10,8 +10,10 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts';
-import { X, TrendingUp, AlertTriangle, CheckCircle2, ShieldAlert, ExternalLink, Calendar, UserCheck } from 'lucide-react';
-import { formatScore, formatDelta } from '../../lib/format';
+import { X, TrendingUp, ExternalLink, UserCheck } from 'lucide-react';
+import { formatScore } from '../../lib/format';
+import { resolveAppColorMode } from '../../lib/theme';
+import { useAuth } from '../../context/AuthContext';
 import type { TranslationKey } from '../../i18n/context';
 
 export interface AreaTrendModalProps {
@@ -47,20 +49,27 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
   lang = 'vi',
   t,
 }) => {
+  const { colorModeOverride } = useAuth();
   if (!isOpen || !area) return null;
 
+  const isLight = resolveAppColorMode(colorModeOverride, true) === 'light';
   const isSubmitted = area.status === 'submitted' && area.score !== null;
   const isPass = area.score !== null && area.score >= target;
   const isWarning = area.score !== null && area.score >= warningTarget && area.score < target;
-  const isFail = area.score !== null && area.score < warningTarget;
 
   const isMonthPass = area.month_avg !== null && area.month_avg >= target;
   const isMonthWarn = area.month_avg !== null && area.month_avg >= warningTarget && area.month_avg < target;
 
-  const passTextCls = 'text-emerald-400';
-  const warnTextCls = 'text-amber-400';
-  const failTextCls = 'text-rose-400';
-  const mutedTextCls = 'text-slate-400';
+  const passTextCls = isLight ? 'text-emerald-700' : 'text-emerald-400';
+  const warnTextCls = isLight ? 'text-amber-700' : 'text-amber-400';
+  const failTextCls = isLight ? 'text-rose-700' : 'text-rose-400';
+  const mutedTextCls = isLight ? 'text-slate-500' : 'text-slate-400';
+  const modalBoxCls = isLight
+    ? 'bg-white/95 backdrop-blur-xl border-slate-200 text-slate-900'
+    : 'bg-[#0b1324]/95 backdrop-blur-xl border-slate-700/80 text-slate-100';
+  const modalHeaderCls = isLight ? 'bg-slate-50/90 border-slate-200' : 'bg-slate-950/70 border-slate-800';
+  const tileBoxCls = isLight ? 'border-slate-200 bg-slate-50/80' : 'border-slate-800 bg-slate-950/60';
+  const sectionBoxCls = isLight ? 'border-slate-200 bg-slate-50/70' : 'border-slate-800 bg-slate-950/80';
 
   // 12-week chart data
   const rawTrend = area.trend_12_weeks || [];
@@ -83,46 +92,50 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className={`border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden ${modalBoxCls}`}>
         
         {/* Header */}
-        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className={`px-4 py-3 sm:px-6 sm:py-4 border-b flex items-center justify-between gap-3 shrink-0 ${modalHeaderCls}`}>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+              <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold border ${
+                isLight ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+              }`}>
                 {area.area_code}
               </span>
-              <h2 className="text-base sm:text-lg font-black truncate text-white">
+              <h2 className={`text-base sm:text-lg font-black truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {area.area_name || area.area_code}
               </h2>
               {isSubmitted ? (
-                <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                   isPass
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    ? isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                     : isWarning
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    ? isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                 }`}>
                   {isPass ? t('tag_pass') : isWarning ? t('tag_warning') : t('tag_fail')}
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                  isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                }`}>
                   {t('badge_pending_week', { week: currentWeek.iso_week })}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap">
+            <div className={`flex items-center gap-3 text-xs mt-1 flex-wrap ${mutedTextCls}`}>
               {area.manager_name && (
                 <span className="flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{t('area_manager_label')}: <strong className="text-slate-300">{area.manager_name}</strong></span>
+                  <UserCheck className="w-3.5 h-3.5 opacity-70" />
+                  <span>{t('area_manager_label')}: <strong className={isLight ? 'text-slate-700' : 'text-slate-300'}>{area.manager_name}</strong></span>
                 </span>
               )}
               {area.auditor_name && (
                 <span className="flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{t('area_auditor_label')}: <strong className="text-slate-300">{area.auditor_name}</strong></span>
+                  <UserCheck className="w-3.5 h-3.5 opacity-70" />
+                  <span>{t('area_auditor_label')}: <strong className={isLight ? 'text-slate-700' : 'text-slate-300'}>{area.auditor_name}</strong></span>
                 </span>
               )}
             </div>
@@ -131,7 +144,9 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer shrink-0"
+            className={`p-1.5 rounded-lg transition cursor-pointer shrink-0 ${
+              isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -144,15 +159,15 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
           {/* Row 1: KPI Telemetry Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {/* Week Score */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+            <div className={`rounded-xl border p-3 flex flex-col justify-between ${tileBoxCls}`}>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase ${mutedTextCls}`}>
                 {t('col_week_label', { week: `W${currentWeek.iso_week}` })}
               </span>
               <div className="my-1">
                 <span className={`text-xl sm:text-2xl font-black font-mono leading-none ${
                   isSubmitted
                     ? (isPass ? passTextCls : isWarning ? warnTextCls : failTextCls)
-                    : 'text-amber-400 text-sm sm:text-base'
+                    : `${warnTextCls} text-sm sm:text-base`
                 }`}>
                   {isSubmitted ? formatScore(area.score, lang) : t('waiting_audit_badge')}
                 </span>
@@ -163,8 +178,8 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
             </div>
 
             {/* Month Score */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+            <div className={`rounded-xl border p-3 flex flex-col justify-between ${tileBoxCls}`}>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase ${mutedTextCls}`}>
                 {t('monthly_avg_kpi', { month: monthInfo?.display_month || '' })}
               </span>
               <div className="my-1 flex items-baseline gap-1.5">
@@ -185,8 +200,8 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
             </div>
 
             {/* Week-over-Week Delta */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+            <div className={`rounded-xl border p-3 flex flex-col justify-between ${tileBoxCls}`}>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase ${mutedTextCls}`}>
                 {t('wow_delta_label')}
               </span>
               <div className="my-1">
@@ -208,8 +223,8 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
             </div>
 
             {/* Findings Status */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+            <div className={`rounded-xl border p-3 flex flex-col justify-between ${tileBoxCls}`}>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase ${mutedTextCls}`}>
                 {t('open_findings_kpi')}
               </span>
               <div className="my-1 flex items-baseline gap-2">
@@ -219,7 +234,7 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
                   {area.open_count || 0}
                 </span>
                 {area.overdue_count > 0 && (
-                  <span className="text-xs font-bold text-rose-400">
+                  <span className={`text-xs font-bold ${failTextCls}`}>
                     ({area.overdue_count} {t('alarm_badge')})
                   </span>
                 )}
@@ -231,20 +246,20 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
           </div>
 
           {/* Row 2: 12-Week Score Trend LineChart */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 sm:p-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 mb-3">
+          <div className={`rounded-xl border p-3 sm:p-4 ${sectionBoxCls}`}>
+            <div className={`flex items-center justify-between pb-2 border-b mb-3 ${isLight ? 'border-slate-200' : 'border-slate-800/80'}`}>
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-sky-400" />
-                <h3 className="font-bold text-xs sm:text-sm text-slate-200">
+                <TrendingUp className="w-4 h-4 text-sky-500" />
+                <h3 className={`font-bold text-xs sm:text-sm ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                   {t('area_trend_12_weeks_title')}
                 </h3>
               </div>
               <div className="flex items-center gap-3 text-[10px] font-mono">
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <span className="w-2 h-0.5 bg-emerald-400 inline-block"></span> ≥{target}%
+                <span className={`${passTextCls} flex items-center gap-1`}>
+                  <span className="w-2 h-0.5 bg-emerald-500 inline-block"></span> ≥{target}%
                 </span>
-                <span className="text-amber-400 flex items-center gap-1">
-                  <span className="w-2 h-0.5 bg-amber-400 inline-block"></span> ≥{warningTarget}%
+                <span className={`${warnTextCls} flex items-center gap-1`}>
+                  <span className="w-2 h-0.5 bg-amber-500 inline-block"></span> ≥{warningTarget}%
                 </span>
               </div>
             </div>
@@ -253,28 +268,26 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
               <div className="h-44 sm:h-52 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.12)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#cbd5e1' : 'rgba(148, 163, 184, 0.12)'} />
                     <XAxis
                       dataKey="week"
-                      tick={{ fill: '#94a3b8', fontSize: 10 }}
-                      axisLine={{ stroke: '#334155' }}
+                      tick={{ fill: isLight ? '#475569' : '#94a3b8', fontSize: 10 }}
+                      axisLine={{ stroke: isLight ? '#cbd5e1' : '#334155' }}
                       tickLine={false}
                     />
                     <YAxis
                       domain={[70, 100]}
                       ticks={[70, 80, 90, 95, 100]}
-                      tick={{ fill: '#94a3b8', fontSize: 10 }}
-                      axisLine={{ stroke: '#334155' }}
+                      tick={{ fill: isLight ? '#475569' : '#94a3b8', fontSize: 10 }}
+                      axisLine={{ stroke: isLight ? '#cbd5e1' : '#334155' }}
                       tickLine={false}
                     />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#0f172a',
-                        borderColor: '#334155',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        color: '#f8fafc',
-                      }}
+                      contentStyle={
+                        isLight
+                          ? { backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', fontSize: '11px', color: '#0f172a' }
+                          : { backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px', color: '#f8fafc' }
+                      }
                       formatter={(val: any) => [`${val}%`, lang === 'en' ? '5S Score' : 'Điểm 5S']}
                     />
                     <ReferenceLine y={target} stroke="#10b981" strokeDasharray="3 3" strokeWidth={1.2} />
@@ -282,9 +295,9 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#38bdf8"
+                      stroke={isLight ? '#0284c7' : '#38bdf8'}
                       strokeWidth={2.4}
-                      dot={{ fill: '#38bdf8', r: 3 }}
+                      dot={{ fill: isLight ? '#0284c7' : '#38bdf8', r: 3 }}
                       activeDot={{ r: 5, fill: '#0284c7' }}
                       connectNulls
                     />
@@ -299,8 +312,8 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
           </div>
 
           {/* Row 3: 5S Pillars Breakdown for this Area */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 sm:p-4">
-            <h3 className="font-bold text-xs sm:text-sm text-slate-200 mb-2.5">
+          <div className={`rounded-xl border p-3 sm:p-4 ${sectionBoxCls}`}>
+            <h3 className={`font-bold text-xs sm:text-sm mb-2.5 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
               {t('area_s_breakdown_title', { month: monthInfo?.display_month || '' })}
             </h3>
 
@@ -312,19 +325,19 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
                     key={p.group}
                     className={`rounded-lg border p-2 flex flex-col justify-between ${
                       hasViolations
-                        ? 'border-rose-500/30 bg-rose-950/20'
-                        : 'border-slate-800 bg-slate-900/60'
+                        ? isLight ? 'border-rose-200 bg-rose-50' : 'border-rose-500/30 bg-rose-950/20'
+                        : isLight ? 'border-slate-200 bg-white' : 'border-slate-800 bg-slate-900/60'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-black text-sky-400">{p.code}</span>
+                      <span className="font-black text-sky-500">{p.code}</span>
                       {hasViolations ? (
-                        <span className="text-[10px] font-bold text-rose-400">-{p.penalty}{t('pts_unit')}</span>
+                        <span className={`text-[10px] font-bold ${failTextCls}`}>-{p.penalty}{t('pts_unit')}</span>
                       ) : (
-                        <span className="text-[10px] font-bold text-emerald-400">0{t('pts_unit')}</span>
+                        <span className={`text-[10px] font-bold ${passTextCls}`}>0{t('pts_unit')}</span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 truncate mt-1">
+                    <span className={`text-[10px] truncate mt-1 ${mutedTextCls}`}>
                       {lang === 'en' ? p.name_en : p.name_vi}
                     </span>
                     <span className="text-[10px] font-mono text-slate-500 mt-0.5">
@@ -338,11 +351,15 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 sm:px-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className={`px-4 py-3 sm:px-6 border-t flex items-center justify-between gap-3 shrink-0 ${modalHeaderCls}`}>
           <Link
             to={`/findings?area_id=${area.area_id}`}
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 text-xs font-bold transition"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition ${
+              isLight
+                ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200'
+                : 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border-sky-400/30'
+            }`}
           >
             <span>{t('area_view_findings_btn', { n: area.open_count || 0 })}</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -351,7 +368,9 @@ export const AreaTrendModal: React.FC<AreaTrendModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition cursor-pointer"
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              isLight ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            }`}
           >
             {t('area_close_btn')}
           </button>

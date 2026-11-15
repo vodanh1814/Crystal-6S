@@ -71,14 +71,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sync active theme & color-scheme meta hint to <html> attributes
   useEffect(() => {
     document.documentElement.dataset.uiTheme = activeTheme;
+    const effective = colorModeOverride === 'light' || colorModeOverride === 'dark' ? colorModeOverride : 'dark';
+    document.documentElement.dataset.colorMode = effective;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
-    if (activeTheme === 'classic') {
-      if (meta) meta.content = 'light dark';
-    } else if (colorModeOverride === 'light' || colorModeOverride === 'dark') {
-      if (meta) meta.content = colorModeOverride;
-    } else {
-      if (meta) meta.content = 'light dark';
-    }
+    if (meta) meta.content = effective;
   }, [activeTheme, colorModeOverride]);
 
   // Listen for cross-tab theme / color-mode changes

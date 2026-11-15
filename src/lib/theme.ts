@@ -10,6 +10,21 @@ export function resolveColorMode(
   return isDashboardRoute ? 'dark' : 'light';
 }
 
+/**
+ * Sample A — Bento Telemetry Pro unified Dark/Light resolver across the entire app.
+ * Defaults to Dark (Obsidian & Sapphire) while allowing 1-click user switching
+ * across both Dashboard and inner workspace pages.
+ */
+export function resolveAppColorMode(
+  colorModeOverride: ColorMode | null,
+  _isDashboardRoute = true
+): ColorMode {
+  if (colorModeOverride === 'light' || colorModeOverride === 'dark') {
+    return colorModeOverride;
+  }
+  return 'dark';
+}
+
 export interface DashboardLayoutMeta {
   id: DashboardLayoutId;
   icon: string;

@@ -34,8 +34,8 @@ import type { Area } from '../api/types';
 
 export const Reports: React.FC = () => {
   const { t, lang } = useI18n();
-  const { isAdmin, activeTheme } = useAuth();
-  const stickyTableCls = activeTheme !== 'classic' ? 'sticky-matrix-table' : '';
+  const { isAdmin } = useAuth();
+  const stickyTableCls = 'sticky-matrix-table';
   const [tab, setTab] = useState<'weekly' | 'monthly' | 'remediation'>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'monthly' || params.get('import') === '1') return 'monthly';

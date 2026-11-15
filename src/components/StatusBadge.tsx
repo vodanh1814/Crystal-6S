@@ -1,7 +1,7 @@
 import React from 'react';
 import { useI18n } from '../i18n/context';
 import { useAuth } from '../context/AuthContext';
-import { resolveColorMode } from '../lib/theme';
+import { resolveAppColorMode } from '../lib/theme';
 
 interface StatusBadgeProps {
   status: string;
@@ -10,10 +10,10 @@ interface StatusBadgeProps {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'finding' }) => {
   const { t } = useI18n();
-  const { activeTheme, colorModeOverride } = useAuth();
+  const { colorModeOverride } = useAuth();
 
-  const mode = resolveColorMode(activeTheme, colorModeOverride, false);
-  const isModernLight = activeTheme !== 'classic' && mode === 'light';
+  const mode = resolveAppColorMode(colorModeOverride, false);
+  const isModernLight = mode === 'light';
 
   if (type === 'audit') {
     if (status === 'submitted') {

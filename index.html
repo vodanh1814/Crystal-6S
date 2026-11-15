@@ -11,9 +11,10 @@
           var theme = 'classic';
           document.documentElement.dataset.uiTheme = theme;
           var meta = document.querySelector('meta[name="color-scheme"]');
-          var isDashboard = window.location.pathname === '/';
-          document.documentElement.dataset.colorMode = isDashboard ? 'dark' : 'light';
-          if (meta) meta.content = 'light dark';
+          var savedMode = localStorage.getItem('crystal5s_color_mode');
+          var resolved = savedMode === 'light' || savedMode === 'dark' ? savedMode : 'dark';
+          document.documentElement.dataset.colorMode = resolved;
+          if (meta) meta.content = resolved;
         } catch (e) {}
       })();
     </script>
@@ -21,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     />
     <title>Crystal 5S Audit — Smart Factory Andon</title>
   </head>

@@ -7,6 +7,26 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.12.0] - 2026-11-15
+
+### Added & Redesigned (Thiết Kế Lại Toàn Bộ Giao Diện Mẫu A — Bento Telemetry Pro Adaptive Glass & Dark/Light)
+- **Hệ Thống Giao Diện Bento Telemetry Pro & Chuyển Đổi Dark/Light Tức Thì (`src/index.css`, `src/lib/theme.ts`, `src/context/AuthContext.tsx`)**:
+  - Áp dụng cặp font **Plus Jakarta Sans** + **Fira Code (`tabular-nums`)** cho toàn bộ số liệu KPI và ma trận chấm điểm.
+  - Hỗ trợ chuyển đổi mượt mà giữa **Dark Mode (`#070b14` Deep Obsidian)** và **Light Mode (`#eef4fb` Daylight Glass)** trên toàn bộ các trang, đồng bộ tức thì vào `localStorage` (`crystal5s_color_mode`).
+- **App Shell & Thanh Điều Hướng Đa Thiết Bị (`src/components/Layout.tsx`)**:
+  - Nâng cấp **Bento Glass Sidebar Rail** (kèm huy hiệu đếm cảnh báo `alarmCount` tại mục Lỗi 5S), **Top Command Header** với nút chuyển đổi Dark/Light trực tiếp, nút **Full TV Mode**, và **Mobile Bottom Navigation Bar** cố định cho điện thoại/máy tính bảng.
+- **TV Andon Dashboard & Phân Tích Chuyên Sâu (`src/pages/Dashboard.tsx`, `src/components/dashboard/AreaTrendModal.tsx`)**:
+  - **6 Thẻ KPI Bento Telemetry** tích hợp **Bullet Target Bar** so sánh điểm thực tế với mục tiêu KPI và thanh tiến độ xử lý lỗi 3 phân đoạn.
+  - **Ma Trận 15 Khu Vực (5×3 Bento Grid)** khóa khung hình **Zero-Scroll (`100dvh`)** trên màn hình PC/TV (`lg+`) và giữ trọn vẹn 3 tầng thông tin (Header khu vực + Điểm & Bullet Target Bar + Footer trạng thái lỗi/SLA).
+  - **Biểu Đồ Radar Ngũ Giác 5S (SVG Pentagon) + Thanh Pareto S1–S5**, **Biểu Đồ Xu Hướng 12 Tuần (`AreaChart`)**, **Bảng Đếm Ngược SLA 7 Ngày** và **Bảng Cải Tiến Kaizen & Xếp Hạng 2 Cột**.
+- **Nâng Cấp Đồng Bộ Các Trang Nghiệp Vụ & Xác Thực**:
+  - **Danh Sách Kỳ Chấm (`src/pages/AuditsList.tsx`)**: Bổ sung dải **4 thẻ Bento KPI Summary** (Tổng kỳ chấm, Đã gửi, Bản nháp, Điểm TB).
+  - **Danh Sách Lỗi 5S (`src/pages/FindingsList.tsx`)**: Bổ sung dải **4 thẻ Bento KPI Summary** và chế độ xem **Kanban Board 3 cột** (*Chưa xử lý / Chờ xác nhận / Đã đóng*).
+  - **Chi Tiết Kỳ Chấm & Báo Cáo (`src/pages/AuditDetail.tsx`, `src/pages/Reports.tsx`)**: Kích hoạt mặc định bảng ma trận cố định tiêu đề `.sticky-matrix-table` và thanh tác vụ nổi thích ứng.
+  - **Đăng Nhập & Khởi Tạo Hệ Thống (`src/pages/Login.tsx`, `src/pages/Setup.tsx`)**: Đồng bộ phong cách Bento Telemetry Glass với hiệu ứng quầng sáng Cyan/Sapphire.
+
+---
+
 ## [2.11.17] - 2026-11-15
 
 ### Changed & Standardized (Chuẩn Hóa Quy Trình Phân Bổ Đa Model — Argon 4 & Hydrogen 4)

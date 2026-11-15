@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.17`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.12.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.12.0`
+
+### ✨ Thiết Kế Lại Toàn Bộ Giao Diện Mẫu A — Bento Telemetry Pro (Adaptive Glass & Dark/Light)
+- **Giao Diện Thích Ứng Dark/Light Toàn Hệ Thống**: Kết hợp nền **Deep Obsidian (`#070b14`)** và **Daylight Glass (`#eef4fb`)**, font **Plus Jakarta Sans** + **Fira Code (`tabular-nums`)**, nút chuyển đổi Dark/Light trực tiếp trên Top Command Header, Sidebar Rail kính mờ và Mobile Bottom Bar.
+- **TV Andon Dashboard Nâng Cấp**: 6 thẻ KPI Bento kèm **Bullet Target Bar**, Ma trận **15 khu vực 5×3 Zero-Scroll**, biểu đồ **Radar Ngũ Giác 5S (SVG)** + Pareto S1–S5, biểu đồ **AreaChart 12 tuần**, bảng **SLA 7 Ngày** và **Kaizen Leaderboard 2 cột**.
+- **Nghiệp Vụ & Xác Thực Đồng Bộ**: Dải Bento KPI 4 thẻ tại Kỳ Chấm & Lỗi 5S, bổ sung **Kanban Board 3 cột** cho Lỗi 5S, bảng ma trận cố định tiêu đề mặc định ở Chi tiết kỳ chấm & Báo cáo, cùng màn hình Login / Setup phong cách Telemetry Glass.
 
 ---
 

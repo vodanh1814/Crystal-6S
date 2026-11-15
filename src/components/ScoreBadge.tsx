@@ -2,7 +2,7 @@ import React from 'react';
 import { useI18n } from '../i18n/context';
 import { useAuth } from '../context/AuthContext';
 import { formatScore, getScoreTier } from '../lib/format';
-import { resolveColorMode } from '../lib/theme';
+import { resolveAppColorMode } from '../lib/theme';
 
 interface ScoreBadgeProps {
   score: number | null | undefined;
@@ -20,16 +20,16 @@ export const ScoreBadge: React.FC<ScoreBadgeProps> = ({
   size = 'md',
 }) => {
   const { t, lang } = useI18n();
-  const { activeTheme, colorModeOverride } = useAuth();
+  const { colorModeOverride } = useAuth();
 
   if (score === null || score === undefined) {
     return <span className="text-slate-400 font-mono text-sm">-</span>;
   }
 
   const tier = getScoreTier(score, target, warningTarget);
-  const mode = resolveColorMode(activeTheme, colorModeOverride, false);
-  const isModernLight = activeTheme !== 'classic' && mode === 'light';
-  const isModernDark = activeTheme !== 'classic' && mode === 'dark';
+  const mode = resolveAppColorMode(colorModeOverride, false);
+  const isModernLight = mode === 'light';
+  const isModernDark = mode === 'dark';
 
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5',
