@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Plant-wide 5S Inspection, Andon Monitoring & Continuous Improvement System
 
 **Language: [🇬🇧 English](./README.en.md) · [🇻🇳 Tiếng Việt](./README.md)**  
-**Current Version: `v2.11.16`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
+**Current Version: `v2.11.17`** · See release history in [CHANGELOG.en.md](./CHANGELOG.en.md) / [CHANGELOG.md](./CHANGELOG.md).  
 **Author: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Official Repository:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 An enterprise-grade web application & standalone Windows installer engineered for manufacturing plants to audit, score, track 2K photo remediation, and display real-time **Smart Factory Andon TV dashboards** for 5S (*Sort – Set in order – Shine – Standardize – Sustain*). The system operates seamlessly both on **Local LAN** and **Cloudflare Serverless Edge (Workers, D1 SQLite Database, R2 Object Storage)**.
+
+---
+
+## 1. Highlights of Version `v2.11.17`
+
+### 🤖 Standardized Multi-Model 6-Step Engineering Workflow (Argon 4 & Hydrogen 4)
+- **Planning (Step 1 — Model Argon 4)**: Deep root-cause analysis, architectural design, and step-by-step planning.
+- **Execute (Step 3 & Step 6 — Model Hydrogen 4)**: Fast, accurate code execution, standalone EXE packaging, and Git release publishing.
+- **Review (Step 4 — Model Argon 4)**: Independent cross-review and zero-error automated verification before release.
 
 ---
 

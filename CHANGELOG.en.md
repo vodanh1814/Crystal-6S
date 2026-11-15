@@ -7,6 +7,16 @@ All notable changes to the **Crystal 5S Audit** system are documented in this fi
 
 ---
 
+## [2.11.17] - 2026-11-15
+
+### Changed & Standardized (Multi-Model 6-Step Workflow Allocation — Argon 4 & Hydrogen 4)
+- **Dedicated Model Allocation per Engineering Phase (`GEMINI.md`)**:
+  - **1. Planning (Step 1)**: Powered by **Model Argon 4** for root-cause analysis, architecture design, and detailed implementation planning.
+  - **2. Execute (Step 3 & Step 6)**: Powered by **Model Hydrogen 4** for code implementation, standalone EXE packaging, and Git release execution.
+  - **3. Review (Step 4)**: Powered by **Model Argon 4** for independent code review and zero-error automated test verification.
+
+---
+
 ## [2.11.16] - 2026-11-12
 
 ### Fixed & Improved (Eliminated Excessive Spacing in 7-Day Alarms Board)

@@ -7,6 +7,16 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.11.17] - 2026-11-15
+
+### Changed & Standardized (Chuẩn Hóa Quy Trình Phân Bổ Đa Model — Argon 4 & Hydrogen 4)
+- **Phân Bổ Model Chuyên Trách Theo Giai Đoạn (`GEMINI.md`)**:
+  - **1. Planning (Bước 1 — Lên kế hoạch)**: Sử dụng **Model Argon 4** để phân tích yêu cầu, tìm nguyên nhân gốc (root cause) và thiết kế kế hoạch chi tiết.
+  - **2. Execute (Bước 3 & Bước 6 — Triển khai & Xuất bản Git)**: Sử dụng **Model Hydrogen 4** để chỉnh sửa mã nguồn, đóng gói EXE và thực thi các thao tác Git theo kế hoạch đã duyệt.
+  - **3. Review (Bước 4 — Kiểm định độc lập)**: Sử dụng **Model Argon 4** để review chéo mã nguồn và xác nhận toàn bộ quy trình kiểm thử tự động đạt chuẩn 0 lỗi.
+
+---
+
 ## [2.11.16] - 2026-11-12
 
 ### Fixed & Improved (Khắc Phục Triệt Để Khoảng Trống Thừa Tại Khung 7-Day Alarms)

@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.11.16`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.11.17`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.11.17`
+
+### 🤖 Chuẩn Hóa Quy Trình Phát Triển Đa Model (Argon 4 & Hydrogen 4)
+- **Planning (Bước 1 — Model Argon 4)**: Phân tích chuyên sâu, tìm nguyên nhân gốc và lập kế hoạch triển khai chi tiết.
+- **Execute (Bước 3 & Bước 6 — Model Hydrogen 4)**: Thực thi chỉnh sửa mã nguồn, đóng gói bộ cài EXE và xuất bản Git tốc độ cao theo đúng kế hoạch đã duyệt.
+- **Review (Bước 4 — Model Argon 4)**: Kiểm định chéo độc lập và xác nhận bộ kiểm thử tự động đạt chuẩn 0 lỗi trước khi xuất bản.
 
 ---
 
