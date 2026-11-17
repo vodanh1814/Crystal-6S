@@ -289,6 +289,15 @@ html[data-color-mode="light"] body {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .theme-tv-canvas,
 .theme-workspace {
   background-color: var(--app-bg);
@@ -300,9 +309,9 @@ html[data-color-mode="light"] body {
   overflow-y: auto;
 }
 
-/* Single-frame zero-scroll dashboard on laptop, desktop & TV screens (>=1024w, >=500h).
-   Phones and portrait tablets (<1024w) keep natural vertical scrolling. */
-@media (min-width: 1024px) and (min-height: 500px) {
+/* Single-frame zero-scroll dashboard on xl desktop & TV screens (>=1280w, >=500h).
+   Phones and tablets (<1280w) keep natural vertical scrolling. */
+@media (min-width: 1280px) and (min-height: 500px) {
   .theme-tv-canvas {
     overflow-y: hidden;
   }

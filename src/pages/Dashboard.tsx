@@ -554,7 +554,7 @@ export const Dashboard: React.FC = () => {
   const availableMonths: string[] = month_info.available_months || [];
 
   return (
-    <div className="dash-compact-shell w-full h-full min-h-0 flex flex-col gap-2.5 lg:gap-3 p-2.5 sm:p-3 lg:p-3.5 overflow-x-hidden">
+    <div className="dash-compact-shell w-full h-auto xl:h-full xl:min-h-0 flex flex-col gap-2.5 lg:gap-3 p-2.5 sm:p-3 lg:p-3.5 pb-6 xl:pb-3.5 overflow-x-hidden">
       {/* ── ROW 1: 5-CARD KPI TELEMETRY BENTO STRIP ───────────────────────────────────────── */}
       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-2.5 shrink-0">
         {/* KPI 1: Plant Weekly Score */}
@@ -726,9 +726,9 @@ export const Dashboard: React.FC = () => {
       </section>
 
       {/* ── ROW 2: ASYMMETRIC 12-COLUMN BENTO TELEMETRY WORKSPACE ───────────────────────────── */}
-      <section className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 lg:gap-3 flex-1 min-h-0">
+      <section className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 lg:gap-3 xl:flex-1 xl:min-h-0">
         {/* LEFT RAIL (4 Cols): Hero Plant Gauge + 5S Radar + 7-Day SLA Countdown Alarms */}
-        <div className="xl:col-span-4 flex flex-col gap-2.5 lg:gap-3 min-h-0">
+        <div className="xl:col-span-4 flex flex-col gap-2.5 lg:gap-3 xl:min-h-0">
           {/* Panel A: Hero Semi-Circular Gauge + 5S Pillar Radar */}
           <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col justify-between gap-2 xl:flex-[44] min-h-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--app-border)] pb-1.5">
@@ -750,7 +750,7 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-2 flex-1 min-h-0">
+            <div className="grid grid-cols-2 items-center gap-1.5 sm:gap-2 xl:flex-1 xl:min-h-0">
               <div className="flex flex-col items-center justify-center">
                 {renderHeroGauge(plantWeekScore, target, warningTarget, isLight, lang)}
                 <div className="flex items-center gap-1.5 text-[10px] font-mono-kpi mt-0.5">
@@ -772,7 +772,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Panel B: 7-Day SLA Countdown Alarms */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[56] flex-1 min-h-0">
+          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[56] xl:min-h-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--app-border)] pb-1.5 shrink-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Flame className="w-4 h-4 text-rose-400 shrink-0" />
@@ -789,7 +789,7 @@ export const Dashboard: React.FC = () => {
               </Link>
             </div>
 
-            <div className="scroll-pane flex-1 min-h-0 overflow-y-auto mt-2 space-y-1.5 pr-1">
+            <div className="scroll-pane xl:flex-1 xl:min-h-0 max-h-[260px] xl:max-h-none overflow-y-auto mt-2 space-y-1.5 pr-1">
               {urgent_alarms.length === 0 ? (
                 <div className="h-full min-h-[90px] flex flex-col items-center justify-center text-center p-4 surface-muted">
                   <CheckCircle2 className="w-6 h-6 text-emerald-400 mb-1" />
@@ -883,9 +883,9 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* RIGHT WORKSPACE (8 Cols): 15-Area Bento Telemetry Matrix + 12-Week Trend & Improvement */}
-        <div className="xl:col-span-8 flex flex-col gap-2.5 lg:gap-3 min-h-0">
+        <div className="xl:col-span-8 flex flex-col gap-2.5 lg:gap-3 xl:min-h-0">
           {/* Panel C: 15-Area Bento Telemetry Matrix */}
-          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[60] flex-1 min-h-0 cq-area-grid">
+          <div className="surface-card dash-compact-panel p-3 lg:p-3.5 flex flex-col xl:flex-[60] xl:min-h-0 cq-area-grid">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] pb-2 mb-2 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-xs font-black uppercase tracking-wider truncate">
@@ -937,13 +937,13 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="scroll-pane flex-1 min-h-0 overflow-y-auto pr-0.5 flex flex-col">
+            <div className="scroll-pane xl:flex-1 xl:min-h-0 xl:overflow-y-auto pr-0.5 flex flex-col">
               {filteredAreas.length === 0 ? (
                 <div className="h-full min-h-[140px] flex items-center justify-center text-xs text-[var(--app-text-muted)]">
                   {lang === 'en' ? 'No areas match current filter.' : 'Không có khu vực nào phù hợp bộ lọc.'}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:grid-rows-3 gap-2 lg:gap-2.5 flex-1 h-full auto-rows-fr">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:grid-rows-3 gap-2 lg:gap-2.5 xl:flex-1 xl:h-full auto-rows-fr">
                   {filteredAreas.map((area: any) => {
                     const displayScore =
                       area.score !== null && area.score !== undefined
@@ -1017,7 +1017,9 @@ export const Dashboard: React.FC = () => {
                               </strong>
                             </div>
                           </div>
-                          {renderMiniSparkline(area.sparkline_6 || area.trend_12_weeks, hex)}
+                          <div className="hidden sm:block shrink-0">
+                            {renderMiniSparkline(area.sparkline_6 || area.trend_12_weeks, hex)}
+                          </div>
                         </div>
 
                         {/* Tier 3: Bullet Bar + CAPA Open/Verify/Repeat */}

@@ -7,6 +7,22 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.13.3] - 2026-11-17
+
+### Fixed & Improved (Tối Ưu Toàn Diện Giao Diện Trên Điện Thoại & Máy Tính Bảng)
+- **Khung App Shell `h-dvh`, Header Tinh Gọn & Menu Overlay Trên Điện Thoại (`src/components/Layout.tsx`, `src/index.css`)**:
+  - Chuyển khung gốc sang `h-dvh w-full` tương thích thanh địa chỉ động của trình duyệt di động (iOS Safari / Android Chrome), đảm bảo thanh điều hướng dưới (`Bottom Nav`) hiển thị chuẩn xác.
+  - Chuyển ngăn kéo Menu Mobile sang dạng lớp phủ nổi (`fixed inset-x-0 top-11 z-40`) có nền mờ chạm để đóng và bổ sung tiện ích `.no-scrollbar`.
+- **Dashboard Telemetry Không Cuộn Lồng Nhau & Lưới 2 Cột Trên Điện Thoại (`src/pages/Dashboard.tsx`)**:
+  - Chỉ khóa chiều cao một khung hình ở màn hình lớn (`xl:h-full xl:min-h-0`); trên điện thoại và máy tính bảng (`< 1280px`), trang tự giãn chiều cao (`h-auto pb-6`) giúp vuốt cuộn toàn trang mượt mà, không còn hiện tượng xẹp khung SLA hay Ma trận 15 khu vực.
+  - Hiển thị **Hero Gauge + 5S Radar** cạnh nhau (`grid-cols-2`) và **Ma trận 15 khu vực** dạng lưới 2 cột (`grid-cols-2`) rõ nét trên điện thoại.
+- **Tối Ưu Chấm Điểm Hiện Trường, Kanban Lỗi CAPA & Báo Cáo Trên Điện Thoại (`src/pages/AuditDetail.tsx`, `src/pages/FindingsList.tsx`, `src/pages/Reports.tsx`)**:
+  - Bổ sung thanh chọn nhanh khu vực vuốt ngang + Dropdown (`lg:hidden`) ở đầu trang Chấm điểm và dàn đều 2 nút `ĐẠT / LỖI` (`flex-1`) vừa tầm ngón cái.
+  - Chuyển dải lọc 15 khu vực sang thanh trượt ngang 1 dòng và bổ sung bộ chuyển tab 3 cột Kanban (`Mở / Chờ duyệt / Đã đóng`) trên điện thoại tại trang Lỗi 5S.
+  - Căn chỉnh thanh trượt `Target Simulator` giãn đều `w-full` trên màn hình điện thoại tại trang Báo cáo.
+
+---
+
 ## [2.13.2] - 2026-11-15
 
 ### Changed & Improved (Tối Ưu Full TV Mode Zero-Gap, Mở Rộng Week Trend & Top Improvement, Hiển Thị Tên Label Khu Vực)

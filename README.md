@@ -1,11 +1,19 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.13.2`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.13.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.13.3`
+
+### 📱 Tối Ưu Toàn Diện Trải Nghiệm Trên Điện Thoại & Máy Tính Bảng (Mobile-First Ergonomics)
+- **Dashboard & App Shell Chuẩn Di Động (`Layout.tsx`, `Dashboard.tsx`, `index.css`)**: Khung `h-dvh w-full` tương thích iOS Safari / Android Chrome, Menu Mobile dạng lớp phủ nổi, Dashboard tự giãn chiều cao mượt mà không cuộn lồng nhau trên màn hình `< 1280px`, cùng lưới **Ma trận 15 khu vực 2 cột (`grid-cols-2`)** và **Hero Gauge + 5S Radar** song song ngay trên điện thoại.
+- **Chấm Điểm Hiện Trường & Kanban CAPA Một Chạm (`AuditDetail.tsx`, `FindingsList.tsx`, `Reports.tsx`)**: Thanh chọn nhanh 15 khu vực vuốt ngang ở đầu trang chấm điểm, nút `ĐẠT / LỖI` dàn đều 50/50 cho thao tác một tay, dải lọc khu vực vuốt ngang 1 dòng và bộ chuyển tab 3 cột Kanban (`Chưa xử lý / Chờ xác nhận / Đã đóng`) chuyên biệt cho điện thoại.
 
 ---
 

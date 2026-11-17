@@ -267,7 +267,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const accentIconTextCls = isLightChrome ? 'text-sky-600' : 'text-sky-400';
 
   return (
-    <div className={`h-screen w-screen overflow-hidden antialiased flex flex-col md:flex-row ${shellBgCls}`}>
+    <div className={`h-dvh w-full overflow-hidden antialiased flex flex-col md:flex-row ${shellBgCls}`}>
       {/* COLLAPSIBLE / HIDABLE BENTO GLASS SIDEBAR RAIL (Desktop) */}
       {sidebarState !== 'hidden' && (
         <aside
@@ -532,7 +532,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               )}
               <span
-                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[160px] sm:max-w-[280px] md:max-w-[380px] xl:max-w-none ${
+                className={`font-black text-xs sm:text-sm tracking-tight truncate max-w-[145px] sm:max-w-[280px] md:max-w-[380px] xl:max-w-none ${
                   isLightChrome ? 'text-slate-900' : 'text-white'
                 }`}
               >
@@ -647,10 +647,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {lang.toUpperCase()}
             </button>
 
-            {/* About App / Copyright Button */}
+            {/* About App / Copyright Button (hidden on xs phone since it is inside mobile drawer) */}
             <button
               onClick={() => setAboutOpen(true)}
-              className={`p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer ${
+              className={`hidden sm:flex p-1.5 rounded-lg transition min-w-[32px] min-h-[32px] items-center justify-center cursor-pointer ${
                 isLightChrome
                   ? 'text-slate-500 hover:text-sky-600 hover:bg-slate-100'
                   : 'text-slate-400 hover:text-sky-400 hover:bg-slate-800'
@@ -678,114 +678,120 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
         </header>
 
-        {/* Mobile Slide-over Drawer */}
+        {/* Mobile Slide-over Drawer Overlay */}
         {mobileMenuOpen && (
-          <div
-            className={`md:hidden px-4 py-5 space-y-4 border-b z-40 overflow-y-auto max-h-[80vh] ${
-              isLightChrome
-                ? 'bg-white/95 backdrop-blur-xl text-slate-900 border-slate-200'
-                : 'bg-[#0b1324]/95 backdrop-blur-xl text-white border-white/10'
-            }`}
-          >
-            <div className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active =
-                  location.pathname === item.to ||
-                  (item.to !== '/' && location.pathname.startsWith(item.to));
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
-                      active
-                        ? navActiveCls
-                        : isLightChrome
-                        ? 'hover:bg-slate-100'
-                        : 'hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-5 h-5 opacity-80" />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.to === '/findings' && alarmCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold">
-                        {alarmCount}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {isAdmin && (
-              <div className={`space-y-1 pt-3 border-t ${chromeBorderCls}`}>
-                <div className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                  {t('admin')}
-                </div>
-                {adminItems.map((item) => {
+          <>
+            <div
+              className="md:hidden fixed inset-0 top-11 z-30 bg-slate-950/60 backdrop-blur-xs"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div
+              className={`md:hidden fixed inset-x-0 top-11 px-4 py-4 space-y-4 border-b z-40 overflow-y-auto max-h-[calc(100dvh-6.75rem)] shadow-2xl ${
+                isLightChrome
+                  ? 'bg-white/95 backdrop-blur-xl text-slate-900 border-slate-200'
+                  : 'bg-[#0b1324]/95 backdrop-blur-xl text-white border-white/10'
+              }`}
+            >
+              <div className="space-y-1">
+                {navItems.map((item) => {
                   const Icon = item.icon;
+                  const active =
+                    location.pathname === item.to ||
+                    (item.to !== '/' && location.pathname.startsWith(item.to));
                   return (
                     <Link
                       key={item.to}
                       to={item.to}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
-                        isLightChrome ? 'hover:bg-slate-100' : 'hover:bg-white/5'
+                      className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
+                        active
+                          ? navActiveCls
+                          : isLightChrome
+                          ? 'hover:bg-slate-100'
+                          : 'hover:bg-white/5'
                       }`}
                     >
-                      <Icon className="w-5 h-5 text-slate-400" />
-                      <span>{item.label}</span>
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-5 h-5 opacity-80" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.to === '/findings' && alarmCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold">
+                          {alarmCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
               </div>
-            )}
 
-            <div className={`pt-3 border-t flex flex-col gap-2 ${chromeBorderCls}`}>
-              {user ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{user.full_name}</p>
-                    <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+              {isAdmin && (
+                <div className={`space-y-1 pt-3 border-t ${chromeBorderCls}`}>
+                  <div className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                    {t('admin')}
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-900/50 text-rose-300 text-xs font-semibold"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>{t('logout')}</span>
-                  </button>
+                  {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
+                          isLightChrome ? 'hover:bg-slate-100' : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5 text-slate-400" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold ${fullTvBtnCls}`}
-                >
-                  <UserIcon className="w-4 h-4" />
-                  <span>{t('login')}</span>
-                </Link>
               )}
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setAboutOpen(true);
-                }}
-                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition cursor-pointer ${headerBtnCls}`}
-              >
-                <Info className={`w-4 h-4 ${accentIconTextCls}`} />
-                <span>{t('about_app')}</span>
-              </button>
+
+              <div className={`pt-3 border-t flex flex-col gap-2 ${chromeBorderCls}`}>
+                {user ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{user.full_name}</p>
+                      <p className="text-xs text-slate-400 capitalize">{user.role}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-900/50 text-rose-300 text-xs font-semibold"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>{t('logout')}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold ${fullTvBtnCls}`}
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <span>{t('login')}</span>
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAboutOpen(true);
+                  }}
+                  className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition cursor-pointer ${headerBtnCls}`}
+                >
+                  <Info className={`w-4 h-4 ${accentIconTextCls}`} />
+                  <span>{t('about_app')}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Main Workspace */}
         {isDashboard ? (
-          <main className="theme-tv-canvas flex-1 min-h-0 h-full flex flex-col overflow-y-auto pb-16 md:pb-0">
+          <main className="theme-tv-canvas flex-1 min-h-0 h-full flex flex-col overflow-y-auto pb-20 md:pb-0">
             {children}
           </main>
         ) : (

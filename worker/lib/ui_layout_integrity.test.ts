@@ -37,7 +37,8 @@ test('Layout shell expands inner screens full-width and keeps sidebar scroll + f
   assert.doesNotMatch(layout, /max-w-7xl\s+mx-auto/);
   assert.match(layout, /Bento Telemetry 2\.0/);
 
-  // Scrollable navigation inside bounded flex column and fixed shrink-0 footer
+  // Scrollable navigation inside bounded flex column and fixed shrink-0 footer + mobile-safe dvh shell
+  assert.match(layout, /h-dvh/);
   assert.match(layout, /overflow-y-auto\s+min-h-0/);
   assert.match(layout, /Sidebar Footer/);
   assert.match(layout, /shrink-0/);
@@ -52,8 +53,9 @@ test('Dashboard implements Sample A Bento Telemetry Pro 5-KPI strip, Hero Gauge,
   assert.match(dashboard, /function render5SRadar\(/);
   assert.match(dashboard, /function renderMiniSparkline\(/);
 
-  // 5-card KPI Bento row + 12-col asymmetric workspace + 5-col 15-area matrix
+  // 5-card KPI Bento row + 12-col asymmetric workspace + 2-col mobile / 5-col desktop 15-area matrix
   assert.match(dashboard, /lg:grid-cols-5/);
+  assert.match(dashboard, /grid-cols-2/);
   assert.match(dashboard, /lg:grid-rows-3/);
   assert.match(dashboard, /xl:col-span-4/);
   assert.match(dashboard, /xl:col-span-8/);

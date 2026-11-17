@@ -34,6 +34,7 @@ export const FindingsList: React.FC = () => {
 
   // View mode: 'kanban' (Sample A default) | 'list' | 'gallery'
   const [viewMode, setViewMode] = useState<'list' | 'gallery' | 'kanban'>('kanban');
+  const [mobileKanbanTab, setMobileKanbanTab] = useState<'open' | 'fixed' | 'closed'>('open');
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -242,10 +243,10 @@ export const FindingsList: React.FC = () => {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-nowrap sm:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
           <button
             onClick={() => updateFilter('area_id', '')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
+            className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${mobilePillCls} ${
               !areaFilter
                 ? 'bg-sky-500 text-slate-950 shadow-sm'
                 : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
@@ -260,7 +261,7 @@ export const FindingsList: React.FC = () => {
               <button
                 key={a.id}
                 onClick={() => updateFilter('area_id', isSelected ? '' : String(a.id))}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono-kpi transition-all cursor-pointer ${mobilePillCls} ${
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold font-mono-kpi transition-all cursor-pointer ${mobilePillCls} ${
                   isSelected
                     ? 'bg-sky-500 text-slate-950 shadow-sm'
                     : 'surface-muted text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
@@ -600,10 +601,10 @@ export const FindingsList: React.FC = () => {
         </div>
       ) : (
         /* VIEW 3: 3-COLUMN CAPA VISUAL KANBAN BOARD (BEFORE 2K vs AFTER COMPARISON) */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start flex-1 min-h-0">
-          {[
+        (() => {
+          const kanbanCols = [
             {
-              key: 'open',
+              key: 'open' as const,
               title: t('status_open'),
               dotCls: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]',
               badgeCls: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
@@ -611,7 +612,7 @@ export const FindingsList: React.FC = () => {
               items: findings.filter((f) => f.status === 'open'),
             },
             {
-              key: 'fixed',
+              key: 'fixed' as const,
               title: t('status_fixed'),
               dotCls: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
               badgeCls: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
@@ -619,35 +620,65 @@ export const FindingsList: React.FC = () => {
               items: findings.filter((f) => f.status === 'fixed'),
             },
             {
-              key: 'closed',
+              key: 'closed' as const,
               title: t('status_closed'),
               dotCls: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]',
               badgeCls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
               borderAccent: 'border-t-2 border-t-emerald-500',
               items: findings.filter((f) => f.status === 'closed' || f.status === 'carried'),
             },
-          ].map((col) => (
-            <div
-              key={col.key}
-              className={`surface-card overflow-hidden flex flex-col ${col.borderAccent}`}
-            >
-              {/* Column Header */}
-              <div className="px-4 py-3 border-b border-[var(--app-border)] flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.dotCls}`} />
-                  <h3 className="text-xs font-black uppercase tracking-wider truncate">
-                    {col.title}
-                  </h3>
-                </div>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[11px] font-black font-mono-kpi border shrink-0 ${col.badgeCls}`}
-                >
-                  {col.items.length}
-                </span>
+          ];
+
+          return (
+            <div className="space-y-3 flex-1 min-h-0 flex flex-col">
+              {/* Mobile Kanban Column Switcher (< 1024px) */}
+              <div className="lg:hidden grid grid-cols-3 gap-1.5 p-1 rounded-2xl surface-card">
+                {kanbanCols.map((col) => {
+                  const active = mobileKanbanTab === col.key;
+                  return (
+                    <button
+                      key={col.key}
+                      type="button"
+                      onClick={() => setMobileKanbanTab(col.key)}
+                      className={`px-2 py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        active
+                          ? 'bg-sky-500 text-slate-950 shadow-xs'
+                          : 'text-[var(--app-text-muted)]'
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${col.dotCls}`} />
+                      <span className="truncate">{col.title}</span>
+                      <span className="font-mono-kpi text-[10px]">({col.items.length})</span>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Column Cards */}
-              <div className="p-3 space-y-3 max-h-[74vh] overflow-y-auto scroll-pane">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start flex-1 min-h-0">
+                {kanbanCols.map((col) => (
+                  <div
+                    key={col.key}
+                    className={`surface-card overflow-hidden flex-col ${col.borderAccent} ${
+                      col.key !== mobileKanbanTab ? 'hidden lg:flex' : 'flex'
+                    }`}
+                  >
+                    {/* Column Header */}
+                    <div className="px-4 py-3 border-b border-[var(--app-border)] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.dotCls}`} />
+                        <h3 className="text-xs font-black uppercase tracking-wider truncate">
+                          {col.title}
+                        </h3>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-black font-mono-kpi border shrink-0 ${col.badgeCls}`}
+                      >
+                        {col.items.length}
+                      </span>
+                    </div>
+
+                    {/* Column Cards */}
+                    <div className="p-3 space-y-3 lg:max-h-[74vh] lg:overflow-y-auto scroll-pane">
                 {col.items.length === 0 ? (
                   <div className="py-10 text-center text-xs text-[var(--app-text-muted)] font-medium">
                     {t('noData')}
@@ -780,8 +811,11 @@ export const FindingsList: React.FC = () => {
                 )}
               </div>
             </div>
-          ))}
-        </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()
       )}
 
       {/* 2K Fullscreen Lightbox Modal */}

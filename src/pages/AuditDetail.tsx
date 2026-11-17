@@ -572,7 +572,56 @@ export const AuditDetail: React.FC = () => {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 flex-1 min-h-0">
           {/* LEFT RAIL (4 Cols): 15-Area Switcher & Telemetry Mini Cards */}
           <aside className="lg:col-span-4 flex flex-col min-h-0">
-            <div className="surface-card p-3 flex flex-col gap-2.5 lg:sticky lg:top-3 lg:max-h-[calc(100dvh-195px)]">
+            {/* Mobile Horizontal Touch Area Selector (< 1024px) */}
+            <div className="lg:hidden surface-card p-2.5 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-[var(--app-text-muted)]">
+                  {lang === 'en' ? 'SELECT AREA' : 'CHỌN KHU VỰC'} ({filteredAreas.length})
+                </span>
+                <select
+                  value={activeAreaScore?.area_id || ''}
+                  onChange={(e) => setActiveAreaId(Number(e.target.value))}
+                  aria-label={lang === 'en' ? 'Select area' : 'Chọn khu vực'}
+                  className="surface-muted px-2.5 py-1 text-xs font-bold text-[var(--app-accent)] focus:outline-none"
+                >
+                  {filteredAreas.map((a) => (
+                    <option key={a.area_id} value={a.area_id} className="bg-slate-900 text-slate-100">
+                      {a.area_name || a.area_code} ({formatScore(a.score, lang)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                {filteredAreas.map((a) => {
+                  const isActive = activeAreaScore?.area_id === a.area_id;
+                  const areaFindingCount = findings.filter((f) => f.area_id === a.area_id).length;
+                  return (
+                    <button
+                      type="button"
+                      key={a.area_id}
+                      onClick={() => setActiveAreaId(a.area_id)}
+                      className={`shrink-0 px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-sky-500 text-slate-950 border-sky-400 shadow-xs'
+                          : 'surface-elevated text-[var(--app-text)]'
+                      }`}
+                    >
+                      <span className="truncate max-w-[120px]">{a.area_name || a.area_code}</span>
+                      <span className={`font-mono-kpi text-[11px] font-black ${isActive ? 'text-slate-950' : 'text-[var(--app-accent)]'}`}>
+                        {formatScore(a.score, lang)}
+                      </span>
+                      {areaFindingCount > 0 && (
+                        <span className={`px-1 py-0.2 rounded text-[9px] font-mono-kpi font-black ${isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-rose-500/20 text-rose-300'}`}>
+                          {areaFindingCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="surface-card p-3 hidden lg:flex flex-col gap-2.5 lg:sticky lg:top-3 lg:max-h-[calc(100dvh-195px)]">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-xs font-black uppercase tracking-wider">
                   {lang === 'en' ? 'AREAS INSPECTOR' : 'CHỌN KHU VỰC'} ({area_scores.length})
@@ -793,7 +842,7 @@ export const AuditDetail: React.FC = () => {
                           </div>
 
                           {/* Thumb-friendly Segmented Evaluation Controls */}
-                          <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-start">
+                          <div className="shrink-0 flex items-center gap-1.5 w-full sm:w-auto justify-end sm:self-start pt-1 sm:pt-0">
                             {isNA ? (
                               <span className="px-3 py-2 rounded-xl surface-muted text-xs font-mono-kpi font-bold text-[var(--app-text-muted)] min-h-[40px] flex items-center">
                                 N/A
@@ -804,7 +853,7 @@ export const AuditDetail: React.FC = () => {
                                   type="button"
                                   disabled={!isDraft || !canEdit || togglingKey === busyKey || !isFail}
                                   onClick={() => handleMarkPass(activeAreaScore.area_id, itemFindings)}
-                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
+                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex-1 sm:flex-initial justify-center flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
                                     !isFail
                                       ? 'bg-emerald-500 text-slate-950 shadow-sm'
                                       : 'surface-muted text-[var(--app-text-muted)] hover:text-emerald-400'
@@ -817,7 +866,7 @@ export const AuditDetail: React.FC = () => {
                                   type="button"
                                   disabled={!isDraft || !canEdit || togglingKey === busyKey}
                                   onClick={() => handleMarkFail(activeAreaScore.area_id, item, itemFindings)}
-                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
+                                  className={`px-3 py-2 rounded-xl text-xs font-black min-h-[40px] flex-1 sm:flex-initial justify-center flex items-center gap-1 transition-all cursor-pointer disabled:cursor-default ${
                                     isFail
                                       ? 'bg-rose-500 text-white shadow-sm'
                                       : 'surface-muted text-[var(--app-text-muted)] hover:text-rose-400'

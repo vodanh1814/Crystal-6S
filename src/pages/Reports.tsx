@@ -557,8 +557,8 @@ export const Reports: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 flex-1 justify-end">
-            <label className="flex items-center gap-2.5 min-w-[200px]">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 flex-1 sm:justify-end w-full">
+            <label className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto sm:min-w-[200px]">
               <span className="text-[11px] font-bold text-emerald-400 whitespace-nowrap font-mono-kpi">
                 Pass ≥ {simTarget.toFixed(1)}%
               </span>
@@ -573,11 +573,11 @@ export const Reports: React.FC = () => {
                   setSimTarget(next);
                   if (simWarn >= next) setSimWarn(Math.max(75, next - 0.5));
                 }}
-                className="w-28 sm:w-36 accent-emerald-500 cursor-pointer"
+                className="flex-1 sm:w-36 accent-emerald-500 cursor-pointer"
               />
             </label>
 
-            <label className="flex items-center gap-2.5 min-w-[200px]">
+            <label className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto sm:min-w-[200px]">
               <span className="text-[11px] font-bold text-amber-400 whitespace-nowrap font-mono-kpi">
                 Warn ≥ {simWarn.toFixed(1)}%
               </span>
@@ -591,7 +591,7 @@ export const Reports: React.FC = () => {
                   const next = Math.min(simTarget - 0.5, parseFloat(e.target.value));
                   setSimWarn(Math.max(75, next));
                 }}
-                className="w-28 sm:w-36 accent-amber-500 cursor-pointer"
+                className="flex-1 sm:w-36 accent-amber-500 cursor-pointer"
               />
             </label>
 
