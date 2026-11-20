@@ -7,6 +7,20 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.13.4] - 2026-11-20
+
+### Added & Changed (Thiết Lập Hệ Thống 3 Agent Con Chuyên Trách — Neon, Argon & Hydrogen)
+- **Cấu Hình 3 Subagent Chuyên Trách (`.agents/agents/neon.md`, `.agents/agents/argon.md`, `.agents/agents/hydrogen.md`)**:
+  - **`Neon`**: Model chính cho lập trình, thiết kế kiến trúc, xử lý vấn đề phức tạp và review code.
+  - **`Argon`**: Model chuyên phân tích sâu, nghiên cứu, lập kế hoạch và review độc lập.
+  - **`Hydrogen`**: Model thực thi nhanh, viết code theo đặc tả, sửa lỗi nhỏ và chạy test.
+- **Chuẩn Hóa Quy Trình 6 Bước Đa Agent (`GEMINI.md`)**:
+  - Cập nhật phân bổ vai trò cho cả 3 agent (`Argon` & `Neon` ở Bước 1 & Bước 4; `Neon` & `Hydrogen` ở Bước 3; `Hydrogen` ở Bước 6), bảo toàn các chốt chặn phê duyệt ở Bước 2 và Bước 5.
+- **Kiểm Thử Toàn Vẹn Cấu Hình Subagents (`worker/lib/ui_layout_integrity.test.ts`)**:
+  - Bổ sung unit test tự động xác minh 3 file cấu hình `.agents/agents/*.md` và định nghĩa vai trò 3 agent trong `GEMINI.md`.
+
+---
+
 ## [2.13.3] - 2026-11-17
 
 ### Fixed & Improved (Tối Ưu Toàn Diện Giao Diện Trên Điện Thoại & Máy Tính Bảng)

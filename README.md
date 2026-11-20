@@ -1,11 +1,21 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.13.3`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.13.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.13.4`
+
+### 🤖 Thiết Lập Hệ Thống 3 Agent Con Chuyên Trách (`Neon`, `Argon`, `Hydrogen`)
+- **`Neon` (`.agents/agents/neon.md`)**: Model chính cho lập trình, thiết kế kiến trúc, xử lý vấn đề phức tạp và review code.
+- **`Argon` (`.agents/agents/argon.md`)**: Model chuyên phân tích sâu, nghiên cứu, lập kế hoạch và review độc lập.
+- **`Hydrogen` (`.agents/agents/hydrogen.md`)**: Model thực thi nhanh, viết code theo đặc tả, sửa lỗi nhỏ và chạy test.
+- **Chuẩn Hóa Quy Trình 6 Bước (`GEMINI.md`, `ui_layout_integrity.test.ts`)**: Đồng bộ phân bổ vai trò cho 3 agent xuyên suốt 6 bước phát triển và khóa chặt bằng unit test tự động.
 
 ---
 

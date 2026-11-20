@@ -102,3 +102,26 @@ test('APP_VERSION in src/version.ts strictly matches version in package.json', (
   assert.ok(match, 'APP_VERSION constant not found in src/version.ts');
   assert.equal(match?.[1], pkg.version);
 });
+
+test('Subagent configurations (Neon, Argon, Hydrogen) and GEMINI.md workflow rules are properly defined', () => {
+  const subagents = [
+    { name: 'neon', path: '.agents/agents/neon.md' },
+    { name: 'argon', path: '.agents/agents/argon.md' },
+    { name: 'hydrogen', path: '.agents/agents/hydrogen.md' },
+  ];
+
+  for (const { name, path: relPath } of subagents) {
+    const absPath = path.resolve(process.cwd(), relPath);
+    assert.ok(fs.existsSync(absPath), `Missing subagent config: ${relPath}`);
+    const content = fs.readFileSync(absPath, 'utf-8');
+    assert.match(content, new RegExp(`^name:\\s*${name}$`, 'm'));
+    assert.match(content, /^description:\s*.+$/m);
+    assert.match(content, /^subagent:\s*true$/m);
+    assert.match(content, /^tools:\s*\[.+\]$/m);
+  }
+
+  const geminiRules = readProjectFile('GEMINI.md');
+  assert.match(geminiRules, /`Neon`.*Model chính cho lập trình, thiết kế kiến trúc, xử lý vấn đề phức tạp và review code/);
+  assert.match(geminiRules, /`Argon`.*Model chuyên phân tích sâu, nghiên cứu, lập kế hoạch và review độc lập/);
+  assert.match(geminiRules, /`Hydrogen`.*Model thực thi nhanh, viết code theo đặc tả, sửa lỗi nhỏ và chạy test/);
+});
