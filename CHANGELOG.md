@@ -7,6 +7,33 @@ Mọi thay đổi quan trọng của hệ thống **Crystal 5S Audit** đều đ
 
 ---
 
+## [2.14.0] - 2026-11-24
+
+### Added (Hệ Thống Xem Trước & Duyệt Ảnh Trước Khi Tải Lên, Modal Tổng Duyệt Nộp Kỳ Chấm & Pure Helpers)
+- **Hệ Thống Xem Trước & Duyệt Ảnh Trước Khi Tải Lên (`src/components/PhotoApprovalModal.tsx`, `src/lib/imageCompression.ts`)**:
+  - Bổ sung `PhotoApprovalModal` và `StagedPhotoTray` hỗ trợ chụp Camera, chọn Thư viện nhiều ảnh cùng lúc, Kéo-thả (Drag & Drop) và Dán trực tiếp (`Ctrl+V`).
+  - Hiển thị xem trước kích thước (px) và dung lượng sau nén, phóng to 2K, xoay ảnh 90°, xóa từng ảnh trước khi duyệt tải lên, thanh tiến trình tải lên và giữ lại ảnh khi gặp lỗi mạng.
+  - Bổ sung `compressImageWithMeta` (kèm fallback nén giảm kích thước xuống `<= 4.8MB` để đảm bảo dưới ngưỡng 5MB của Worker) và `rotateImageBlob` trong `src/lib/imageCompression.ts`.
+- **Nâng Cấp `Lightbox.tsx` Cho Ảnh Local & Trình Duyệt**:
+  - Mở rộng `Lightbox.tsx` hỗ trợ xem ảnh local qua `src?: string` (`ObjectURL`), render qua React Portal (`createPortal`) và xử lý phím `Escape` ở capture phase tránh đóng nhầm modal cha.
+- **Modal Tổng Duyệt Trước Khi Nộp Kỳ Chấm (`src/pages/AuditDetail.tsx`)**:
+  - Bổ sung Modal tổng duyệt hiển thị thống kê khu vực/điểm/lỗi trước khi gửi nộp kỳ chấm (`submit`).
+- **Tách Pure Helpers & Kiểm Thử Tự Động (`src/lib/auditEntry.ts`, `worker/lib/audit_entry_ux.test.ts`)**:
+  - Tách các hàm thuần (`getEligibleChecklistItems`, `computePreviewEscalation`, `mergeServerDescriptions`, `clampNonNegativeInt`, `getRemainingPhotoSlots`, v.v.) vào `src/lib/auditEntry.ts` và bổ sung bộ unit test `worker/lib/audit_entry_ux.test.ts`.
+
+### Improved & Fixed (Tối Ưu Toàn Diện Trang Chấm Điểm 5S & Chi Tiết Khắc Phục Lỗi)
+- **Bảo Toàn Nội Dung Đang Nhập & Lưu Thông Minh (`src/pages/AuditDetail.tsx`, `src/pages/FindingDetail.tsx`)**:
+  - Bảo toàn mô tả lỗi và ghi chú khắc phục đang gõ dở khi refetch dữ liệu từ server thông qua `mergeServerDescriptions` và `fixNoteDirtyRef`.
+  - Bổ sung auto-save khi rời ô (`onBlur`) và hỗ trợ phím tắt `Ctrl+Enter` an toàn với bộ gõ tiếng Việt IME (`!e.nativeEvent.isComposing`).
+- **Tối Ưu Nhập Điểm Ngoại Quan & Luồng Chấm Điểm Hiện Trường (`src/pages/AuditDetail.tsx`)**:
+  - Cho phép nhập số trực tiếp (`inputMode="numeric"`) kết hợp Optimistic UI và hàng đợi cập nhật tuần tự cho điểm ngoại quan `BOD` / `Customer` / `IE`.
+  - Bổ sung bộ lọc **Chỉ lỗi** / **Ẩn N/A**, nút điều hướng **Khu vực trước / tiếp**, và nâng cấp `CriterionPicker` với tìm kiếm nhanh, lọc trụ cột `S1–S5`, lọc bỏ tiêu chí `N/A`, cảnh báo phạt lặp (`computePreviewEscalation`) và chống tạo trùng finding.
+- **Hoàn Thiện Trang Chi Tiết Lỗi & Upload (`src/pages/FindingDetail.tsx`, `src/components/PhotoUpload.tsx`, `src/i18n/vi.ts`, `src/i18n/en.ts`, `src/index.css`)**:
+  - Thống nhất `Lightbox` 2K cho ảnh Before / After / History tại `FindingDetail.tsx` kèm checklist 2 điều kiện trước khi nộp khắc phục.
+  - Tinh chỉnh song ngữ Việt/Anh (`vi.ts`, `en.ts`), tối ưu thao tác mobile và tương thích giao diện Dark/Light mode (`src/index.css`).
+
+---
+
 ## [2.13.4] - 2026-11-20
 
 ### Added & Changed (Thiết Lập Hệ Thống 3 Agent Con Chuyên Trách — Neon, Argon & Hydrogen)

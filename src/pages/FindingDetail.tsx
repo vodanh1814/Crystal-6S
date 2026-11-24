@@ -1,44 +1,54 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router';
 import {
   ArrowLeft,
-  Calendar,
-  Clock,
   CheckCircle2,
-  AlertTriangle,
   Send,
   XCircle,
   Loader2,
   History,
+  ZoomIn,
+  AlertCircle,
+  Circle,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/context';
 import { StatusBadge } from '../components/StatusBadge';
 import { PhotoUpload } from '../components/PhotoUpload';
+import { Lightbox, type LightboxPhoto } from '../components/Lightbox';
 import type { Finding, Photo } from '../api/types';
 
 export const FindingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, canAudit, canManage } = useAuth();
+  const { user, canAudit, canManage } = useAuth();
   const { lang, t } = useI18n();
 
   const [loading, setLoading] = useState(true);
   const [finding, setFinding] = useState<Finding | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // Fix Action Form (MNG)
+  // Fix Action Form (MNG) with dirty guard so photo uploads never wipe typed text
   const [fixNote, setFixNote] = useState('');
+  const fixNoteDirtyRef = useRef(false);
 
   // Verify Action Form (Auditor)
   const [rejectNote, setRejectNote] = useState('');
   const [showRejectBox, setShowRejectBox] = useState(false);
 
+  // Unified 2K Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxPhotos, setLightboxPhotos] = useState<LightboxPhoto[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const fetchFinding = useCallback(async () => {
     try {
       const res = await api.get<{ finding: Finding }>(`/findings/${id}`);
       setFinding(res.finding);
-      setFixNote(res.finding.fix_note || '');
+      if (!fixNoteDirtyRef.current) {
+        setFixNote(res.finding.fix_note || '');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -47,8 +57,14 @@ export const FindingDetail: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    fixNoteDirtyRef.current = false;
+    setShowRejectBox(false);
+    setRejectNote('');
+    setActionError(null);
+    setLightboxOpen(false);
+    setLoading(true);
     fetchFinding();
-  }, [fetchFinding]);
+  }, [id, fetchFinding]);
 
   if (loading || !finding) {
     return (
@@ -64,6 +80,26 @@ export const FindingDetail: React.FC = () => {
   const canFix = finding.status === 'open' && isAreaManager;
   const canVerify = finding.status === 'fixed' && isAreaAuditor;
 
+  const beforePhotos = (finding.photos || []).filter((p) => p.kind === 'before');
+  const afterPhotos = (finding.photos || []).filter((p) => p.kind === 'after');
+  const hasAfterPhoto = afterPhotos.length > 0;
+  const hasFixNote = fixNote.trim() !== '';
+
+  const openLightbox = (photos: Photo[], targetId: number, overrideDescription?: string) => {
+    const mapped: LightboxPhoto[] = photos.map((p) => ({
+      id: p.id,
+      kind: p.kind,
+      area_code: finding.area_code,
+      item_code: finding.item_code,
+      description: overrideDescription ?? finding.description,
+      finding_id: finding.id,
+    }));
+    const idx = mapped.findIndex((p) => p.id === targetId);
+    setLightboxPhotos(mapped);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+    setLightboxOpen(true);
+  };
+
   const handleUploadAfterPhoto = async (blob: Blob) => {
     const formData = new FormData();
     formData.append('file', blob, 'after.jpg');
@@ -73,37 +109,67 @@ export const FindingDetail: React.FC = () => {
     await fetchFinding();
   };
 
+  const handleUploadAfterPhotoBatch = async (
+    blobs: Blob[],
+    onProgress?: (done: number, total: number) => void
+  ) => {
+    let uploadedAny = false;
+    try {
+      for (let i = 0; i < blobs.length; i++) {
+        const formData = new FormData();
+        formData.append('file', blobs[i], 'after.jpg');
+        formData.append('kind', 'after');
+        await api.post(`/findings/${id}/photos`, formData);
+        uploadedAny = true;
+        onProgress?.(i + 1, blobs.length);
+      }
+      setActionError(null);
+    } finally {
+      if (uploadedAny) {
+        await fetchFinding();
+      }
+    }
+  };
+
   const handleDeletePhoto = async (photoId: number) => {
-    await api.delete(`/photos/${photoId}`);
-    await fetchFinding();
+    try {
+      setActionError(null);
+      await api.delete(`/photos/${photoId}`);
+      await fetchFinding();
+    } catch (err: any) {
+      setActionError(err?.message || 'Failed to delete photo');
+    }
   };
 
   const handleFixSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fixNote.trim()) {
-      alert(t('fix_note') + ' is required');
+    setActionError(null);
+
+    if (!hasAfterPhoto) {
+      setActionError(t('at_least_one_after_photo'));
       return;
     }
-    const afterPhotos = (finding.photos || []).filter((p) => p.kind === 'after');
-    if (afterPhotos.length === 0) {
-      alert(t('at_least_one_after_photo'));
+    if (!hasFixNote) {
+      setActionError(`${t('fix_note')} is required`);
       return;
     }
 
     try {
       setActionLoading(true);
       await api.post(`/findings/${id}/fix`, { note: fixNote });
+      fixNoteDirtyRef.current = false;
       await fetchFinding();
     } catch (err: any) {
-      alert(err.message || 'Failed to submit fix');
+      setActionError(err?.message || 'Failed to submit fix');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleVerify = async (action: 'close' | 'reject') => {
+    setActionError(null);
     if (action === 'reject' && !rejectNote.trim()) {
-      alert(t('reject_reason') + ' is required');
+      setActionError(`${t('reject_reason')} is required`);
       return;
     }
 
@@ -116,27 +182,36 @@ export const FindingDetail: React.FC = () => {
       setShowRejectBox(false);
       await fetchFinding();
     } catch (err: any) {
-      alert(err.message || 'Failed to verify');
+      setActionError(err?.message || 'Failed to verify');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const beforePhotos = (finding.photos || []).filter((p) => p.kind === 'before');
-  const afterPhotos = (finding.photos || []).filter((p) => p.kind === 'after');
-
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-16">
+    <div className="space-y-6 max-w-4xl mx-auto pb-24 md:pb-16">
       {/* Back button */}
       <div>
         <Link
-          to={finding?.area_id ? `/findings?area_id=${finding.area_id}` : "/findings"}
+          to={finding?.area_id ? `/findings?area_id=${finding.area_id}` : '/findings'}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{t('back')}</span>
         </Link>
       </div>
+
+      {/* Inline error notice */}
+      {actionError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{actionError}</span>
+        </div>
+      )}
 
       {/* Guest Notice */}
       {!user && (
@@ -208,7 +283,7 @@ export const FindingDetail: React.FC = () => {
 
       {/* Side-by-Side Photos: Before & After */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Before Photos */}
+        {/* Before Photos (clickable 2K Lightbox) */}
         <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900">{t('before_photos')}</h3>
@@ -220,23 +295,29 @@ export const FindingDetail: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
               {beforePhotos.map((p) => (
-                <div
+                <button
                   key={p.id}
-                  className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200"
+                  type="button"
+                  onClick={() => openLightbox(finding.photos || [], p.id)}
+                  title={t('click_to_zoom')}
+                  className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 cursor-pointer block"
                 >
                   <img
                     src={`/api/photos/${p.id}`}
                     alt="before"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition"
                     loading="lazy"
                   />
-                </div>
+                  <span className="absolute bottom-1.5 right-1.5 p-1.5 rounded-lg bg-slate-950/70 text-white opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </span>
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* After Photos */}
+        {/* After Photos (with Pre-Upload Preview & Approval Modal + Unified Lightbox) */}
         <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3">
           <PhotoUpload
             photos={finding.photos || []}
@@ -244,7 +325,10 @@ export const FindingDetail: React.FC = () => {
             canUpload={canFix}
             canDelete={() => canFix}
             onUpload={handleUploadAfterPhoto}
+            onUploadBatch={handleUploadAfterPhotoBatch}
             onDelete={handleDeletePhoto}
+            onPhotoClick={(photo) => openLightbox(finding.photos || [], photo.id)}
+            contextLabel={`${finding.area_code || ''} · ${finding.item_code || ''} · CAPA #${finding.id}`}
           />
         </div>
       </div>
@@ -257,25 +341,65 @@ export const FindingDetail: React.FC = () => {
             <span>{t('fix_finding_title')}</span>
           </div>
 
+          {/* 2-Step Readiness Checklist */}
+          <div className="p-3 rounded-2xl bg-white/80 border border-blue-200/80 space-y-1.5">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              {t('fix_checklist_title')}
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs font-semibold">
+              <div
+                className={`inline-flex items-center gap-1.5 ${
+                  hasAfterPhoto ? 'text-emerald-700' : 'text-amber-700'
+                }`}
+              >
+                {hasAfterPhoto ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Circle className="w-4 h-4 text-amber-500" />
+                )}
+                <span>{t('fix_req_photo')}</span>
+              </div>
+              <div
+                className={`inline-flex items-center gap-1.5 ${
+                  hasFixNote ? 'text-emerald-700' : 'text-amber-700'
+                }`}
+              >
+                {hasFixNote ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                ) : (
+                  <Circle className="w-4 h-4 text-amber-500" />
+                )}
+                <span>{t('fix_req_note')}</span>
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={handleFixSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              <label
+                htmlFor="finding-fix-note"
+                className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1"
+              >
                 {t('fix_note')}
               </label>
               <textarea
+                id="finding-fix-note"
                 required
                 rows={3}
                 value={fixNote}
-                onChange={(e) => setFixNote(e.target.value)}
+                onChange={(e) => {
+                  fixNoteDirtyRef.current = true;
+                  setFixNote(e.target.value);
+                }}
                 placeholder={t('fix_note_placeholder')}
-                className="w-full px-4 py-2.5 rounded-xl border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
+                className="auto-grow-textarea w-full px-4 py-2.5 rounded-xl border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 text-sm"
               />
             </div>
 
             <button
               type="submit"
               disabled={actionLoading}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 min-h-[42px] rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {actionLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,12 +434,12 @@ export const FindingDetail: React.FC = () => {
           </div>
 
           {!showRejectBox ? (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => handleVerify('close')}
                 disabled={actionLoading}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{t('btn_verify_close')}</span>
@@ -325,7 +449,7 @@ export const FindingDetail: React.FC = () => {
                 type="button"
                 onClick={() => setShowRejectBox(true)}
                 disabled={actionLoading}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 min-h-[42px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <XCircle className="w-4 h-4" />
                 <span>{t('btn_verify_reject')}</span>
@@ -333,30 +457,34 @@ export const FindingDetail: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3 pt-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-rose-800">
+              <label
+                htmlFor="finding-reject-note"
+                className="block text-xs font-bold uppercase tracking-wider text-rose-800"
+              >
                 {t('reject_reason')}
               </label>
               <textarea
+                id="finding-reject-note"
                 required
                 rows={2}
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 placeholder={t('reject_reason_placeholder')}
-                className="w-full px-4 py-2.5 rounded-xl border border-rose-300 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 text-sm"
+                className="auto-grow-textarea w-full px-4 py-2.5 rounded-xl border border-rose-300 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 text-sm"
               />
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleVerify('reject')}
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer"
+                  className="px-4 py-2 min-h-[40px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer"
                 >
                   {t('confirm')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowRejectBox(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer"
+                  className="px-4 py-2 min-h-[40px] rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
@@ -375,7 +503,7 @@ export const FindingDetail: React.FC = () => {
           </div>
 
           <div className="space-y-4 border-l-2 border-slate-200 pl-4 ml-2">
-            {finding.history.map((h: any, idx: number) => (
+            {finding.history.map((h: any) => (
               <div key={h.id} className="space-y-2">
                 <div className="flex items-center gap-2 text-xs">
                   <span className="font-bold text-slate-700">
@@ -385,15 +513,22 @@ export const FindingDetail: React.FC = () => {
                 </div>
                 <p className="text-xs text-slate-600">{h.description || t('no_description')}</p>
                 {h.photos?.length > 0 && (
-                  <div className="flex gap-2 py-1">
+                  <div className="flex flex-wrap gap-2 py-1">
                     {h.photos.map((hp: Photo) => (
-                      <img
+                      <button
                         key={hp.id}
-                        src={`/api/photos/${hp.id}`}
-                        alt={hp.kind}
-                        className="w-14 h-14 rounded-lg object-cover border border-slate-200"
-                        loading="lazy"
-                      />
+                        type="button"
+                        onClick={() => openLightbox(h.photos, hp.id, h.description)}
+                        title={t('click_to_zoom')}
+                        className="relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 cursor-pointer group"
+                      >
+                        <img
+                          src={`/api/photos/${hp.id}`}
+                          alt={hp.kind}
+                          className="w-full h-full object-cover group-hover:scale-105 transition"
+                          loading="lazy"
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -402,6 +537,14 @@ export const FindingDetail: React.FC = () => {
           </div>
         </div>
       )}
+
+      <Lightbox
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        photos={lightboxPhotos}
+        currentIndex={lightboxIndex}
+        onNavigate={setLightboxIndex}
+      />
     </div>
   );
 };

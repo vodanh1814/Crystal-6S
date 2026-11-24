@@ -1,11 +1,20 @@
 # Crystal 5S Audit — Hệ thống Đánh giá, Giám sát Andon & Cải tiến 5S Nhà Máy
 
 **Ngôn ngữ: [🇻🇳 Tiếng Việt](./README.md) · [🇬🇧 English](./README.en.md)**  
-**Phiên bản hiện tại: `v2.13.4`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
+**Phiên bản hiện tại: `v2.14.0`** · Xem lịch sử cập nhật chi tiết tại [CHANGELOG.md](./CHANGELOG.md) / [CHANGELOG.en.md](./CHANGELOG.en.md).  
 **Tác giả: Simon** ([GitHub: @vodanh1814](https://github.com/vodanh1814))  
 **Kho lưu trữ chính thức:** [https://github.com/vodanh1814/Crystal-6S](https://github.com/vodanh1814/Crystal-6S)
 
 Ứng dụng web & bộ cài đặt độc lập toàn diện hỗ trợ kiểm tra, chấm điểm, theo dõi tiến độ khắc phục lỗi hình ảnh 2K và hiển thị bảng điện tử **Smart Factory Andon TV** cho hoạt động 5S (*Sort – Set in order – Shine – Standardize – Sustain*) tại nhà máy. Hệ thống hoạt động linh hoạt cả trên **Mạng nội bộ (Local LAN)** lẫn **Đám mây Cloudflare (Workers, D1 Database, R2 Object Storage)**.
+
+---
+
+## 1. Điểm nổi bật của phiên bản `v2.14.0`
+
+### 📸 Duyệt Ảnh Trước Khi Tải Lên & Tối Ưu Toàn Diện Nhập Điểm / Khắc Phục Lỗi 5S
+- **Hệ Thống Xem Trước & Duyệt Ảnh (`PhotoApprovalModal`, `StagedPhotoTray`, `Lightbox.tsx`, `imageCompression.ts`)**: Cho phép chụp Camera, chọn nhiều ảnh từ Thư viện, Kéo-thả hoặc Dán `Ctrl+V`; xem trước kích thước/dung lượng nén (`<= 4.8MB`), phóng to 2K (hỗ trợ ảnh local qua Portal & phím `Escape` capture phase), xoay 90°, xóa từng ảnh, theo dõi thanh tiến trình tải lên và giữ lại ảnh khi lỗi mạng.
+- **Trải Nghiệm Chấm Điểm Hiện Trường Nhanh & An Toàn (`AuditDetail.tsx`, `auditEntry.ts`)**: Bảo toàn mô tả đang gõ dở khi refetch (`mergeServerDescriptions`), auto-save `onBlur` & IME-safe `Ctrl+Enter`, nhập số trực tiếp (`inputMode="numeric"`) kèm Optimistic UI + hàng đợi tuần tự cho điểm ngoại quan `BOD / Customer / IE`, bộ lọc **Chỉ lỗi / Ẩn N/A**, nút **Khu vực trước / tiếp**, `CriterionPicker` tìm kiếm + lọc `S1–S5` + lọc `N/A` + cảnh báo phạt lặp, chống tạo trùng finding và **Modal tổng duyệt** trước khi nộp kỳ chấm.
+- **Chi Tiết Khắc Phục Lỗi CAPA & Kiểm Thử (`FindingDetail.tsx`, `PhotoUpload.tsx`, `audit_entry_ux.test.ts`)**: Bảo toàn ghi chú khắc phục (`fixNoteDirtyRef`), thống nhất `Lightbox` 2K cho ảnh Before / After / History, checklist 2 điều kiện nộp khắc phục, tối ưu mobile + Dark/Light mode và bổ sung bộ unit test `worker/lib/audit_entry_ux.test.ts`.
 
 ---
 

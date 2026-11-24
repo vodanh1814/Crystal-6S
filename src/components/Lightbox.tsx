@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
 import { useI18n } from '../i18n/context';
 
 export interface LightboxPhoto {
-  id: number;
+  id?: number;
+  src?: string;
+  metaLabel?: string;
   kind?: 'before' | 'after';
   area_code?: string;
   item_code?: string;
@@ -33,6 +36,8 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         onClose();
       } else if (e.key === 'ArrowLeft' && onNavigate && currentIndex > 0) {
         onNavigate(currentIndex - 1);
@@ -41,18 +46,22 @@ export const Lightbox: React.FC<LightboxProps> = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, currentIndex, photos.length, onClose, onNavigate]);
 
   if (!isOpen || photos.length === 0) return null;
 
   const current = photos[currentIndex] || photos[0];
-  const photoUrl = `/api/photos/${current.id}`;
+  const photoUrl = current.src || (current.id !== undefined ? `/api/photos/${current.id}` : '');
+  if (!photoUrl) return null;
 
-  return (
+  const content = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 backdrop-blur-md p-2 sm:p-4 select-none animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label={current.description || 'Photo preview'}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/92 backdrop-blur-md p-2 sm:p-4 select-none overscroll-contain animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Top action bar */}
@@ -60,7 +69,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
         className="absolute top-3 left-3 right-3 flex items-center justify-between text-white z-10"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {current.kind && (
             <span
               className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
@@ -82,8 +91,13 @@ export const Lightbox: React.FC<LightboxProps> = ({
               {current.item_code}
             </span>
           )}
+          {current.metaLabel && (
+            <span className="px-2.5 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-xs font-mono font-bold text-sky-200">
+              {current.metaLabel}
+            </span>
+          )}
           {photos.length > 1 && (
-            <span className="text-xs text-slate-400 font-mono hidden sm:inline-block ml-2">
+            <span className="text-xs text-slate-300 font-mono hidden sm:inline-block ml-1">
               {currentIndex + 1} / {photos.length}
             </span>
           )}
@@ -101,8 +115,10 @@ export const Lightbox: React.FC<LightboxProps> = ({
             </Link>
           )}
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full bg-slate-800/80 hover:bg-rose-600 text-slate-300 hover:text-white transition cursor-pointer"
+            aria-label={t('close_esc')}
+            className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full bg-slate-800/80 hover:bg-rose-600 text-slate-300 hover:text-white transition cursor-pointer"
             title={t('close_esc')}
           >
             <X className="w-5 h-5" />
@@ -113,11 +129,13 @@ export const Lightbox: React.FC<LightboxProps> = ({
       {/* Prev button */}
       {photos.length > 1 && onNavigate && currentIndex > 0 && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onNavigate(currentIndex - 1);
           }}
-          className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition z-10 cursor-pointer border border-slate-700 hover:border-blue-500 shadow-xl"
+          aria-label="Previous photo"
+          className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition z-10 cursor-pointer border border-slate-700 hover:border-blue-500 shadow-xl"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -126,11 +144,13 @@ export const Lightbox: React.FC<LightboxProps> = ({
       {/* Next button */}
       {photos.length > 1 && onNavigate && currentIndex < photos.length - 1 && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onNavigate(currentIndex + 1);
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition z-10 cursor-pointer border border-slate-700 hover:border-blue-500 shadow-xl"
+          aria-label="Next photo"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition z-10 cursor-pointer border border-slate-700 hover:border-blue-500 shadow-xl"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -155,4 +175,9 @@ export const Lightbox: React.FC<LightboxProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+  return content;
 };

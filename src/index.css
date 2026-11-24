@@ -305,6 +305,18 @@ html[data-color-mode="light"] body {
   color: var(--app-text);
 }
 
+.theme-workspace {
+  scroll-padding-bottom: 6.5rem;
+}
+
+.auto-grow-textarea {
+  field-sizing: content;
+  height: auto;
+  width: 100%;
+  min-block-size: 3.5rem;
+  max-block-size: 12rem;
+}
+
 .theme-tv-canvas {
   overflow-y: auto;
 }
@@ -455,9 +467,9 @@ html[data-color-mode="dark"] .theme-workspace {
   color: #e2e8f0;
 }
 
-html[data-color-mode="dark"] .theme-workspace :is(.bg-white, .bg-white\/95, .bg-white\/80):not(.logo-well):not(.no-glass),
+html[data-color-mode="dark"] .theme-workspace :is(.bg-white, .bg-white\/95, .bg-white\/90, .bg-white\/80):not(.logo-well):not(.no-glass),
 html[data-color-mode="dark"] .theme-modal-card,
-html[data-color-mode="dark"] .theme-modal-card :is(.bg-white, .bg-white\/95, .bg-white\/80):not(.logo-well):not(.no-glass) {
+html[data-color-mode="dark"] .theme-modal-card :is(.bg-white, .bg-white\/95, .bg-white\/90, .bg-white\/80):not(.logo-well):not(.no-glass) {
   background-color: rgba(15, 23, 42, 0.86);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -606,7 +618,7 @@ html[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) [class*="h
   color: #f8fafc;
 }
 
-html[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:bg-blue-50"], [class*="hover:bg-blue-100"]):hover {
+html[data-color-mode="dark"] :is(.theme-workspace, .theme-modal-card) :is([class*="hover:bg-blue-50"], [class*="hover:bg-blue-100"], [class*="hover:bg-sky-50"], [class*="hover:bg-sky-100"]):hover {
   background-color: rgba(14, 165, 233, 0.24);
 }
 
